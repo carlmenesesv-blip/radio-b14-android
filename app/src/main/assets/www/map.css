@@ -1,0 +1,213 @@
+/* ==========================================================
+   MAP — vista Mapa (navegación) y mapa vivo del Inicio
+   Sección: NAVEGACIÓN
+   ========================================================== */
+
+:root[data-theme="dark"]  { --panel: rgba(18, 18, 22, 0.88); --live-scrim: rgba(8, 8, 10, 0.72); }
+:root[data-theme="light"] { --panel: rgba(255, 255, 255, 0.94); --live-scrim: rgba(233, 235, 238, 0.92); }
+
+/* ---------- Motor de teselas ---------- */
+.tm { position: relative; overflow: hidden; user-select: none; -webkit-user-select: none; background: #e8eaed; }
+[data-mt="dark"] .tm, [data-mt="dark"].tm { background: #15171b; }
+[data-mt="light"] .tm, [data-mt="light"].tm { background: #e8eaed; }
+.tm__tiles, .tm__pins { position: absolute; inset: 0; overflow: hidden; }
+.tm__pins { pointer-events: none; }
+.tm__tile {
+  position: absolute; left: 0; top: 0; width: 256px; height: 256px; max-width: none;
+  opacity: 0; transition: opacity 160ms ease-out; will-change: transform;
+  pointer-events: none; -webkit-user-drag: none;
+}
+.tm__tile.is-in { opacity: 1; }
+.tm__tile.is-bad { display: none; }
+/* Mapa oscuro: se invierte la tesela clara */
+[data-ts="invert"] .tm__tiles { filter: invert(1) hue-rotate(180deg) brightness(0.88) contrast(0.92) saturate(0.75); }
+[data-mt="light"] .tm__tiles { filter: none; }
+
+.tm__svg { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+.tm__route-casing, .tm__route { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.tm__route-casing { stroke: rgba(0, 0, 0, 0.55); stroke-width: 11; }
+.tm__route { stroke: #4da3ff; stroke-width: 6.500; }
+.tm__route-casing.is-alt { stroke-width: 9; opacity: 0.6; }
+.tm__route.is-alt { stroke: #8a94a6; stroke-width: 5; }
+[data-mt="light"] .tm__route-casing { stroke: #ffffff; }
+[data-mt="light"] .tm__route { stroke: #1a6fd6; }
+[data-mt="light"] .tm__route.is-alt { stroke: #7b8494; }
+
+.tm__pin { position: absolute; left: 0; top: 0; will-change: transform; }
+.tm__pin-in { position: absolute; left: 0; top: 0; width: 2.2rem; height: 2.2rem; margin: -1.1rem 0 0 -1.1rem; transform-origin: 50% 50%; transition: transform 250ms linear; }
+.tm__pin-in svg { display: block; width: 100%; height: 100%; }
+.pin-car svg { fill: #0a84ff; stroke: #ffffff; stroke-width: 1.600; stroke-linejoin: round; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45)); }
+.pin-car.is-dot i { display: block; width: 1.2rem; height: 1.2rem; margin: 0.5rem; border-radius: 50%; background: #0a84ff; border: 3px solid #ffffff; box-shadow: 0 0 0 0.55rem rgba(10, 132, 255, 0.22), 0 2px 6px rgba(0, 0, 0, 0.4); }
+.pin-dest { width: 2.8rem; height: 2.8rem; margin: -2.8rem 0 0 -1.4rem; }
+.pin-dest svg { fill: #ff3b30; stroke: #ffffff; stroke-width: 1.400; stroke-linejoin: round; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)); }
+.pin-dest circle { fill: #ffffff; stroke: none; }
+
+/* ---------- Vista ---------- */
+.nav {
+  position: absolute; inset: 0; overflow: hidden; isolation: isolate;
+  border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow);
+  background: #15171b;
+  container-type: size; container-name: navview;
+  --g: var(--gap);
+}
+.nav[data-mt="light"] { background: #e8eaed; }
+.nav__map { position: absolute; inset: 0; touch-action: none; cursor: grab; }
+.nav__map:active { cursor: grabbing; }
+
+.nav__top, .nav__ctl, .nav__guide, .nav__bar, .nav__card, .nav__gps, .nav__attr, .nav__waze, .nav__nomap { position: absolute; z-index: 5; }
+
+/* Superficie común de los paneles flotantes */
+.nav__search, .nav__panel, .nav__guide, .nav__bar, .nav__card, .nav__gps, .nav__cbtn, .nav__nomap {
+  background: var(--panel); color: var(--text);
+  border: 1px solid var(--border-strong);
+  backdrop-filter: blur(var(--blur)) saturate(140%); -webkit-backdrop-filter: blur(var(--blur)) saturate(140%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+
+/* ---------- Búsqueda ---------- */
+.nav__top { left: var(--g); top: var(--g); width: min(28rem, calc(100% - 6.4rem)); display: flex; flex-direction: column; gap: 0.5rem; }
+.nav__search { display: flex; align-items: center; gap: 0.3rem; min-height: 3.4rem; padding: 0 0.4rem 0 1.1rem; border-radius: var(--radius-pill); }
+.nav__search > svg.icon { flex: none; color: var(--text-dim); }
+.nav__input {
+  flex: 1; min-width: 0; height: 3.2rem; padding: 0 0.6rem; background: none; border: 0; outline: none;
+  color: var(--text); font: inherit; font-size: 1rem; user-select: text; -webkit-user-select: text;
+}
+.nav__input::placeholder { color: var(--text-dim); }
+.nav__search:focus-within { border-color: var(--text); }
+.nav__ibtn { flex: none; width: max(2.8rem, 44px); height: max(2.8rem, 44px); border-radius: 50%; display: grid; place-items: center; touch-action: manipulation; transition: transform 160ms ease-out, background 160ms ease-out; }
+.nav__ibtn:active { transform: scale(0.97); }
+.nav__ibtn[hidden] { display: none; }
+.nav__ibtn.is-live { background: var(--dock-active-bg); color: var(--dock-active-fg); }
+
+.nav__panel { display: flex; flex-direction: column; gap: 0.6rem; padding: 0.7rem; border-radius: var(--radius-lg); max-height: calc(100cqh - 7rem); overflow-y: auto; scrollbar-width: none; }
+.nav__panel::-webkit-scrollbar { display: none; }
+.nav__panel[hidden] { display: none; }
+.nav__quick { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.nav__chip {
+  display: inline-flex; align-items: center; gap: 0.5rem; min-height: max(2.8rem, 44px); padding: 0 1.1rem; border-radius: var(--radius-pill);
+  background: var(--surface-inset); border: 1px solid var(--border); font-size: 0.9rem; touch-action: manipulation;
+  transition: transform 160ms ease-out, background 160ms ease-out;
+}
+.nav__chip:active { transform: scale(0.97); }
+.nav__chip svg.icon { width: 1.15rem; height: 1.15rem; }
+.nav__list { list-style: none; display: flex; flex-direction: column; }
+.nav__list > li + li { border-top: 1px solid var(--border); }
+.nav__item { width: 100%; display: flex; align-items: center; gap: 0.9rem; min-height: 3.6rem; padding: 0.4rem 0.4rem; text-align: left; border-radius: var(--radius-md); touch-action: manipulation; transition: background 160ms ease-out, transform 160ms ease-out; }
+.nav__item:active { transform: scale(0.99); background: var(--surface-inset); }
+.nav__item > svg.icon { flex: none; color: var(--text-dim); }
+.nav__item-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.nav__item-t b { font-weight: 500; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav__item-t span { font-size: 0.75rem; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav__item-d { flex: none; font-size: 0.8rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.nav__msg { padding: 0.9rem 0.4rem; font-size: 0.85rem; color: var(--text-dim); }
+.nav__panel-close { align-self: flex-end; min-height: max(2.6rem, 44px); padding: 0 1.1rem; border-radius: var(--radius-pill); font-size: 0.85rem; color: var(--text-dim); touch-action: manipulation; }
+
+/* ---------- Controles ---------- */
+.nav__ctl { right: var(--g); top: var(--g); display: flex; flex-direction: column; gap: 0.6rem; }
+.nav__cbtn { width: max(3.2rem, 44px); height: max(3.2rem, 44px); border-radius: 50%; display: grid; place-items: center; touch-action: manipulation; transition: transform 160ms ease-out, background 160ms ease-out, color 160ms ease-out; }
+.nav__cbtn:active { transform: scale(0.97); }
+.nav__cbtn[aria-pressed="true"], .nav.is-free .nav__cbtn--center { background: var(--dock-active-bg); color: var(--dock-active-fg); border-color: transparent; }
+
+/* ---------- Aviso de GPS ---------- */
+.nav__gps { left: var(--g); top: calc(var(--g) + 4rem); max-width: min(28rem, calc(100% - 6.4rem)); display: flex; align-items: center; gap: 0.8rem; padding: 0.55rem 0.7rem 0.55rem 1rem; border-radius: var(--radius-pill); font-size: 0.8rem; }
+.nav__gps[hidden], .nav[data-gps="ok"] .nav__gps { display: none; }
+.nav__gps::before { content: ""; flex: none; width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--warn); }
+.nav[data-gps="denied"] .nav__gps::before, .nav[data-gps="nosignal"] .nav__gps::before, .nav[data-gps="off"] .nav__gps::before { background: var(--bad); }
+.nav__gps-btn { flex: none; min-height: max(2.4rem, 40px); padding: 0 1rem; border-radius: var(--radius-pill); background: var(--dock-active-bg); color: var(--dock-active-fg); font-size: 0.8rem; touch-action: manipulation; }
+.nav__gps-btn[hidden] { display: none; }
+.nav.is-searching .nav__gps, .nav[data-mode="place"] .nav__gps { display: none; }
+.nav[data-mode="guide"] .nav__gps { top: calc(var(--g) + 8.4rem); }
+
+/* ---------- Tarjeta del destino ---------- */
+.nav__card { left: var(--g); bottom: var(--g); width: min(31rem, calc(100% - 6.4rem)); padding: 1rem; border-radius: var(--radius-lg); display: flex; flex-direction: column; gap: 0.8rem; }
+.nav__card[hidden] { display: none; }
+.nav__card-h { display: flex; align-items: flex-start; gap: 0.8rem; }
+.nav__card-t { flex: 1; min-width: 0; }
+.nav__name { font-size: 1.25rem; font-weight: 500; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav__sub { font-size: 0.8rem; color: var(--text-dim); margin-top: 0.15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav__routes { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.nav__routes:empty { display: none; }
+.nav__route { flex: 1 1 8rem; display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem; min-height: 3.6rem; padding: 0.55rem 0.9rem; border-radius: var(--radius-md); background: var(--surface-inset); border: 1px solid var(--border); text-align: left; touch-action: manipulation; transition: background 160ms ease-out, transform 160ms ease-out, color 160ms ease-out; }
+.nav__route:active { transform: scale(0.97); }
+.nav__route b { font-size: 1.15rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.nav__route span { font-size: 0.75rem; opacity: 0.75; font-variant-numeric: tabular-nums; }
+.nav__route[aria-pressed="true"] { background: var(--dock-active-bg); color: var(--dock-active-fg); border-color: transparent; }
+.nav__cmsg { font-size: 0.8rem; color: var(--text-dim); min-height: 1.1em; }
+.nav__cmsg:empty { display: none; }
+.nav__cmsg[data-kind="bad"] { color: var(--text); }
+.nav__cmsg[data-kind="bad"]::before { content: ""; display: inline-block; width: 0.5rem; height: 0.5rem; margin-right: 0.5rem; border-radius: 50%; background: var(--bad); vertical-align: 0.05em; }
+.nav__card[data-busy="true"] .nav__cmsg { color: var(--text-dim); }
+.nav__acts { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.nav__acts .btn-pill { display: inline-flex; align-items: center; gap: 0.5rem; min-height: max(2.8rem, 44px); }
+.nav__acts .btn-pill svg.icon { width: 1.1rem; height: 1.1rem; }
+.nav__go { background: var(--dock-active-bg); color: var(--dock-active-fg); border-color: transparent; font-weight: 500; }
+.nav__save { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.nav__save[hidden] { display: none; }
+
+/* ---------- Guía giro a giro ---------- */
+.nav__guide { left: var(--g); top: var(--g); width: min(31rem, calc(100% - 6.4rem)); display: flex; align-items: center; gap: 1rem; padding: 0.8rem 1.1rem 0.8rem 0.8rem; border-radius: var(--radius-lg); }
+.nav__guide[hidden], .nav__bar[hidden] { display: none; }
+.nav__turn { flex: none; width: 4.8rem; height: 4.8rem; border-radius: var(--radius-md); background: var(--dock-active-bg); color: var(--dock-active-fg); display: grid; place-items: center; }
+.nav__turn svg { width: 3.2rem; height: 3.2rem; fill: none; stroke: currentColor; stroke-width: 2.200; stroke-linecap: round; stroke-linejoin: round; }
+.nav__guide-t { min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+.nav__dist { font-size: 2rem; font-weight: 400; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.nav__instr { font-size: 0.95rem; line-height: 1.25; }
+.nav__then { font-size: 0.75rem; color: var(--text-dim); }
+.nav__then:empty { display: none; }
+
+.nav__bar { left: var(--g); bottom: var(--g); width: min(40rem, calc(100% - 6.4rem)); display: flex; align-items: center; gap: 1.1rem; padding: 0.6rem 0.7rem 0.6rem 1.2rem; border-radius: var(--radius-pill); }
+.nav__stat { display: flex; flex-direction: column; flex: none; line-height: 1.15; }
+.nav__stat b { font-size: 1.15rem; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.nav__stat span { font-size: 0.7rem; color: var(--text-dim); }
+.nav__sim { display: none; font-size: 0.7rem; padding: 0.25rem 0.6rem; border-radius: var(--radius-pill); background: var(--surface-inset); }
+.nav[data-sim="on"] .nav__sim { display: inline-block; }
+.nav__bbtn { flex: none; margin-left: auto; width: max(2.8rem, 44px); height: max(2.8rem, 44px); border-radius: 50%; display: grid; place-items: center; background: var(--surface-inset); touch-action: manipulation; transition: transform 160ms ease-out, background 160ms ease-out, color 160ms ease-out; }
+.nav__bbtn + .nav__bbtn { margin-left: 0; }
+.nav[data-sim="on"] .nav__sim + .nav__bbtn { margin-left: 0; }
+.nav__sim + .nav__bbtn { margin-left: auto; }
+.nav__stat:nth-child(3) + .nav__sim + .nav__bbtn { margin-left: auto; }
+.nav__bbtn:active { transform: scale(0.97); }
+.nav__bbtn[aria-pressed="false"] { opacity: 0.55; }
+.nav__stop { flex: none; min-height: max(2.8rem, 44px); background: var(--bad); color: #ffffff; border-color: transparent; }
+.nav[data-mode="guide"] .nav__top { display: none; }
+
+/* ---------- Waze ---------- */
+.nav__waze { inset: 0; z-index: 8; display: flex; flex-direction: column; background: var(--panel); }
+.nav__waze[hidden] { display: none; }
+.nav__waze-h { flex: none; display: flex; align-items: center; gap: 0.8rem; padding: 0.7rem 0.8rem 0.7rem 1.2rem; border-bottom: 1px solid var(--border); }
+.nav__waze-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.nav__waze-t b { font-weight: 500; }
+.nav__waze-t span { font-size: 0.75rem; color: var(--text-dim); }
+.nav__waze-h .btn-pill { display: inline-flex; align-items: center; gap: 0.5rem; min-height: max(2.8rem, 44px); }
+.nav__waze-h .btn-pill svg.icon { width: 1.1rem; height: 1.1rem; }
+.nav__waze-f { flex: 1; width: 100%; border: 0; background: #e8eaed; }
+
+/* ---------- Varios ---------- */
+.nav__attr { right: var(--g); bottom: var(--g); z-index: 4; padding: 0.15rem 0.5rem; border-radius: var(--radius-pill); font-size: 0.65rem; background: rgba(255, 255, 255, 0.78); color: #222; pointer-events: none; }
+.nav__nomap { display: none; left: 50%; bottom: 3.6rem; transform: translateX(-50%); padding: 0.55rem 1rem; border-radius: var(--radius-pill); font-size: 0.8rem; white-space: nowrap; }
+.nav[data-tiles="error"] .nav__nomap { display: block; }
+.nav__card[hidden] ~ .nav__attr { bottom: var(--g); }
+
+/* ---------- Pantalla estrecha / vertical ---------- */
+@container navview (max-width: 46rem) {
+  .nav__top, .nav__guide, .nav__card, .nav__bar { width: calc(100% - 6.4rem); }
+  .nav__bar { gap: 0.8rem; padding-left: 1rem; }
+  .nav[data-sim="on"] .nav__sim { display: none; }
+  .nav__stat + .nav__stat { margin-left: 0.2rem; }
+  .nav__card { padding: 0.9rem; }
+}
+@container navview (max-height: 30rem) {
+  .nav__card { max-height: calc(100cqh - 2 * var(--g)); overflow-y: auto; }
+  .nav__routes { flex-wrap: nowrap; }
+}
+
+/* ---------- Mapa vivo en la tarjeta del Inicio ---------- */
+.card--map { cursor: pointer; }
+.card--map:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.map__live { position: absolute; inset: 0; opacity: 0; transition: opacity 320ms ease-out; pointer-events: none; }
+.card--map.is-live .map__live { opacity: 1; }
+.card--map.is-live .map__canvas { opacity: 0; }
+.card--map.is-live::after { background: linear-gradient(180deg, var(--live-scrim) 0%, transparent 60%); }
+.map__live .tm__pin-in { width: 1.8rem; height: 1.8rem; margin: -0.9rem 0 0 -0.9rem; }
+.map__live .pin-dest { width: 2.2rem; height: 2.2rem; margin: -2.2rem 0 0 -1.1rem; }
+.map__live .pin-car.is-dot i { width: 0.9rem; height: 0.9rem; margin: 0.45rem; }

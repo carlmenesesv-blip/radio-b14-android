@@ -1,0 +1,121 @@
+/* ==========================================================
+   APPS — lanzador y visor
+   Usa tokens del sistema (oscuro y claro). Sección: APPS
+   ========================================================== */
+.view--apps { container-type: inline-size; container-name: appsview; overflow: hidden; }
+.ap { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+.ap__launcher { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: var(--gap); }
+.ap__launcher::-webkit-scrollbar { display: none; }
+.ap__launcher[hidden], .ap__frame[hidden] { display: none; }
+
+.ap__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 2.75rem; }
+.ap__hint { font-size: 0.85rem; color: var(--text-dim); }
+.ap__hint b { color: var(--text); font-weight: 500; }
+.ap__head .btn-pill { min-height: 2.75rem; }
+
+.ap__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: var(--gap); }
+.ap__cell { position: relative; }
+.ap__tile {
+  width: 100%; min-height: 9.5rem; padding: 1rem 0.6rem;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.35rem;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card, 1.5rem);
+  backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
+  color: var(--text); text-align: center;
+  transition: transform 160ms ease-out, background 160ms ease-out;
+}
+.ap__tile:active { transform: scale(0.97); }
+.ap__tile[data-running="true"] { border-color: var(--border-strong); background: var(--surface-strong); }
+.ap__ico-tile {
+  width: 3.6rem; height: 3.6rem; border-radius: 1.1rem; display: grid; place-items: center;
+  background: var(--surface-inset); border: 1px solid var(--border-strong);
+  font-size: 1.6rem; font-weight: 500; margin-bottom: 0.3rem;
+}
+.ap__ico-tile svg.icon { width: 1.7rem; height: 1.7rem; }
+.ap__name { font-size: 0.98rem; font-weight: 500; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ap__sub { font-size: 0.74rem; color: var(--text-dim); }
+.ap__tile[data-running="true"] .ap__sub { color: var(--ok, #34c759); }
+.ap__del {
+  position: absolute; top: -0.35rem; right: -0.35rem; width: 2.75rem; height: 2.75rem; border-radius: 50%;
+  display: grid; place-items: center; background: var(--surface-strong); border: 1px solid var(--border-strong); color: var(--text);
+  box-shadow: var(--shadow);
+}
+.ap__del svg.icon { width: 1rem; height: 1rem; }
+.ap__del:active { transform: scale(0.92); }
+
+.ap__add-row { display: flex; gap: 0.7rem; flex-wrap: wrap; margin-top: 0.7rem; }
+.ap__add-row .ap__input { flex: 1 1 9rem; }
+.ap__add-row .ap__input--wide { flex: 2 1 14rem; }
+.ap__add-ok { min-height: 2.75rem; }
+.ap__input {
+  min-height: 2.75rem; padding: 0 1rem; border-radius: 999px; min-width: 0;
+  background: var(--surface-inset); border: 1px solid var(--border-strong); color: var(--text); font: inherit; font-size: 0.95rem;
+}
+.ap__input::placeholder { color: var(--text-dim); }
+.ap__input:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+/* Visor */
+.ap__frame { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.7rem; }
+.ap__bar { display: flex; align-items: center; gap: 0.6rem; }
+.ap__home {
+  display: inline-flex; align-items: center; gap: 0.4rem; min-height: 3rem; padding: 0 1.2rem 0 0.8rem; border-radius: 999px;
+  background: var(--dock-active-bg, var(--text)); color: var(--dock-active-fg, var(--bg)); font-weight: 500; font-size: 0.95rem;
+  transition: transform 160ms ease-out;
+}
+.ap__home:active { transform: scale(0.97); }
+.ap__home svg.icon { width: 1.2rem; height: 1.2rem; }
+.ap__bar .btn-pill { min-height: 3rem; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
+.ap__bar .btn-pill svg.icon { width: 1.1rem; height: 1.1rem; }
+.ap__bar .ap__ico { width: 3rem; height: 3rem; flex: none; }
+.ap__addr { flex: 1; min-width: 0; display: flex; }
+.ap__addr .ap__input { width: 100%; min-height: 3rem; }
+
+.ap__body { position: relative; flex: 1; min-height: 0; border-radius: var(--radius-card, 1.5rem); overflow: hidden; background: var(--surface); border: 1px solid var(--border); }
+.ap__body iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #fff; }
+.ap__body iframe:not([src]) { display: none; }
+.ap__note {
+  position: absolute; left: 50%; bottom: 0.8rem; translate: -50% 0; z-index: 1; max-width: calc(100% - 1.6rem);
+  display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; justify-content: center; padding: 0.6rem 0.6rem 0.6rem 1.1rem;
+  background: #1c1c20; color: #f4f1f0; border: 1px solid rgba(255,255,255,0.16); border-radius: 1.4rem;
+  box-shadow: var(--shadow); font-size: 0.82rem; backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
+}
+.ap__note span { color: rgba(244,241,240,0.62); }
+:root[data-theme="light"] .ap__note { background: #fff; color: #111113; border-color: rgba(17,17,19,0.14); }
+:root[data-theme="light"] .ap__note span { color: rgba(17,17,19,0.62); }
+.ap__note .btn-pill { background: rgba(255,255,255,0.12); color: inherit; }
+:root[data-theme="light"] .ap__note .btn-pill { background: rgba(17,17,19,0.07); }
+.ap__note[hidden] { display: none; }
+.ap__note .btn-pill { min-height: 2.75rem; }
+
+@container appsview (max-width: 46rem) {
+  .ap__bar .ap__apps span, .ap__bar .ap__ext span { display: none; }
+  .ap__bar .ap__apps, .ap__bar .ap__ext { padding: 0 0.9rem; }
+  .ap__hint { font-size: 0.8rem; }
+  .ap__note span { display: none; }
+}
+@container appsview (max-width: 30rem) {
+  .ap__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ap__tile { min-height: 8rem; }
+  .ap__bar { flex-wrap: wrap; }
+  .ap__addr { order: 5; flex-basis: 100%; }
+}
+
+/* Pantalla completa: el visor cubre todo y conserva la barra con «Sistema» */
+.ap__frame:fullscreen { background: var(--bg, #050507); padding: 0.8rem; }
+.ap__frame:-webkit-full-screen { background: var(--bg, #050507); padding: 0.8rem; }
+
+/* Búsqueda rápida */
+.ap__search { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; padding: 0.7rem 0.8rem; }
+.ap__search .ap__input { flex: 1 1 14rem; }
+.ap__seg button { min-height: 2.75rem; }
+.ap__seg { flex: none; } .ap__seg .seg__btn { flex: none; padding-inline: 1rem; white-space: nowrap; }
+
+/* Todas las apps (Android) */
+.ap__all[hidden] { display: none; }
+.ap__all { display: flex; flex-direction: column; gap: var(--gap); }
+.ap__all > .btn-pill { align-self: flex-start; min-height: 2.75rem; display: inline-flex; align-items: center; gap: 0.4rem; }
+.ap__all-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr)); gap: 0.7rem; }
+.ap__tile--sm { min-height: 6.8rem; padding: 0.7rem 0.4rem; }
+.ap__tile--sm .ap__ico-tile { width: 3rem; height: 3rem; margin-bottom: 0.1rem; }
+.ap__ico-tile--img { background: transparent; border: 0; }
+.ap__ico-tile--img img { width: 100%; height: 100%; object-fit: contain; border-radius: 0.8rem; }
+.ap__tile--sm .ap__name { font-size: 0.8rem; }

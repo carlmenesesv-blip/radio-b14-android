@@ -1,0 +1,221 @@
+/* ==========================================================
+   VEHICLE — controles del auto en Home
+   Salud (voltaje + temperatura), combustible, accesos directos,
+   interruptores con luz (neblineras, ventilador, ambiental),
+   estados de la ilustración del auto y apagado de pantalla.
+   Sección: VEHÍCULO
+   ========================================================== */
+
+/* ---------- Texto secundario con contraste AA en tema claro ---------- */
+:root[data-theme="light"] :is(.card--car, .card--health, .card--fuel) { --text-dim: rgba(17, 17, 19, 0.64); }
+:root[data-theme="dark"]  { --knob: #8e8e95; }
+:root[data-theme="light"] { --knob: #ffffff; }
+
+/* ---------- Estado (punto + texto: el color nunca va solo) ---------- */
+.status {
+  --sc: var(--ok);
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.72rem; color: var(--text); white-space: nowrap;
+}
+.status[data-state="warn"] { --sc: var(--warn); }
+.status[data-state="bad"]  { --sc: var(--bad); }
+.status > i { width: 0.55rem; height: 0.55rem; border-radius: 50%; flex: none; background: var(--sc); box-shadow: 0 0 0.55rem var(--sc); }
+.status > b { font-weight: 400; }
+.vh__head .status { padding: 0.28rem 0.65rem; border-radius: var(--radius-pill); background: var(--surface-inset); }
+
+.vh__head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+
+/* ---------- Salud del auto ---------- */
+.card--health, .card--fuel { display: flex; flex-direction: column; gap: 0.6rem; }
+.health__grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; }
+.metric { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; --sc: var(--ok); }
+.metric[data-state="warn"] { --sc: var(--warn); }
+.metric[data-state="bad"]  { --sc: var(--bad); }
+.metric__name { display: flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; color: var(--text-dim); white-space: nowrap; }
+.metric__name svg.icon { width: 1rem; height: 1rem; flex: none; }
+.metric__val { font-size: 2.3rem; margin-top: auto; transition: color 160ms ease-out; }
+.metric[data-state="bad"] .metric__val { color: var(--bad); }
+.metric .status { padding: 0; background: none; }
+
+/* Barra de zonas: la zona normal es neutra; atención y crítico se tiñen */
+.zone { position: relative; height: 0.35rem; border-radius: var(--radius-pill); background: var(--track-bg); }
+.zone__seg { position: absolute; top: 0; bottom: 0; background: var(--sc); opacity: 0.75; }
+.zone__seg[data-state="ok"]   { --sc: var(--ok);   opacity: 0.32; }
+.zone__seg[data-state="warn"] { --sc: var(--warn); }
+.zone__seg[data-state="bad"]  { --sc: var(--bad); }
+.zone__seg:first-child { border-radius: var(--radius-pill) 0 0 var(--radius-pill); }
+.zone__seg:last-child  { border-radius: 0 var(--radius-pill) var(--radius-pill) 0; }
+.zone__mark {
+  position: absolute; top: -0.22rem; width: 3px; height: 0.8rem; margin-left: -1.5px;
+  border-radius: 2px; background: var(--text);
+  left: var(--pos, 50%); transition: left 320ms var(--ease);
+}
+
+/* Alerta: el borde y el punto avisan sin tapar el dato */
+.card--health[data-state="warn"], .card--fuel[data-state="warn"] { border-color: var(--warn); }
+.card--health[data-state="bad"],  .card--fuel[data-state="bad"]  { border-color: var(--bad); box-shadow: var(--shadow), 0 0 1.6rem -0.5rem var(--bad); }
+.status[data-state="bad"] > i { animation: vh-pulse 1.2s ease-in-out infinite; }
+@keyframes vh-pulse { 50% { opacity: 0.35; } }
+
+/* ---------- Combustible ---------- */
+.fuel__row { display: flex; align-items: center; gap: 1rem; }
+.fuel__val { font-size: 2.3rem; flex: none; }
+.fuel__gauge { flex: 1; min-width: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 0.66rem; color: var(--text-dim); }
+.fuel__gauge b { font-weight: 400; }
+.fuel__bar { position: relative; flex: 1; height: 0.8rem; border-radius: var(--radius-pill); background: var(--track-bg); overflow: hidden; }
+.fuel__fill {
+  position: absolute; inset: 0 auto 0 0; width: var(--lvl, 62%); border-radius: inherit;
+  background: var(--text); transition: width 320ms var(--ease), background 160ms ease-out;
+}
+.card--fuel[data-state="warn"] .fuel__fill { background: var(--warn); }
+.card--fuel[data-state="bad"]  .fuel__fill { background: var(--bad); }
+.fuel__ticks { position: absolute; inset: 0; }
+.fuel__ticks i { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--bg); opacity: 0.7; }
+.fuel__ticks i:nth-child(1) { left: 25%; }
+.fuel__ticks i:nth-child(2) { left: 50%; }
+.fuel__ticks i:nth-child(3) { left: 75%; }
+
+/* ---------- Accesos directos ---------- */
+.quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; margin-top: auto; }
+.qbtn {
+  --qc: rgba(255, 241, 189, 0.55); --qi: var(--lamp-ink);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.25rem;
+  min-height: 3.2rem; min-height: max(3.2rem, 44px); padding: 0.3rem 0.2rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-inset); border: 1px solid var(--border);
+  font-size: 0.66rem; color: var(--text-dim);
+  touch-action: manipulation;
+  transition: background 160ms ease-out, color 160ms ease-out, border-color 160ms ease-out, box-shadow 200ms ease-out, transform 160ms ease-out;
+}
+.qbtn:active { transform: scale(0.97); }
+.qbtn svg.icon { width: 1.25rem; height: 1.25rem; transition: color 160ms ease-out, filter 200ms ease-out; }
+#qb-dim  { --qc: rgba(77, 163, 255, 0.55); --qi: var(--fan-ink); }
+:root[data-theme="light"] .qbtn { --qc: rgba(255, 176, 32, 0.7); }
+:root[data-theme="light"] #qb-dim { --qc: rgba(47, 140, 255, 0.6); }
+.qbtn[aria-pressed="true"] {
+  background: var(--surface-strong); color: var(--text); border-color: var(--qc);
+  box-shadow: 0 0 1.1rem -0.2rem var(--qc), inset 0 0 0.9rem -0.6rem var(--qc);
+}
+.qbtn[aria-pressed="true"] svg.icon { color: var(--qi); filter: drop-shadow(0 0 0.35rem var(--qc)); }
+
+/* ---------- Tarjeta del auto ---------- */
+.card--car { gap: 0.7rem; justify-content: flex-start; }
+.car__stage { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 0.4rem; }
+.car__svg { max-width: 100%; }
+
+/* Haces de luz */
+.beam { opacity: 0; transition: opacity 220ms ease-out; }
+.beam--head { fill: url(#beamHead); }
+.beam--fog  { fill: url(#beamFog); }
+.card--car[data-head="on"] .beam--head,
+.card--car[data-fog="on"]  .beam--fog { opacity: 1; }
+
+/* Faros y neblineras: solo se ven encendidos */
+.lamp { fill: var(--lamp); opacity: 0; transition: opacity 200ms ease-out; }
+.lamp--fog { fill: var(--fog); }
+.card--car[data-head="on"] .lamp--head { opacity: 1; filter: drop-shadow(0 0 26px var(--lamp)); }
+.card--car[data-fog="on"]  .lamp--fog  { opacity: 1; filter: drop-shadow(0 0 30px var(--fog)); }
+
+/* Iluminación ambiental */
+.car__amb, .car__dome, .car__fan { opacity: 0; transition: opacity 240ms ease-out; }
+.card--car[data-amb="on"]   .car__amb  { opacity: 1; }
+.card--car[data-cabin="on"] .car__dome { opacity: 1; }
+.card--car[data-fan="on"]   .car__fan  { opacity: 1; }
+.amb-blob { fill: var(--amb); opacity: 0.32; }
+.amb-glass { fill: var(--amb); opacity: 0.55; }
+.amb-line { fill: none; stroke: var(--amb); stroke-width: 20; stroke-linecap: round; filter: drop-shadow(0 0 24px var(--amb)); }
+.dome-glow { fill: var(--lamp); opacity: 0.45; }
+.dome-lamp { fill: var(--lamp); }
+
+/* Ventilador forzado */
+.fan-glow { fill: var(--fan); opacity: 0.32; }
+.fan-ring { fill: none; stroke: var(--fan); stroke-width: 1.5; }
+.fan-blade, .fan-hub { fill: var(--fan); }
+.fan-rot { animation: vh-spin 0.8s linear infinite; animation-play-state: paused; }
+.card--car[data-fan="on"] .fan-rot { animation-play-state: running; }
+@keyframes vh-spin { to { transform: rotate(360deg); } }
+
+/* ---------- Interruptores tipo balancín ---------- */
+.car__controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; width: 100%; }
+.rocker {
+  --c: var(--fog); --ci: var(--fog-ink); --cg: rgba(255, 176, 32, 0.6);
+  display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+  padding: 0.55rem 0.2rem 0.5rem; min-width: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface-inset); border: 1px solid var(--border);
+  touch-action: manipulation;
+  transition: background 160ms ease-out, border-color 160ms ease-out, box-shadow 220ms ease-out, transform 160ms ease-out;
+}
+.rocker[data-sw="fan"] { --c: var(--fan); --ci: var(--fan-ink); --cg: rgba(77, 163, 255, 0.6); }
+.rocker[data-sw="amb"] { --c: var(--amb); --ci: var(--amb-ink); --cg: rgba(157, 123, 255, 0.6); }
+.rocker:active { transform: scale(0.97); }
+.rocker__ico { display: grid; place-items: center; color: var(--text-dim); transition: color 160ms ease-out; }
+.rocker__ico svg.icon { transition: filter 220ms ease-out; }
+.rocker__track {
+  position: relative; width: 2.2rem; height: 3.7rem; border-radius: var(--radius-pill);
+  background: var(--track-bg); box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: background 200ms ease-out, box-shadow 220ms ease-out;
+}
+.rocker__thumb {
+  position: absolute; left: 0.2rem; right: 0.2rem; bottom: 0.2rem; height: 1.8rem; border-radius: 50%;
+  background: var(--knob); border: 1px solid var(--border-strong);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: transform 220ms var(--ease), background 200ms ease-out, box-shadow 220ms ease-out;
+}
+.rocker__label { font-size: 0.68rem; line-height: 1.15; text-align: center; min-height: 2.3em; display: flex; align-items: center; }
+.rocker__state { font-size: 0.62rem; color: var(--text-dim); }
+
+.rocker[aria-checked="true"] {
+  background: var(--surface-strong); border-color: var(--cg);
+  box-shadow: 0 0 1.4rem -0.2rem var(--cg), inset 0 0 1.1rem -0.6rem var(--cg);
+}
+.rocker[aria-checked="true"] .rocker__ico { color: var(--ci); }
+.rocker[aria-checked="true"] .rocker__ico svg.icon { filter: drop-shadow(0 0 0.4rem var(--cg)); }
+.rocker[aria-checked="true"] .rocker__track { background: var(--c); box-shadow: 0 0 1.2rem var(--cg), inset 0 1px 3px rgba(0, 0, 0, 0.2); }
+.rocker[aria-checked="true"] .rocker__thumb { transform: translateY(-1.5rem); background: #fff; box-shadow: 0 0 0.9rem var(--cg), 0 1px 3px rgba(0, 0, 0, 0.3); }
+.rocker[aria-checked="true"] .rocker__state { color: var(--text); }
+
+/* ---------- Botón de cámara de reversa ---------- */
+.cam-btn {
+  width: 100%; min-height: 3rem; min-height: max(3rem, 44px);
+  display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+  border-radius: var(--radius-pill);
+  background: var(--dock-active-bg); color: var(--dock-active-fg);
+  font-size: 0.9rem; touch-action: manipulation;
+  transition: transform 160ms ease-out, opacity 160ms ease-out;
+}
+.cam-btn:active { transform: scale(0.97); }
+
+/* ---------- Alerta en la barra de estado ---------- */
+#sb-alert { color: var(--bad); }
+#sb-alert[data-state="warn"] { color: var(--fog-ink); }
+
+/* ---------- Pantalla apagada ---------- */
+.screenoff {
+  position: fixed; inset: 0; z-index: 400; width: 100%;
+  display: grid; place-items: center;
+  background: #000; color: rgba(255, 255, 255, 0.62); font-size: 0.9rem;
+  opacity: 0; visibility: hidden; cursor: pointer;
+  transition: opacity 240ms ease-out, visibility 0s linear 240ms;
+}
+.screenoff.is-on { opacity: 1; visibility: visible; transition-delay: 0s; }
+.screenoff span { opacity: 0; }
+.screenoff.is-on span { animation: vh-hint 4s ease-out both; }
+@keyframes vh-hint { 0% { opacity: 0; } 12%, 70% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ---------- Foco de teclado ---------- */
+.rocker:focus-visible, .qbtn:focus-visible, .cam-btn:focus-visible, .screenoff:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fan-rot { animation: none; }
+  .status[data-state="bad"] > i { animation: none; }
+}
+
+/* ---------- Ajustes de proporción ---------- */
+.vh__head .card__label { white-space: nowrap; }
+.card--car .car__speed .card__value { font-size: 2.4rem; }
+.metric__val { font-size: 2rem; white-space: nowrap; }
+.metric__val .card__unit { margin-left: 0.2em; }
+
+/* ---------- Foto del auto ---------- */
+.car__svg { filter: none; }

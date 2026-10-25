@@ -1,0 +1,163 @@
+/* ==========================================================
+   CAR — sección Vehículo
+   Alertas, diagrama de puertas/luces/llantas, viaje y mantenimiento.
+   Usa .card, .btn-pill y los tokens del sistema (oscuro y claro).
+   Sección: VEHÍCULO
+   ========================================================== */
+
+.view--car {
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  container-type: inline-size;
+  container-name: carview;
+}
+.view--car::-webkit-scrollbar { display: none; }
+
+.cv {
+  height: 100%; min-height: 34rem;
+  display: grid; gap: var(--gap);
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas: "alerts alerts" "diagram trip" "diagram maint";
+}
+.cv__alerts { grid-area: alerts; }
+.cv__diagram { grid-area: diagram; }
+.cv__trip { grid-area: trip; }
+.cv__maint { grid-area: maint; }
+
+.cv__head { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; min-height: 2.4rem; }
+.cv__head .card__label { margin: 0; }
+.cv__head .btn-pill { min-height: 2.4rem; padding: 0 1rem; font-size: 0.78rem; }
+
+/* ---------- Alertas ---------- */
+.cv__alerts { display: flex; align-items: center; gap: 1rem; padding: 0.6rem 1.1rem; --lv: var(--ok); }
+.cv__alerts[data-state="warn"] { --lv: var(--warn); }
+.cv__alerts[data-state="bad"] { --lv: var(--bad); }
+.cv__alerts-ico { flex: none; width: 2.6rem; height: 2.6rem; border-radius: 50%; display: grid; place-items: center; color: var(--lv); background: color-mix(in srgb, var(--lv) 16%, transparent); border: 1px solid var(--lv); }
+.cv__alerts-txt { display: flex; flex-direction: column; min-width: 0; }
+.cv__alerts-txt b { font-weight: 500; font-size: 1.05rem; }
+.cv__alerts-txt span { font-size: 0.75rem; color: var(--text-dim); }
+.cv__alerts-list { flex: 1; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.4rem; min-width: 0; }
+.cv__achip { padding: 0.3rem 0.7rem; border-radius: var(--radius-pill); font-size: 0.72rem; background: var(--surface-inset); border: 1px solid var(--border); }
+.cv__achip[data-level="warn"] { border-color: var(--warn); }
+.cv__achip[data-level="bad"] { border-color: var(--bad); }
+
+/* ---------- Diagrama ---------- */
+.cv__diagram { display: flex; flex-direction: column; gap: 0.7rem; }
+.cv__demo[aria-pressed="true"] { background: var(--dock-active-bg); color: var(--dock-active-fg); }
+.cv__stage { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 0.6rem; align-items: stretch; }
+.cv__car { height: clamp(12rem, 31vh, 23rem); width: auto; aspect-ratio: 220 / 400; align-self: center; overflow: visible; }
+
+.cv__tires { display: flex; flex-direction: column; justify-content: space-between; padding: 12% 0; gap: 0.6rem; min-width: 0; }
+.tire {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem; min-width: 0;
+  padding: 0.55rem 0.8rem; border-radius: var(--radius-md);
+  background: var(--surface-inset); border: 1px solid var(--border); text-align: left;
+  touch-action: manipulation;
+  transition: transform 160ms ease-out, border-color 160ms ease-out, background 160ms ease-out;
+}
+.cv__tires--r .tire { align-items: flex-end; text-align: right; }
+.tire__pos { font-size: 0.68rem; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.tire__val { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.tire[data-state="warn"] { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); }
+.tire[data-state="bad"] { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
+.cv[data-demo="on"] .tire:active { transform: scale(0.97); }
+.cv[data-demo="off"] .tire { cursor: default; }
+
+.cv__body { fill: var(--surface-strong); stroke: var(--border-strong); stroke-width: 1.5; }
+.cv__wheels rect { fill: var(--text-faint); }
+.cv__mirror { fill: var(--surface-strong); stroke: var(--border-strong); stroke-width: 1; }
+.cv__glass { fill: var(--surface-inset); stroke: var(--border); stroke-width: 1; }
+.cv__roof { fill: var(--surface); stroke: var(--border); stroke-width: 1; }
+.cv__part { fill: var(--surface-inset); stroke: var(--border); stroke-width: 1.2; transition: fill 160ms ease-out, stroke 160ms ease-out; outline: none; }
+.cv__part.is-open { fill: color-mix(in srgb, var(--warn) 38%, transparent); stroke: var(--warn); }
+.cv__door { fill: var(--surface-strong); stroke: var(--border-strong); stroke-width: 1.4; transition: transform 320ms var(--ease), fill 160ms ease-out, stroke 160ms ease-out; outline: none; }
+.cv__hit { fill: transparent; stroke: none; }
+.cv__door--l.is-open { transform: rotate(34deg); }
+.cv__door--r.is-open { transform: rotate(-34deg); }
+.cv__door.is-open { fill: color-mix(in srgb, var(--warn) 55%, transparent); stroke: var(--warn); }
+.cv[data-demo="on"] [data-part] { cursor: pointer; }
+.cv__part:focus-visible, .cv__door:focus-visible { stroke: var(--text); stroke-width: 2.5; }
+
+.lamp { fill: var(--text-faint); transition: fill 160ms ease-out, filter 160ms ease-out; }
+.lamp--head.is-on { fill: var(--lamp); filter: drop-shadow(0 0 6px var(--lamp)); }
+.lamp--brake.is-on { fill: #ff3b30; opacity: 0.55; }
+.lamp--brake.is-hard { opacity: 1; filter: drop-shadow(0 0 6px #ff3b30); }
+.lamp--rev.is-on { fill: #fff; filter: drop-shadow(0 0 6px #fff); }
+.lamp--turn.is-blink { animation: cvBlink 800ms steps(1, end) infinite; }
+@keyframes cvBlink { 0%, 49% { fill: var(--fog); filter: drop-shadow(0 0 6px var(--fog)); } 50%, 100% { fill: var(--text-faint); filter: none; } }
+
+.cv__sum { text-align: center; font-size: 0.85rem; color: var(--text-dim); }
+.cv__sum[data-state="warn"] { color: var(--warn); }
+
+.cv__lights { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.45rem; }
+.lchip {
+  display: inline-flex; align-items: center; gap: 0.45rem; min-height: 2.4rem; padding: 0 0.85rem;
+  border-radius: var(--radius-pill); background: var(--surface-inset); border: 1px solid var(--border);
+  font-size: 0.75rem; color: var(--text-dim); touch-action: manipulation;
+  transition: transform 160ms ease-out, border-color 160ms ease-out, color 160ms ease-out;
+}
+.lchip i { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--text-faint); transition: background 160ms ease-out, box-shadow 160ms ease-out; }
+.lchip[aria-pressed="true"] { color: var(--text); border-color: var(--c, var(--border-strong)); }
+.lchip[aria-pressed="true"] i { background: var(--c, var(--text)); box-shadow: 0 0 0.6rem var(--c, transparent); }
+.lchip[data-light="head"] { --c: var(--info); } .lchip[data-light="brake"] { --c: #ff3b30; } .lchip[data-light="reverse"] { --c: var(--text); }
+.lchip[data-light="turnL"], .lchip[data-light="turnR"] { --c: var(--fog); } .lchip[data-light="hazard"] { --c: var(--warn); }
+.lchip:disabled { opacity: 1; pointer-events: none; }
+.cv[data-demo="on"] .lchip:active { transform: scale(0.97); }
+
+/* ---------- Viaje ---------- */
+.cv__trip { display: flex; flex-direction: column; gap: 0.8rem; }
+.cv__trip-main { display: flex; align-items: baseline; gap: 0.5rem; font-size: 3.4rem; font-weight: 300; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.cv__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }
+.cv__stats > div { padding: 0.6rem 0.8rem; border-radius: var(--radius-md); background: var(--surface-inset); display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.cv__stats small { font-size: 0.68rem; color: var(--text-dim); }
+.cv__stats b { font-weight: 400; font-size: 1.15rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cv__stats em { font-style: normal; font-size: 0.7rem; color: var(--text-dim); }
+.cv__note { font-size: 0.75rem; color: var(--text-dim); }
+.cv__note[hidden] { display: none; }
+
+/* ---------- Mantenimiento ---------- */
+.cv__maint { display: flex; flex-direction: column; gap: 0.8rem; }
+.cv__odo { display: flex; align-items: center; gap: 0.5rem; }
+.cv__odo-lbl { font-size: 0.72rem; color: var(--text-dim); }
+.cv__odo b { font-weight: 400; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.cv__odo-u { font-size: 0.72rem; color: var(--text-dim); }
+.cv__odo-form { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.cv__odo-form[hidden] { display: none; }
+.cv__odo-form .set-input { flex: 1 1 10rem; min-width: 0; min-height: 2.8rem; }
+.cv__svc { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+.svc { --c: var(--ok); padding: 0.8rem 0.9rem; border-radius: var(--radius-md); background: var(--surface-inset); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.55rem; min-width: 0; transition: border-color 160ms ease-out; }
+.svc[data-state="warn"] { --c: var(--warn); border-color: var(--warn); }
+.svc[data-state="bad"] { --c: var(--bad); border-color: var(--bad); }
+.svc[data-state="none"] { --c: var(--text-faint); }
+.svc__top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.svc__name { font-size: 0.9rem; min-width: 0; line-height: 1.2; }
+.svc__btn { min-height: 2.2rem; padding: 0 0.8rem; font-size: 0.72rem; flex: none; }
+.svc__bar { height: 0.35rem; border-radius: var(--radius-pill); background: var(--track-bg); overflow: hidden; }
+.svc__bar > i { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--c); transition: width 320ms var(--ease), background 160ms ease-out; }
+.svc__sub { font-size: 0.7rem; color: var(--text-dim); }
+
+.cv button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+/* ---------- Tarjeta de puertas en Inicio ---------- */
+.card--doors .btn-round { transition: transform 160ms ease-out, background 160ms ease-out, border-color 160ms ease-out, color 160ms ease-out; }
+.card--doors[data-locked="false"] .btn-round { border-color: var(--warn); color: var(--warn); }
+.card--doors[data-open="true"] .doors__state { color: var(--warn); }
+
+/* ---------- Pantallas estrechas y verticales ---------- */
+@container carview (max-width: 56rem) {
+  .cv { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; height: auto; grid-template-areas: "alerts" "diagram" "trip" "maint"; }
+}
+@container carview (max-width: 34rem) {
+  .cv__svc { grid-template-columns: minmax(0, 1fr); }
+  .cv__trip-main { font-size: 3.2rem; }
+  .cv__stage { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 0.4rem; }
+  .tire { padding: 0.45rem 0.55rem; }
+  .tire__val { font-size: 0.9rem; }
+  .cv__alerts-list { display: none; }
+}
+
+/* Icono de alerta de la barra superior: tocable cuando hay algo que revisar */
+#sb-alert:not(.is-off) { cursor: pointer; }
+#sb-alert:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 4px; }

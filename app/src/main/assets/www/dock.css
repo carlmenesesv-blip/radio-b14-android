@@ -1,0 +1,58 @@
+/* ==========================================================
+   DOCK — barra de navegación flotante + selector de tema
+   Sección: NAVEGACIÓN
+   ========================================================== */
+
+.dock {
+  display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  padding: 0.4rem;
+  width: 4.2rem;
+  align-self: center;
+  max-height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
+  background: var(--dock-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  backdrop-filter: blur(calc(var(--blur) + 4px)) saturate(150%);
+  -webkit-backdrop-filter: blur(calc(var(--blur) + 4px)) saturate(150%);
+  box-shadow: var(--shadow);
+  transition: background var(--dur) var(--ease);
+}
+
+/* Selector sol / luna */
+.theme-switch {
+  display: flex; flex-direction: column; gap: 0.2rem;
+  padding: 0.2rem; border-radius: var(--radius-pill);
+  background: var(--surface-inset);
+}
+.theme-switch__btn {
+  width: 2.9rem; height: 2.9rem; border-radius: 50%;
+  display: grid; place-items: center; color: var(--text-dim);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.theme-switch__btn[aria-pressed="true"] { background: var(--dock-active-bg); color: var(--dock-active-fg); }
+.theme-switch__btn:active { transform: scale(0.92); }
+
+.dock__divider { width: 70%; height: 1px; background: var(--border-strong); margin: 0.1rem 0; }
+
+.dock__nav { display: flex; flex-direction: column; gap: 0.3rem; }
+.dock__btn {
+  width: 3.2rem; height: 3.2rem; border-radius: 50%;
+  display: grid; place-items: center; color: var(--text-dim);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.dock__btn:active { transform: scale(0.92); }
+.dock__btn[aria-current="page"] { background: var(--dock-active-bg); color: var(--dock-active-fg); }
+
+/* Pantalla vertical: el dock pasa abajo en horizontal */
+@media (orientation: portrait) {
+  .dock { flex-direction: row; width: auto; align-self: center; justify-content: center; }
+  .theme-switch { flex-direction: row; }
+  .dock__divider { width: 1px; height: 2rem; margin: 0 0.1rem; }
+  .dock__nav { flex-direction: row; }
+}
+
+/* Área táctil mínima de ~44 px aunque el botón se vea más pequeño (pantallas chicas) */
+.dock__btn, .theme-switch__btn { position: relative; }
+.dock__btn::after, .theme-switch__btn::after { content: ""; position: absolute; inset: calc((100% - max(100%, 44px)) / 2); }

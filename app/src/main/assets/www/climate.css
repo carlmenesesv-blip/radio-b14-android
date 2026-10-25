@@ -1,0 +1,197 @@
+/* ==========================================================
+   CLIMATE — climatización (aire acondicionado)
+   Zonas conductor / pasajero, ventilador, dirección del aire y
+   funciones. Usa .card, .btn-round, .btn-pill y los tokens del sistema.
+   Sección: CLIMATIZACIÓN
+   ========================================================== */
+
+.view--climate {
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  container-type: inline-size;
+  container-name: climview;
+}
+.view--climate::-webkit-scrollbar { display: none; }
+
+.clim {
+  --cold: var(--fan);
+  --hot: #ff4a3d;
+  height: 100%; min-height: 30rem;
+  display: grid; gap: var(--gap);
+  grid-template-columns: minmax(0, 3fr) minmax(0, 6fr) minmax(0, 3fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+/* ---------- Zonas ---------- */
+.clim__zone {
+  display: flex; flex-direction: column; justify-content: space-between; gap: 0.9rem;
+  container-type: inline-size;
+}
+.clim__zh { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; min-height: 2.2rem; }
+.clim__zh .card__label { margin: 0; }
+.clim__sync { min-height: 2.2rem; padding: 0 0.8rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.35rem; }
+.clim__sync svg.icon { width: 1rem; height: 1rem; }
+.clim__sync[aria-pressed="true"], .clim__auto[aria-pressed="true"] { background: var(--dock-active-bg); color: var(--dock-active-fg); }
+
+.clim__temp { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.clim__step { width: 3rem; height: 3rem; flex: none; touch-action: manipulation; user-select: none; }
+.clim__val {
+  display: flex; align-items: flex-start; justify-content: center; min-width: 0;
+  font-size: 4.2rem; font-size: min(4.6rem, 24cqw);
+  font-weight: 300; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums;
+  transition: color 160ms ease-out;
+}
+.clim__deg { font-size: 0.32em; font-weight: 400; letter-spacing: 0; color: var(--text-dim); margin: 0.25em 0 0 0.12em; }
+.clim__val[data-tone="cold"] { color: var(--fan-ink); }
+.clim__val[data-tone="hot"] { color: var(--hot); }
+
+/* Barra de temperatura (frío → calor) */
+.clim__range {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 2.6rem; margin: 0; background: transparent; cursor: pointer; outline: none;
+  touch-action: pan-y; --th: 1.9rem;
+}
+.clim__range::-webkit-slider-runnable-track { height: 0.55rem; border-radius: var(--radius-pill); background: linear-gradient(90deg, var(--cold), var(--text-faint) 50%, var(--hot)); }
+.clim__range::-moz-range-track { height: 0.55rem; border-radius: var(--radius-pill); background: linear-gradient(90deg, var(--cold), var(--text-faint) 50%, var(--hot)); }
+.clim__range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: var(--th); height: var(--th); border-radius: 50%;
+  margin-top: calc((0.55rem - var(--th)) / 2);
+  background: var(--dock-active-bg); border: 3px solid var(--bg); box-shadow: 0 0 0 1px var(--border-strong), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+.clim__range::-moz-range-thumb {
+  width: var(--th); height: var(--th); border-radius: 50%;
+  background: var(--dock-active-bg); border: 3px solid var(--bg); box-shadow: 0 0 0 1px var(--border-strong), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+.clim__range:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--text); outline-offset: 2px; }
+.clim__range:focus-visible::-moz-range-thumb { outline: 2px solid var(--text); outline-offset: 2px; }
+
+/* Calefacción de asiento */
+.heat {
+  width: 100%; min-height: 3.2rem; padding: 0 1rem; border-radius: var(--radius-pill);
+  display: flex; align-items: center; gap: 0.7rem;
+  background: var(--surface-inset); border: 1px solid var(--border); color: var(--text-dim);
+  font-size: 0.85rem; touch-action: manipulation;
+  transition: transform 160ms ease-out, background 160ms ease-out, color 160ms ease-out, border-color 160ms ease-out;
+}
+.heat:active { transform: scale(0.97); }
+.heat__txt { flex: 1; text-align: left; }
+.heat__lv { display: inline-flex; align-items: flex-end; gap: 0.2rem; height: 1.1rem; }
+.heat__lv i { display: block; width: 0.35rem; border-radius: 2px; background: var(--track-bg); transition: background 160ms ease-out; }
+.heat__lv i:nth-child(1) { height: 40%; } .heat__lv i:nth-child(2) { height: 70%; } .heat__lv i:nth-child(3) { height: 100%; }
+.heat[data-lv="1"], .heat[data-lv="2"], .heat[data-lv="3"] { color: var(--text); border-color: var(--hot); background: color-mix(in srgb, var(--hot) 16%, transparent); }
+.heat[data-lv="1"] .heat__lv i:nth-child(-n+1),
+.heat[data-lv="2"] .heat__lv i:nth-child(-n+2),
+.heat[data-lv="3"] .heat__lv i { background: var(--hot); }
+.heat[data-lv="1"] svg.icon, .heat[data-lv="2"] svg.icon, .heat[data-lv="3"] svg.icon { color: var(--hot); }
+
+/* ---------- Centro ---------- */
+.clim__center { display: flex; flex-direction: column; justify-content: space-between; gap: 1rem; container-type: inline-size; }
+.clim__top { display: flex; align-items: center; gap: 0.9rem; }
+.clim__power { width: 3.2rem; height: 3.2rem; flex: none; }
+.clim__power[aria-pressed="true"] { background: var(--dock-active-bg); color: var(--dock-active-fg); }
+.clim__info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.clim__cabin { font-size: 1.35rem; font-weight: 400; }
+.clim__temps { display: flex; align-items: center; flex-wrap: wrap; gap: 0.45rem; font-size: 0.8rem; color: var(--text-dim); }
+.clim__temps b { font-weight: 500; color: var(--text); font-variant-numeric: tabular-nums; }
+.clim__dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-faint); }
+.clim__auto { display: inline-flex; align-items: center; gap: 0.45rem; flex: none; }
+.clim__auto svg.icon { width: 1.1rem; height: 1.1rem; }
+
+.clim__fan { display: flex; align-items: center; gap: 0.9rem; }
+.clim__fstep { width: 3.2rem; height: 3.2rem; flex: none; touch-action: manipulation; }
+.clim__fanbody { flex: 1; min-width: 0; display: flex; align-items: center; gap: 1rem; }
+.clim .clim__fanico { width: 2.6rem; height: 2.6rem; flex: none; color: var(--fan-ink); fill: currentColor; stroke: none; }
+.clim .clim__fanico.is-spin { animation: climspin calc(2.6s / var(--lv, 1)) linear infinite; }
+@keyframes climspin { to { transform: rotate(360deg); } }
+.clim__levels { flex: 1; display: flex; align-items: flex-end; gap: 0.35rem; height: 3.6rem; }
+.clim__levels button {
+  flex: 1; min-width: 1.6rem; height: 100%; display: flex; align-items: flex-end; touch-action: manipulation;
+  border-radius: 0.5rem;
+}
+.clim__levels button::before {
+  content: ""; display: block; width: 100%; border-radius: 0.4rem; background: var(--track-bg);
+  height: calc(22% + var(--n) * 11%);
+  transition: background 160ms ease-out, transform 160ms ease-out;
+}
+.clim__levels button:active::before { transform: scaleY(0.94); }
+.clim__levels button:nth-child(1) { --n: 0; } .clim__levels button:nth-child(2) { --n: 1; } .clim__levels button:nth-child(3) { --n: 2; }
+.clim__levels button:nth-child(4) { --n: 3; } .clim__levels button:nth-child(5) { --n: 4; } .clim__levels button:nth-child(6) { --n: 5; } .clim__levels button:nth-child(7) { --n: 6; }
+.clim__levels button.is-on::before { background: var(--fan); }
+.clim__fanval { flex: none; width: 4.2rem; display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+.clim__fanval span { font-size: 2.2rem; font-weight: 300; font-variant-numeric: tabular-nums; }
+.clim__fanval small { font-size: 0.7rem; color: var(--text-dim); }
+
+/* Dirección del aire */
+.clim__modes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.6rem; }
+.mode {
+  min-height: 5rem; padding: 0.6rem 0.4rem; border-radius: var(--radius-md);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.4rem;
+  background: var(--surface-inset); border: 1px solid var(--border); color: var(--text-dim);
+  font-size: 0.72rem; line-height: 1.2; text-align: center; touch-action: manipulation;
+  transition: transform 160ms ease-out, background 160ms ease-out, color 160ms ease-out;
+}
+.mode svg.icon { width: 1.7rem; height: 1.7rem; }
+.mode:active { transform: scale(0.97); }
+.mode[aria-pressed="true"] { background: var(--dock-active-bg); color: var(--dock-active-fg); border-color: transparent; }
+
+/* ---------- Funciones ---------- */
+.clim__tiles { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.7rem; padding: 0.8rem; }
+.tile {
+  --c: var(--fan); --ci: var(--fan-ink);
+  min-height: 4.6rem; padding: 0.6rem 0.8rem; border-radius: var(--radius-md);
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 0.7rem; align-items: center; text-align: left;
+  background: var(--surface-inset); border: 1px solid var(--border); color: var(--text-dim);
+  touch-action: manipulation;
+  transition: transform 160ms ease-out, background 160ms ease-out, border-color 160ms ease-out, color 160ms ease-out;
+}
+.tile svg.icon { grid-row: 1 / span 2; width: 1.7rem; height: 1.7rem; }
+.tile__t { font-size: 0.85rem; color: var(--text); align-self: end; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile__s { font-size: 0.7rem; align-self: start; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile:active { transform: scale(0.97); }
+#clim-dfront, #clim-drear { --c: var(--fog); --ci: var(--fog-ink); }
+#clim-wheel { --c: var(--hot); --ci: var(--hot); }
+.tile[aria-pressed="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--text); }
+.tile[aria-pressed="true"] svg.icon { color: var(--ci); }
+
+/* ---------- Apagado ---------- */
+.clim[data-power="off"] .clim__zone > *:not(.clim__zh),
+.clim[data-power="off"] .clim__fan,
+.clim[data-power="off"] .clim__modes,
+.clim[data-power="off"] .clim__info { opacity: 0.4; }
+.clim[data-power="off"] .tile:not(#clim-dfront):not(#clim-drear) { opacity: 0.4; }
+.clim__zone > *, .clim__fan, .clim__modes, .clim__info, .tile { transition-property: opacity, transform, background, border-color, color; transition-duration: 160ms; transition-timing-function: ease-out; }
+
+/* Sin sincronizar, el pasajero conserva su propia temperatura; sincronizado, sigue al conductor */
+.clim[data-sync="on"] [data-zone="pass"] .clim__range { opacity: 0.85; }
+
+.clim button:focus-visible, .view--climate .heat:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+/* ---------- Pantallas estrechas y verticales ---------- */
+@container climview (max-width: 52rem) {
+  .clim { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto auto auto; height: auto; }
+  .clim__center { grid-column: 1 / -1; grid-row: 1; }
+  .clim__zone[data-zone="driver"] { grid-column: 1; grid-row: 2; }
+  .clim__zone[data-zone="pass"] { grid-column: 2; grid-row: 2; }
+  .clim__tiles { grid-row: 3; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@container climview (max-width: 34rem) {
+  .clim__zone[data-zone="driver"], .clim__zone[data-zone="pass"] { grid-column: 1 / -1; }
+  .clim__zone[data-zone="driver"] { grid-row: 2; }
+  .clim__zone[data-zone="pass"] { grid-row: 3; }
+  .clim__tiles { grid-row: 4; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .clim__fanico { display: none; }
+  .mode { min-height: 4.4rem; }
+}
+
+/* Centro estrecho: sin icono del ventilador para que las 7 velocidades sean tocables */
+@container (max-width: 36rem) {
+  .clim .clim__fanico { display: none; }
+  .clim__fanbody { gap: 0.6rem; }
+  .clim__fanval { width: 3.2rem; }
+  .clim__fan { gap: 0.5rem; }
+}
+@container (max-width: 28rem) {
+  .clim__fstep { width: 2.8rem; height: 2.8rem; }
+  .clim__levels { gap: 0.2rem; }
+}

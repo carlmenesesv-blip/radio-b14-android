@@ -1,0 +1,151 @@
+/* ==========================================================
+   RADIO — sintonizador FM / AM
+   Usa .seg y .btn-pill definidos en settings.css
+   Sección: RADIO
+   ========================================================== */
+
+.view--radio {
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  container-type: inline-size;
+  container-name: radioview;
+}
+.view--radio::-webkit-scrollbar { display: none; }
+
+.radio {
+  height: 100%;
+  min-height: 31rem;
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+/* ---------- Sintonizador ---------- */
+.radio__tuner {
+  grid-column: 1 / span 8; grid-row: 1 / span 2;
+  display: flex; flex-direction: column; justify-content: space-between; gap: 0.9rem;
+  container-type: inline-size;
+}
+
+.radio__top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.radio__band { width: 11rem; flex: none; }
+.radio__meta { display: flex; align-items: center; gap: 0.9rem; }
+.radio__stereo:not(.is-on) { visibility: hidden; }
+
+.radio__signal { display: inline-flex; align-items: flex-end; gap: 0.2rem; height: 1.2rem; }
+.radio__signal i { display: block; width: 0.32rem; border-radius: 2px; background: var(--track-bg); transition: background 160ms ease-out; }
+.radio__signal i:nth-child(1) { height: 30%; }
+.radio__signal i:nth-child(2) { height: 55%; }
+.radio__signal i:nth-child(3) { height: 78%; }
+.radio__signal i:nth-child(4) { height: 100%; }
+.radio__signal i.is-on { background: var(--text); }
+
+.radio__display { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; text-align: center; transition: opacity 160ms ease-out; }
+.radio__freq {
+  font-size: 5rem; font-size: min(5.5rem, 15cqw);
+  font-weight: 300; line-height: 1; letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.radio__name { font-size: 1.5rem; font-weight: 400; }
+.radio__rds { font-size: 0.85rem; color: var(--text-dim); }
+.radio[data-power="off"] .radio__display { opacity: 0.45; }
+
+/* ---------- Dial ---------- */
+.radio__dial {
+  position: relative; height: 5rem;
+  margin-inline: calc(var(--pad) * -1);
+  touch-action: none; cursor: grab; user-select: none;
+}
+.radio__dial:active { cursor: grabbing; }
+.radio__canvas {
+  display: block; width: 100%; height: 100%;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+}
+.radio__needle {
+  position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px;
+  border-radius: 2px; background: var(--accent); pointer-events: none;
+  transition: opacity 160ms ease-out;
+}
+.radio[data-power="off"] .radio__needle { opacity: 0.35; }
+
+/* ---------- Controles ---------- */
+.radio__controls { display: flex; align-items: center; justify-content: center; gap: 1rem; }
+.radio__btn { width: 3.4rem; height: 3.4rem; touch-action: manipulation; }
+.radio__btn:active, .radio__power:active { transform: scale(0.97); }
+.radio__power {
+  width: 4.8rem; height: 4.8rem; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--dock-active-bg); color: var(--dock-active-fg);
+  touch-action: manipulation;
+  transition: transform 160ms ease-out, background 160ms ease-out;
+}
+.radio__power svg.icon { width: 1.8rem; height: 1.8rem; }
+.radio__power .ico-pause { display: none; }
+.radio__power[aria-pressed="true"] .ico-play { display: none; }
+.radio__power[aria-pressed="true"] .ico-pause { display: block; }
+
+.radio__actions { display: flex; justify-content: center; gap: 0.7rem; flex-wrap: wrap; }
+.radio .btn-pill[aria-pressed="true"] { background: var(--dock-active-bg); color: var(--dock-active-fg); }
+
+/* ---------- Presets ---------- */
+.radio__presets { grid-column: 9 / span 4; grid-row: 1; display: flex; flex-direction: column; gap: 0.8rem; }
+.radio__preset-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }
+.radio__preset {
+  min-height: 4rem; padding: 0.4rem;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-inset); border: 1px solid var(--border);
+  touch-action: manipulation; user-select: none; -webkit-touch-callout: none;
+  transition: background 160ms ease-out, color 160ms ease-out, transform 160ms ease-out;
+}
+.radio__preset:active { transform: scale(0.97); }
+.radio__preset[aria-pressed="true"] { background: var(--dock-active-bg); color: var(--dock-active-fg); border-color: transparent; }
+.radio__preset.is-empty { color: var(--text-dim); border-style: dashed; border-color: var(--border-strong); background: transparent; }
+.radio__preset-freq { font-size: 1.2rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.radio__preset-name { max-width: 100%; font-size: 0.66rem; opacity: 0.65; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-align: center; }
+.radio__preset svg.icon { width: 1.2rem; height: 1.2rem; }
+.radio__preset-grid[data-saving] .radio__preset { outline: 2px dashed var(--text-dim); outline-offset: -5px; }
+.radio__hint { font-size: 0.72rem; color: var(--text-dim); min-height: 1.2em; }
+
+/* ---------- Estaciones ---------- */
+.radio__stations { grid-column: 9 / span 4; grid-row: 2; display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
+.radio__list {
+  list-style: none; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 1.6rem), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 1.6rem), transparent);
+}
+.radio__list::-webkit-scrollbar { display: none; }
+.radio__station {
+  display: flex; align-items: center; gap: 0.8rem; width: 100%; min-height: 3.2rem;
+  padding: 0.3rem 0.6rem; border-radius: var(--radius-md); text-align: left;
+  touch-action: manipulation;
+  transition: background 160ms ease-out, transform 160ms ease-out;
+}
+.radio__station:active { transform: scale(0.98); }
+.radio__station[aria-pressed="true"] { background: var(--track-bg); }
+.radio__station-freq { flex: none; width: 3.8rem; font-size: 1rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.radio__station-txt { min-width: 0; }
+.radio__station-name { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.radio__station-genre { font-size: 0.68rem; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.radio__empty { padding: 1rem 0.6rem; font-size: 0.8rem; color: var(--text-dim); }
+.radio__note { font-size: 0.68rem; color: var(--text-dim); }
+
+/* ---------- Búsqueda en curso: bloquea lo que no debe tocarse ---------- */
+.radio[data-scanning] :is(.radio__band, .radio__dial, .radio__btn, .radio__preset-grid, .radio__list, #radio-save) {
+  pointer-events: none; opacity: 0.45;
+}
+
+/* ---------- Foco de teclado ---------- */
+.radio button:focus-visible, .radio__dial:focus-visible, .radio__preset:focus-visible {
+  outline: 2px solid var(--text); outline-offset: 2px;
+}
+
+/* ---------- Espacio reducido (pantalla angosta o texto grande) ---------- */
+@container radioview (max-width: 58rem) {
+  .radio { height: auto; min-height: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .radio__tuner, .radio__presets, .radio__stations { grid-column: 1; grid-row: auto; }
+  .radio__list { max-height: 22rem; }
+}

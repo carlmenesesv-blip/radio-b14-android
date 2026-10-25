@@ -1,0 +1,110 @@
+/* ==========================================================
+   BASE — reset, escala adaptable, shell, barra superior, tarjeta base
+   Sección: ESTRUCTURA GENERAL
+   ========================================================== */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  /* Escala adaptable: todo el UI usa rem, así se ajusta a cualquier pantalla */
+  font-size: calc(clamp(11px, min(1.55vw, 2.5vh), 24px) * var(--text-scale, 1));
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+svg.icon { width: 1.4rem; height: 1.4rem; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- Fondo con luz ---------- */
+.bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.bg__glow {
+  position: absolute; border-radius: 50%; filter: blur(90px);
+  opacity: var(--glow-opacity);
+  transition: opacity var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.bg__glow--a { width: 55vmax; height: 55vmax; left: 8%; top: -18%; background: radial-gradient(circle, var(--glow-a), transparent 65%); }
+.bg__glow--b { width: 45vmax; height: 45vmax; right: -12%; bottom: -22%; background: radial-gradient(circle, var(--glow-b), transparent 65%); }
+
+/* ---------- Shell ---------- */
+.shell {
+  position: relative; z-index: 1;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--gap);
+  padding: var(--gap);
+}
+
+.stage { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; min-height: 0; }
+
+/* ---------- Barra superior ---------- */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 0.4rem; min-height: 2.2rem;
+}
+.topbar__title { font-size: 1.15rem; font-weight: 500; letter-spacing: 0.01em; }
+.topbar__sub { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.1rem; }
+.topbar__status { display: flex; align-items: center; gap: 1.2rem; font-size: 0.9rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.topbar__status strong { color: var(--text); font-weight: 500; }
+
+/* ---------- Vistas ---------- */
+.views { position: relative; flex: 1; min-height: 0; }
+.view { position: absolute; inset: 0; opacity: 0; visibility: hidden; transform: translateY(0.6rem); transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease), visibility 0s linear var(--dur); }
+.view.is-active { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+
+.placeholder { height: 100%; display: grid; place-items: center; text-align: center; color: var(--text-dim); }
+.placeholder h2 { font-size: 1.6rem; font-weight: 400; color: var(--text); margin-bottom: 0.4rem; }
+
+/* ---------- Tarjeta base (glass) ---------- */
+.card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--pad);
+  backdrop-filter: blur(var(--blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(140%);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  min-width: 0; min-height: 0;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.card__label { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-dim); letter-spacing: 0.02em; }
+.card__label::before { content: ""; width: 2px; height: 0.9em; border-radius: 2px; background: var(--accent); }
+.card__value { font-weight: 300; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.card__unit { font-size: 0.4em; color: var(--text-dim); margin-left: 0.25em; letter-spacing: 0; }
+
+.chip { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.7rem; border-radius: var(--radius-pill); background: var(--surface-inset); font-size: 0.72rem; color: var(--text-dim); }
+
+.btn-round {
+  width: 2.6rem; height: 2.6rem; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--surface-strong); border: 1px solid var(--border);
+  transition: transform var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.btn-round:active { transform: scale(0.92); }
+
+/* ---------- Pantalla vertical ---------- */
+@media (orientation: portrait) {
+  html { font-size: calc(clamp(11px, min(2.6vw, 1.6vh), 24px) * var(--text-scale, 1)); }
+  .shell { grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr) auto; }
+  .stage { grid-column: 1; grid-row: 1; }
+  .dock  { grid-column: 1; grid-row: 2; justify-self: center; }
+  .vol   { grid-column: 2; grid-row: 1 / span 2; }
+}
