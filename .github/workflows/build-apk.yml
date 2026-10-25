@@ -3,6 +3,8 @@ on:
   workflow_dispatch:
   push:
     branches: [ main, master ]
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -20,3 +22,10 @@ jobs:
         with:
           name: RadioB14-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+      - name: Publicar en Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk RadioB14.apk
+          gh release delete apk-latest --yes --cleanup-tag || true
+          gh release create apk-latest RadioB14.apk --title "Radio B14 (APK)" --notes "APK de depuración compilado automáticamente. Instálalo y elige Radio B14 como pantalla de inicio."
