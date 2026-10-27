@@ -4,10 +4,16 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.media.AudioManager
+import android.net.wifi.WifiManager
+import android.bluetooth.BluetoothManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -46,6 +52,24 @@ class MainActivity : Activity() {
     private var fileCallback: ValueCallback<Array<Uri>>? = null
     private var customView: View? = null
     private var customCallback: WebChromeClient.CustomViewCallback? = null
+
+    // Avisa a la interfaz cuando se instala, actualiza o desinstala una app (el cajón se refresca solo)
+    private val pkgReceiver = object : BroadcastReceiver() {
+        override fun onReceive(ctx: Context, intent: Intent) {
+            if (intent.getBooleanExtra(Intent.EXTRA_REPLACING, false) && intent.action == Intent.ACTION_PACKAGE_REMOVED) return
+            web.post { web.evaluateJavascript("window.dispatchEvent(new Event('radio:appschanged'))", null) }
+        }
+    }
+
+    private val prefs by lazy { getSharedPreferences("radiob14", Context.MODE_PRIVATE) }
+    private val audio by lazy { getSystemService(Context.AUDIO_SERVICE) as AudioManager }
+
+    private fun canOverlay() = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)
+    private fun floatingWanted() = prefs.getBoolean("floating", true) && canOverlay()
+    private fun showFloating(on: Boolean) {
+        val i = Intent(this, FloatingHomeService::class.java)
+        try { if (on) startService(i) else stopService(i) } catch (e: Exception) { }
+    }
 
     companion object {
         private const val HOST = "appassets.androidplatform.net"
@@ -140,6 +164,11 @@ class MainActivity : Activity() {
             }
         }
 
+        registerReceiver(pkgReceiver, IntentFilter().apply {
+            addAction(Intent.ACTION_PACKAGE_ADDED); addAction(Intent.ACTION_PACKAGE_REMOVED); addAction(Intent.ACTION_PACKAGE_REPLACED)
+            addDataScheme("package")
+        })
+
         if (savedInstanceState != null) web.restoreState(savedInstanceState) else web.loadUrl(HOME_URL)
         applyImmersive()
     }
@@ -181,11 +210,12 @@ class MainActivity : Activity() {
         if (web.canGoBack()) web.goBack()
     }
 
-    override fun onResume() { super.onResume(); web.onResume(); applyImmersive() }
-    override fun onPause() { web.onPause(); super.onPause() }
+    override fun onResume() { super.onResume(); web.onResume(); applyImmersive(); showFloating(false) }
+    // Al salir a otra app (Spotify, Waze…) aparece el botón flotante para volver
+    override fun onPause() { web.onPause(); if (floatingWanted() && !isFinishing) showFloating(true); super.onPause() }
     override fun onWindowFocusChanged(hasFocus: Boolean) { super.onWindowFocusChanged(hasFocus); if (hasFocus) applyImmersive() }
     override fun onSaveInstanceState(outState: Bundle) { super.onSaveInstanceState(outState); web.saveState(outState) }
-    override fun onDestroy() { root.removeAllViews(); web.destroy(); super.onDestroy() }
+    override fun onDestroy() { try { unregisterReceiver(pkgReceiver) } catch (e: Exception) { }; root.removeAllViews(); web.destroy(); super.onDestroy() }
 
     @Suppress("DEPRECATION")
     private fun applyImmersive() {
@@ -200,6 +230,12 @@ class MainActivity : Activity() {
     private fun openExternal(uri: Uri) {
         try { startActivity(Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
         catch (e: ActivityNotFoundException) { /* sin navegador instalado */ }
+    }
+
+    private fun isDefaultHome(): Boolean {
+        val i = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        val r = packageManager.resolveActivity(i, PackageManager.MATCH_DEFAULT_ONLY)
+        return r?.activityInfo?.packageName == packageName
     }
 
     private fun isInstalled(pkg: String): Boolean =
@@ -246,6 +282,102 @@ class MainActivity : Activity() {
                 try { startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (e: Exception) { }
             }
         }
+
+        /** Pantalla «Información de la app» de Android. */
+        @JavascriptInterface
+        fun appInfo(pkg: String) {
+            runOnUiThread {
+                try {
+                    startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                } catch (e: Exception) { }
+            }
+        }
+
+        /** Pide a Android desinstalar la app (Android muestra su propia confirmación). */
+        @JavascriptInterface
+        fun uninstall(pkg: String) {
+            runOnUiThread {
+                try {
+                    startActivity(Intent(Intent.ACTION_DELETE, Uri.parse("package:$pkg")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                } catch (e: Exception) { }
+            }
+        }
+
+        /** Estado real del sistema: {vol, mute, bright, wifi, bt, overlay, writeSettings, floating, home}. */
+        @JavascriptInterface
+        fun sys(): String {
+            val o = JSONObject()
+            try {
+                val max = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
+                o.put("vol", Math.round(audio.getStreamVolume(AudioManager.STREAM_MUSIC) * 100f / max))
+                o.put("mute", if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) audio.isStreamMute(AudioManager.STREAM_MUSIC) else false)
+            } catch (e: Exception) { }
+            try {
+                val b = Settings.System.getInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS)
+                o.put("bright", Math.round(b * 100f / 255f))
+            } catch (e: Exception) { }
+            try { o.put("wifi", (applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager).isWifiEnabled) } catch (e: Exception) { }
+            try { o.put("bt", (getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter?.isEnabled == true) } catch (e: Exception) { }
+            o.put("overlay", canOverlay())
+            o.put("writeSettings", Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.System.canWrite(this@MainActivity))
+            o.put("floating", prefs.getBoolean("floating", true))
+            o.put("home", isDefaultHome())
+            return o.toString()
+        }
+
+        /** Volumen de música del sistema, 0–100. */
+        @JavascriptInterface
+        fun setVolume(pct: Int) {
+            try {
+                val max = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                audio.setStreamVolume(AudioManager.STREAM_MUSIC, Math.round(pct.coerceIn(0, 100) * max / 100f), 0)
+            } catch (e: Exception) { }
+        }
+
+        @JavascriptInterface
+        fun setMute(on: Boolean) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                    audio.adjustStreamVolume(AudioManager.STREAM_MUSIC, if (on) AudioManager.ADJUST_MUTE else AudioManager.ADJUST_UNMUTE, 0)
+            } catch (e: Exception) { }
+        }
+
+        /** Brillo 5–100: de esta ventana siempre; del sistema si se concedió «Modificar ajustes del sistema». */
+        @JavascriptInterface
+        fun setBrightness(pct: Int) {
+            val p = pct.coerceIn(5, 100)
+            runOnUiThread {
+                try { window.attributes = window.attributes.apply { screenBrightness = p / 100f } } catch (e: Exception) { }
+            }
+            try {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.System.canWrite(this@MainActivity)) {
+                    Settings.System.putInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS_MODE, Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL)
+                    Settings.System.putInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS, Math.round(p * 255 / 100f))
+                }
+            } catch (e: Exception) { }
+        }
+
+        /** Abre una pantalla de ajustes de Android: wifi, bluetooth, display, sound, apps, all, home, overlay, write. */
+        @JavascriptInterface
+        fun openSettings(kind: String) {
+            val pkgUri = Uri.parse("package:$packageName")
+            val i = when (kind) {
+                "wifi" -> Intent(Settings.ACTION_WIFI_SETTINGS)
+                "bluetooth" -> Intent(Settings.ACTION_BLUETOOTH_SETTINGS)
+                "display" -> Intent(Settings.ACTION_DISPLAY_SETTINGS)
+                "sound" -> Intent(Settings.ACTION_SOUND_SETTINGS)
+                "apps" -> Intent(Settings.ACTION_APPLICATION_SETTINGS)
+                "home" -> Intent(Settings.ACTION_HOME_SETTINGS)
+                "overlay" -> Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, pkgUri)
+                "write" -> Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, pkgUri)
+                else -> Intent(Settings.ACTION_SETTINGS)
+            }.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            runOnUiThread { try { startActivity(i) } catch (e: Exception) { try { startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (x: Exception) { } } }
+        }
+
+        /** Activa o no el botón flotante «Volver al radio». */
+        @JavascriptInterface
+        fun setFloating(on: Boolean) { prefs.edit().putBoolean("floating", on).apply() }
 
         /** Apps instaladas con icono de lanzador: [{name, pkg}], sin el propio radio. */
         @JavascriptInterface

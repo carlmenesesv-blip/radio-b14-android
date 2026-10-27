@@ -27,6 +27,7 @@
     climDefrost: true,          // al desempañar: A/C, aire exterior y ventilador alto
     rearMin: 10,                // minutos del desempañador trasero (0 = sin límite)
     bootAnim: true,             // animación de inicio
+    radioResume: true,          // la radio continúa con la última emisora al encender
     oskMode: "auto",             // teclado en pantalla: auto | on | off
     appsFullscreen: true,       // las apps se abren a pantalla completa
     appsNative: true,           // intentar abrir la app instalada antes que la web
@@ -459,6 +460,7 @@
     });
     var bootSnd = row(c, "Sonido al iniciar", "Algunos navegadores lo bloquean hasta que toques la pantalla", function (id) { return toggle("bootSound", id); });
     refreshers.push(function () { bootDur.hidden = !state.bootAnim; bootSnd.hidden = !state.bootAnim; });
+    row(c, "Radio al encender", "Continúa con la última emisora al iniciar el sistema", function (id) { return toggle("radioResume", id); });
     c.appendChild(button("Ver animación", function () { var u = new URL(location.href); u.search = "?boot=1"; u.hash = ""; location.href = u.href; }));
 
     /* ----- Entrada ----- */
@@ -479,6 +481,43 @@
     c = card(mount, "");
     row(c, "Abrir a pantalla completa", "Las apps ocupan toda la pantalla; «Sistema» o Esc regresan", function (id) { return toggle("appsFullscreen", id); });
     row(c, "Usar la app instalada", "Si Spotify, Waze o Maps están instaladas, se abre esa app; si no, la web", function (id) { return toggle("appsNative", id); });
+
+    /* ----- Sistema Android (solo cuando corre como app/launcher) ----- */
+    if (window.AndroidBridge && typeof window.AndroidBridge.sys === "function") {
+      group(mount, "Sistema Android");
+      c = card(mount, "");
+      var homeHint = null, ovHint = null, wrHint = null, ovTgl = null;
+      var homeRow = row(c, "Pantalla de inicio", "", function (id) {
+        return button("Elegir Radio B14 como inicio", function () { window.RadioAndroid && window.RadioAndroid.open("home"); }, id);
+      });
+      homeHint = homeRow.querySelector(".set-item__hint") || (function () { var s = h("span", "set-item__hint", ""); homeRow.querySelector(".set-item__txt").appendChild(s); return s; })();
+      var ovRow = row(c, "Botón «Volver al radio»", "", function (id) {
+        var b = h("button", "tgl"); b.type = "button"; b.setAttribute("role", "switch"); b.setAttribute("aria-labelledby", id); b.appendChild(h("i"));
+        b.addEventListener("click", function () { window.RadioAndroid && window.RadioAndroid.setFloating(b.getAttribute("aria-checked") !== "true"); });
+        ovTgl = b; return b;
+      });
+      ovHint = (function () { var s = h("span", "set-item__hint", ""); ovRow.querySelector(".set-item__txt").appendChild(s); return s; })();
+      var wrRow = row(c, "Brillo del sistema", "", function (id) {
+        return button("Permitir cambiar el brillo", function () { window.RadioAndroid && window.RadioAndroid.open("write"); }, id);
+      });
+      wrHint = (function () { var s = h("span", "set-item__hint", ""); wrRow.querySelector(".set-item__txt").appendChild(s); return s; })();
+      function paintAndroid(i) {
+        i = i || {};
+        homeHint.textContent = i.home ? "Radio B14 ya es la pantalla de inicio." : "Para que al pulsar Inicio vuelva aquí, elígelo como inicio y marca «Siempre».";
+        ovTgl.setAttribute("aria-checked", String(i.floating !== false && i.overlay !== false));
+        ovHint.textContent = i.overlay === false ? "Falta el permiso «Mostrar sobre otras apps». Al activarlo se abre su pantalla." : "Aparece sobre otras apps para volver al radio con un toque.";
+        wrRow.hidden = i.writeSettings !== false;
+        wrHint.textContent = "Sin este permiso el brillo solo cambia dentro del radio.";
+      }
+      window.addEventListener("radio:androidsys", function (e) { paintAndroid(e.detail); });
+      paintAndroid(window.RadioAndroid ? window.RadioAndroid.info() : {});
+      var shortcuts = h("div", "set-item");
+      [["Wi‑Fi", "wifi"], ["Bluetooth", "bluetooth"], ["Pantalla", "display"], ["Sonido", "sound"], ["Apps", "apps"], ["Ajustes de Android", "all"]].forEach(function (p) {
+        shortcuts.appendChild(button(p[0], function () { window.RadioAndroid && window.RadioAndroid.open(p[1]); }));
+      });
+      shortcuts.style.flexWrap = "wrap"; shortcuts.style.gap = "0.5rem";
+      c.appendChild(shortcuts);
+    }
 
     /* ----- Vehículo ----- */
     group(mount, "Vehículo");

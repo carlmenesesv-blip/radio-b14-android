@@ -15,16 +15,18 @@
 .view--car::-webkit-scrollbar { display: none; }
 
 .cv {
-  height: 100%; min-height: 34rem;
+  min-height: max(100%, 44rem);
   display: grid; gap: var(--gap);
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  grid-template-rows: auto auto minmax(0, 1fr);
-  grid-template-areas: "alerts alerts" "diagram trip" "diagram maint";
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-areas: "alerts alerts" "diagram trip" "diagram maint" "ign mir";
 }
 .cv__alerts { grid-area: alerts; }
 .cv__diagram { grid-area: diagram; }
 .cv__trip { grid-area: trip; }
 .cv__maint { grid-area: maint; }
+.cv__ign { grid-area: ign; }
+.cv__mir { grid-area: mir; }
 
 .cv__head { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; min-height: 2.4rem; }
 .cv__head .card__label { margin: 0; }
@@ -147,7 +149,7 @@
 
 /* ---------- Pantallas estrechas y verticales ---------- */
 @container carview (max-width: 56rem) {
-  .cv { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; height: auto; grid-template-areas: "alerts" "diagram" "trip" "maint"; }
+  .cv { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; height: auto; grid-template-areas: "alerts" "diagram" "trip" "maint" "ign" "mir"; }
 }
 @container carview (max-width: 34rem) {
   .cv__svc { grid-template-columns: minmax(0, 1fr); }

@@ -1,572 +1,505 @@
 /* ==========================================================
-   RADIO — lógica del sintonizador FM / AM
-   Las estaciones son de DEMOSTRACIÓN. Para conectar un sintonizador
-   real, reemplaza STATIONS / strength() y los métodos de window.RadioTuner.
-
-   Unidades internas ("pasos"):
-     FM: 1 paso = 0,1 MHz  → 955 = 95,5 MHz   (87,5 – 108,0)
-     AM: 1 paso = 10 kHz   → 98  = 980 kHz    (530 – 1710)
+   RADIO — emisoras por internet
+   · Directorio: radio-browser.info (público, gratuito). Se muestran las
+     emisoras del país elegido (Costa Rica por defecto); el buscador puede ampliar a todo el mundo.
+   · La lista se guarda en el equipo (12 h) para abrir rápido y sin conexión.
+   · Reproducción con <audio>: se reconecta sola si el stream se corta.
+   · Una sola fuente de audio: al sonar la radio se pausa la música y el
+     Bluetooth; al sonar la música, la radio se pausa (RadioTuner.setPower).
+   Sección: RADIO
+   API: RadioTuner.get() / setPower(bool) / play(estación) / next() / prev()
+   Evento: radio:tunerchange {power, name}
    ========================================================== */
 (function () {
   "use strict";
 
-  var KEY = "radio-tuner";
+  var KEY = "radio-inet";
+  var CACHE_PREFIX = "radio-inet-cache-";
+  var COUNTRIES_KEY = "radio-inet-countries";
+  var COUNTRIES_TTL = 7 * 24 * 3600 * 1000;
+  var CACHE_TTL = 12 * 3600 * 1000;
+  var SERVERS = [
+    "https://de1.api.radio-browser.info",
+    "https://de2.api.radio-browser.info",
+    "https://nl1.api.radio-browser.info",
+    "https://at1.api.radio-browser.info"
+  ];
+  var MAX_FAVS = 30;
+
   var view = document.querySelector('[data-view="radio"]');
   if (!view) return;
-
   function $(id) { return document.getElementById(id); }
+
   var el = {
-    radio: view.querySelector(".radio"),
-    band: $("radio-band"), freq: $("radio-freq"), unit: $("radio-unit"),
+    root: $("radio"), state: $("radio-state"), fav: $("radio-fav"),
+    logo: $("radio-logo"), logoImg: $("radio-logo-img"), initial: $("radio-initial"),
     name: $("radio-name"), rds: $("radio-rds"),
-    stereo: $("radio-stereo"), signal: $("radio-signal"),
-    dial: $("radio-dial"), canvas: $("radio-canvas"),
-    prev: $("radio-seek-prev"), next: $("radio-seek-next"),
-    down: $("radio-step-down"), up: $("radio-step-up"),
-    power: $("radio-power"), save: $("radio-save"), scan: $("radio-scan"),
-    presets: $("radio-presets"), presetsLabel: $("radio-presets-label"), hint: $("radio-hint"),
-    list: $("radio-stations"), note: $("radio-list-note")
+    prev: $("radio-prev"), next: $("radio-next"), power: $("radio-power"),
+    presets: $("radio-presets"), q: $("radio-q"), cats: $("radio-cats"),
+    list: $("radio-stations"), note: $("radio-list-note"),
+    country: $("radio-country"), cc: $("radio-cc"), countryName: $("radio-country-name"),
+    cPanel: $("radio-countries"), cBack: $("radio-countries-back"), cq: $("radio-cq"), cList: $("radio-country-list"), cNote: $("radio-countries-note")
   };
 
-  var BANDS = {
-    fm: { min: 875, max: 1080, unit: "MHz", label: "FM", fmt: function (f) { return (f / 10).toFixed(1); }, tick: function (f) { return String(f / 10); } },
-    am: { min: 53, max: 171, unit: "kHz", label: "AM", fmt: function (f) { return String(f * 10); }, tick: function (f) { return String(f * 10); } }
+  var CATS = {
+    news: /news|noticia|talk|actualidad|informaci/,
+    sports: /sport|deporte|futbol|fútbol|soccer/,
+    faith: /christian|cristian|gospel|religi|catol|católic|evang|worship/,
+    music: /music|músic|musica|pop|rock|salsa|reggae|merengue|latin|hits|dance|electr|jazz|classic|bachata|reggaeton|cumbia|ranchera|oldies|top ?40|romant|balada|tropical/
   };
-
-  var STATIONS = {
-    fm: [
-      { f: 881, name: "Pop FM", genre: "Éxitos actuales" },
-      { f: 895, name: "Clásica", genre: "Música de concierto" },
-      { f: 913, name: "Noticias 24", genre: "Noticias y análisis" },
-      { f: 927, name: "Rock Nacional", genre: "Rock en español" },
-      { f: 941, name: "Tropical", genre: "Salsa y merengue" },
-      { f: 955, name: "Jazz Nocturno", genre: "Jazz y blues" },
-      { f: 967, name: "Deportes", genre: "Deportes en vivo" },
-      { f: 983, name: "Cultura", genre: "Cultura y debate" },
-      { f: 995, name: "Éxitos 90s", genre: "Hits de los 90" },
-      { f: 1011, name: "Latina", genre: "Música latina" },
-      { f: 1029, name: "Chill", genre: "Relax y lounge" },
-      { f: 1043, name: "Voces", genre: "Variedad y entrevistas" },
-      { f: 1057, name: "Retro", genre: "Clásicos de oro" },
-      { f: 1071, name: "Alternativa", genre: "Indie y alternativo" }
-    ],
-    am: [
-      { f: 54, name: "Noticias AM", genre: "Noticias" },
-      { f: 62, name: "Deportes AM", genre: "Deportes" },
-      { f: 73, name: "Comunidad", genre: "Información local" },
-      { f: 85, name: "Debate", genre: "Opinión y tertulia" },
-      { f: 98, name: "Música Popular", genre: "Música popular" },
-      { f: 109, name: "Cultura AM", genre: "Cultura y educación" },
-      { f: 123, name: "Tertulia", genre: "Conversación" },
-      { f: 138, name: "Campo", genre: "Agro y campo" },
-      { f: 152, name: "Clásicos", genre: "Música de siempre" },
-      { f: 164, name: "Opinión", genre: "Análisis" }
-    ]
-  };
-
-  var NOTE_DEFAULT = "Estaciones de demostración";
-  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------- Estado ---------- */
-  function clampF(band, f) { var b = BANDS[band]; return Math.max(b.min, Math.min(b.max, Math.round(f))); }
-
-  function defaults() {
-    return {
-      band: "fm",
-      freq: { fm: 955, am: 98 },
-      power: true,
-      presets: { fm: [881, 927, 955, 983, null, null], am: [54, 85, null, null, null, null] }
-    };
-  }
   function load() {
-    var d = defaults(), s = null;
+    var d = { station: null, favs: [], power: false, cat: "all", country: "CR" }, s = null;
     try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
     if (!s) return d;
-    if (s.band === "fm" || s.band === "am") d.band = s.band;
-    d.power = s.power !== false;
-    ["fm", "am"].forEach(function (b) {
-      if (s.freq && isFinite(s.freq[b])) d.freq[b] = clampF(b, s.freq[b]);
-      if (s.presets && Array.isArray(s.presets[b])) {
-        d.presets[b] = s.presets[b].slice(0, 6).map(function (v) { return v !== null && isFinite(v) ? clampF(b, v) : null; });
-        while (d.presets[b].length < 6) d.presets[b].push(null);
-      }
-    });
+    if (s.station && s.station.url) d.station = s.station;
+    if (Array.isArray(s.favs)) d.favs = s.favs.filter(function (f) { return f && f.id && f.url; }).slice(0, MAX_FAVS);
+    d.power = s.power === true;
+    if (s.cat === "all" || CATS[s.cat]) d.cat = s.cat;
+    if (/^[A-Z]{2}$/.test(s.country || "")) d.country = s.country;
     return d;
   }
+  var state = load();
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
 
-  var state = load();
-  var found = { fm: STATIONS.fm.map(function (s) { return s.f; }), am: STATIONS.am.map(function (s) { return s.f; }) };
-  var cur = state.freq[state.band];       // posición del dial (puede tener decimales mientras se arrastra)
-  var scanning = false, sweeping = false;
-  var saving = false, savingTimer = null, hintTimer = null;
-
-  /* ---------- Recepción simulada ---------- */
-  function stationAt(band, f) {
-    var list = STATIONS[band];
-    for (var i = 0; i < list.length; i++) if (list[i].f === f) return list[i];
-    return null;
-  }
-  function strength(band, f) {
-    var list = STATIONS[band], best = 0;
-    for (var i = 0; i < list.length; i++) {
-      var d = Math.abs(list[i].f - f);
-      var s = d === 0 ? 1 : d === 1 ? 0.55 : d === 2 ? 0.2 : 0;
-      if (s > best) best = s;
-    }
-    return best;
-  }
+  var all = [];           // emisoras del directorio (Costa Rica)
+  var extra = null;       // resultado de la búsqueda mundial (reemplaza a la lista mientras hay búsqueda)
+  var status = "idle";    // idle | connecting | live | error | paused
+  var retries = 0, retryTimer = null, token = 0;
 
   /* ---------- Utilidades ---------- */
-  function easeOut(t) { return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t); }
-  function linear(t) { return t; }
-  function make(tag, cls, text) {
-    var n = document.createElement(tag);
-    if (cls) n.className = cls;
-    if (text !== undefined) n.textContent = text;
-    return n;
-  }
-  function say(text, ms) {
-    el.hint.textContent = text;
-    clearTimeout(hintTimer);
-    if (ms) hintTimer = setTimeout(function () { el.hint.textContent = defaultHint(); }, ms);
-  }
-  function defaultHint() { return "Mantén presionado un preset para guardar la estación actual."; }
+  function norm(t) { return String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+  function esc(t) { return String(t == null ? "" : t); }
+  function toast(o) { if (window.RadioToast) window.RadioToast.show(o); }
+  var allowHttp = location.protocol !== "https:" || !!window.AndroidBridge;   // la app Android permite http
 
-  /* ---------- Animación del dial ---------- */
-  var anim = null;
-  function stopAnim() { if (anim) { cancelAnimationFrame(anim.id); anim = null; } }
-
-  function animateTo(target, ms, ease, done) {
-    stopAnim();
-    target = clampF(state.band, target);
-    if (reduced || ms <= 0 || Math.abs(target - cur) < 0.001) { setCur(target); if (done) done(); return; }
-    var from = cur, t0 = performance.now(), a = {};
-    anim = a;
-    function frame(now) {
-      if (anim !== a) return;
-      var t = Math.min(1, (now - t0) / ms);
-      setCur(from + (target - from) * (ease || easeOut)(t));
-      if (t < 1) a.id = requestAnimationFrame(frame);
-      else { anim = null; if (done) done(); }
-    }
-    a.id = requestAnimationFrame(frame);
-  }
-
-  // Durante la búsqueda, registra todas las estaciones que el dial acaba de cruzar
-  // (el dial puede avanzar más de un paso entre cuadros)
-  function collectCrossed(prev, next) {
-    var lo = Math.min(prev, next), hi = Math.max(prev, next), added = false;
-    STATIONS[state.band].forEach(function (s) {
-      if (s.f >= lo && s.f <= hi && found[state.band].indexOf(s.f) === -1) { found[state.band].push(s.f); added = true; }
-    });
-    if (added) { found[state.band].sort(function (x, y) { return x - y; }); renderList(); }
-  }
-
-  function setCur(v) {
-    var b = BANDS[state.band], prev = cur;
-    cur = Math.max(b.min, Math.min(b.max, v));
-    if (sweeping) collectCrossed(prev, cur);
-    var r = Math.round(cur);
-    if (r !== state.freq[state.band]) { state.freq[state.band] = r; updateReadout(); }
-    draw();
-  }
-
-  /* ---------- Render ---------- */
-  function updateReadout() {
-    var band = state.band, b = BANDS[band], f = state.freq[band];
-    var st = stationAt(band, f), s = strength(band, f);
-
-    el.freq.textContent = b.fmt(f);
-    el.name.textContent = st ? st.name : s > 0 ? "Señal débil" : "Sin estación";
-    el.rds.textContent = st ? st.genre : band === "fm" ? "Frecuencia modulada" : "Amplitud modulada";
-
-    var level = s >= 1 ? 4 : s >= 0.55 ? 2 : s > 0 ? 1 : 0;
-    Array.prototype.forEach.call(el.signal.children, function (bar, i) { bar.classList.toggle("is-on", i < level); });
-    el.signal.setAttribute("aria-label", "Señal " + level + " de 4");
-    el.stereo.classList.toggle("is-on", band === "fm" && s >= 1);
-
-    el.dial.setAttribute("aria-valuenow", String(f));
-    el.dial.setAttribute("aria-valuetext", b.fmt(f) + " " + b.unit);
-
-    Array.prototype.forEach.call(el.presets.children, function (btn, i) {
-      var pf = state.presets[band][i];
-      btn.setAttribute("aria-pressed", String(pf !== null && pf === f));
-    });
-    Array.prototype.forEach.call(el.list.querySelectorAll(".radio__station"), function (btn) {
-      btn.setAttribute("aria-pressed", String(Number(btn.dataset.f) === f));
-    });
-
-    window.dispatchEvent(new CustomEvent("radio:tunerchange", {
-      detail: { band: band, freq: b.fmt(f), unit: b.unit, name: st ? st.name : "", power: state.power }
-    }));
-  }
-
-  function renderBand() {
-    var b = BANDS[state.band];
-    Array.prototype.forEach.call(el.band.querySelectorAll(".seg__btn"), function (btn) {
-      btn.setAttribute("aria-pressed", String(btn.dataset.band === state.band));
-    });
-    el.unit.textContent = b.unit;
-    el.presetsLabel.textContent = "Presets " + b.label;
-    el.dial.setAttribute("aria-valuemin", String(b.min));
-    el.dial.setAttribute("aria-valuemax", String(b.max));
-  }
-
-  function renderPower() {
-    el.power.setAttribute("aria-pressed", String(state.power));
-    el.power.setAttribute("aria-label", state.power ? "Pausar radio" : "Reproducir radio");
-    el.radio.dataset.power = state.power ? "on" : "off";
-  }
-
-  /* Presets: toque = sintonizar, mantener = guardar la estación actual */
-  function renderPresets() {
-    el.presets.innerHTML = "";
-    state.presets[state.band].forEach(function (pf, i) {
-      var btn = make("button", "radio__preset");
-      btn.type = "button";
-      btn.dataset.index = String(i);
-      if (pf === null) {
-        btn.classList.add("is-empty");
-        btn.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg><span class="radio__preset-name">Vacío</span>';
-        btn.setAttribute("aria-label", "Preset " + (i + 1) + " vacío. Guardar estación actual");
-      } else {
-        var st = stationAt(state.band, pf);
-        btn.appendChild(make("span", "radio__preset-freq", BANDS[state.band].fmt(pf)));
-        btn.appendChild(make("span", "radio__preset-name", st ? st.name : BANDS[state.band].unit));
-        btn.setAttribute("aria-label", "Preset " + (i + 1) + ", " + BANDS[state.band].fmt(pf) + " " + BANDS[state.band].unit);
-      }
-      bindPreset(btn, i);
-      el.presets.appendChild(btn);
-    });
-  }
-
-  function bindPreset(btn, i) {
-    var timer = null, long = false;
-    function clear() { clearTimeout(timer); timer = null; }
-    btn.addEventListener("pointerdown", function () {
-      if (scanning) return;
-      long = false; clear();
-      timer = setTimeout(function () { long = true; savePreset(i); }, 600);
-    });
-    btn.addEventListener("pointerup", function () {
-      if (scanning) return;
-      var wasTimer = timer !== null;
-      clear();
-      if (long || !wasTimer) return;
-      var pf = state.presets[state.band][i];
-      if (saving || pf === null) savePreset(i);
-      else animateTo(pf, glide(pf), easeOut, save);
-    });
-    btn.addEventListener("pointerleave", clear);
-    btn.addEventListener("pointercancel", clear);
-    btn.addEventListener("contextmenu", function (e) { e.preventDefault(); });
-    btn.addEventListener("keydown", function (e) {
-      if (e.key !== "Enter" && e.key !== " ") return;
-      e.preventDefault();
-      var pf = state.presets[state.band][i];
-      if (saving || pf === null) savePreset(i);
-      else animateTo(pf, glide(pf), easeOut, save);
-    });
-  }
-
-  function savePreset(i) {
-    state.presets[state.band][i] = state.freq[state.band];
-    exitSaving();
-    save();
-    renderPresets();
-    updateReadout();
-    say("Guardado en el preset " + (i + 1), 2200);
-  }
-  function enterSaving() {
-    saving = true;
-    el.presets.dataset.saving = "";
-    el.save.setAttribute("aria-pressed", "true");
-    say("Toca un preset para guardar aquí la estación actual");
-    clearTimeout(savingTimer);
-    savingTimer = setTimeout(function () { exitSaving(); say(defaultHint()); }, 6000);
-  }
-  function exitSaving() {
-    saving = false;
-    clearTimeout(savingTimer);
-    delete el.presets.dataset.saving;
-    el.save.setAttribute("aria-pressed", "false");
-  }
-
-  /* Lista de estaciones encontradas */
-  function renderList() {
-    el.list.innerHTML = "";
-    var list = found[state.band];
-    if (!list.length) {
-      var li = make("li", "radio__empty", scanning ? "Buscando estaciones…" : "No hay estaciones. Toca «Buscar estaciones».");
-      el.list.appendChild(li);
-      return;
-    }
-    list.forEach(function (f) {
-      var st = stationAt(state.band, f);
-      var li = make("li");
-      var btn = make("button", "radio__station");
-      btn.type = "button";
-      btn.dataset.f = String(f);
-      btn.setAttribute("aria-pressed", String(f === state.freq[state.band]));
-      btn.appendChild(make("span", "radio__station-freq", BANDS[state.band].fmt(f)));
-      var txt = make("span", "radio__station-txt");
-      txt.appendChild(make("div", "radio__station-name", st ? st.name : BANDS[state.band].unit));
-      txt.appendChild(make("div", "radio__station-genre", st ? st.genre : ""));
-      btn.appendChild(txt);
-      btn.addEventListener("click", function () {
-        if (scanning) return;
-        animateTo(f, glide(f), easeOut, save);
-      });
-      li.appendChild(btn);
-      el.list.appendChild(li);
-    });
-  }
-
-  function renderAll() {
-    renderBand();
-    renderPower();
-    renderPresets();
-    renderList();
-    updateReadout();
-    draw();
-  }
-
-  /* ---------- Dial (canvas) ---------- */
-  var ctx = el.canvas.getContext("2d");
-  var colors = null;
-  function readColors() {
-    var cs = getComputedStyle(document.documentElement);
-    colors = {
-      text: cs.getPropertyValue("--text").trim() || "#fff",
-      dim: cs.getPropertyValue("--text-dim").trim() || "#999",
-      faint: cs.getPropertyValue("--text-faint").trim() || "#555",
-      font: getComputedStyle(document.body).fontFamily,
-      rem: parseFloat(cs.fontSize) || 16
+  function normalize(s) {
+    var url = s.url_resolved || s.url || "";
+    if (!url || s.hls === 1 || s.hls === true) return null;
+    if (!allowHttp && !/^https:/i.test(url)) return null;
+    var name = String(s.name || "").replace(/\s+/g, " ").trim();
+    if (!name) return null;
+    var tags = String(s.tags || "").toLowerCase().split(",").map(function (t) { return t.trim(); }).filter(Boolean);
+    var logo = s.favicon || "";
+    if (logo && !allowHttp && !/^https:/i.test(logo)) logo = "";
+    return {
+      id: s.stationuuid || ("u" + url), name: name.slice(0, 60), url: url, logo: logo,
+      tags: tags.slice(0, 6), place: String(s.state || s.country || "").trim(),
+      codec: String(s.codec || "").toUpperCase(), kbps: s.bitrate | 0
     };
   }
+  function dedupe(list) {
+    var seen = {}, out = [];
+    list.forEach(function (s) { var k = norm(s.name); if (!seen[k]) { seen[k] = 1; out.push(s); } });
+    return out;
+  }
+  // Etiquetas del directorio (en inglés casi siempre) a español; «music» y similares no aportan y se omiten
+  var TAGES = { news: "Noticias", talk: "Conversación", sports: "Deportes", sport: "Deportes", christian: "Cristiana", gospel: "Gospel", pop: "Pop", rock: "Rock",
+    salsa: "Salsa", reggae: "Reggae", reggaeton: "Reguetón", latin: "Latina", hits: "Éxitos", dance: "Dance", electronic: "Electrónica", jazz: "Jazz", classical: "Clásica",
+    oldies: "Clásicos", "top 40": "Top 40", romantic: "Románticas", bachata: "Bachata", cumbia: "Cumbia", merengue: "Merengue", tropical: "Tropical", community: "Comunitaria",
+    culture: "Cultura", educational: "Educativa", religious: "Religiosa", catholic: "Católica", variety: "Variedad", spanish: "En español", "world music": "Del mundo" };
+  var TAGSKIP = /^(music|radio|fm|am|online|stream|internet|costa rica|cr|http|www)/;
+  function subtitle(s) {
+    var bits = [];
+    var tg = s.tags.filter(function (t) { return !TAGSKIP.test(t); }).map(function (t) { return TAGES[t] || (t.charAt(0).toUpperCase() + t.slice(1)); });
+    tg = tg.filter(function (t, i) { return tg.indexOf(t) === i; }).slice(0, 2);
+    if (tg.length) bits.push(tg.join(", "));
+    if (s.place) bits.push(s.place);
+    return bits.join(" · ") || "Radio por internet";
+  }
+  function inCat(s, cat) {
+    if (cat === "all") return true;
+    var t = s.tags.join(" ") + " " + norm(s.name);
+    if (cat === "music") return CATS.music.test(t) && !CATS.news.test(t) && !CATS.sports.test(t) && !CATS.faith.test(t);
+    return CATS[cat].test(t);
+  }
 
-  function draw() {
-    var w = el.dial.clientWidth, h = el.dial.clientHeight;
-    if (!w || !h) return;
-    if (!colors) readColors();
-    var dpr = window.devicePixelRatio || 1;
-    var pw = Math.round(w * dpr), ph = Math.round(h * dpr);
-    if (el.canvas.width !== pw || el.canvas.height !== ph) { el.canvas.width = pw; el.canvas.height = ph; }
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, w, h);
-
-    var b = BANDS[state.band];
-    var ppu = colors.rem * 0.8;           // píxeles por paso
-    var half = w / 2;
-    var from = Math.max(b.min, Math.floor(cur - half / ppu) - 1);
-    var to = Math.min(b.max, Math.ceil(cur + half / ppu) + 1);
-    var base = h - 8;
-
-    ctx.lineCap = "round";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.font = "400 " + Math.round(colors.rem * 0.72) + "px " + colors.font;
-
-    for (var f = from; f <= to; f++) {
-      var x = half + (f - cur) * ppu;
-      var major = f % 10 === 0, mid = f % 5 === 0;
-      var len = major ? h * 0.42 : mid ? h * 0.28 : h * 0.17;
-      ctx.strokeStyle = major ? colors.dim : colors.faint;
-      ctx.lineWidth = major ? 1.6 : 1.2;
-      ctx.beginPath();
-      ctx.moveTo(x, base);
-      ctx.lineTo(x, base - len);
-      ctx.stroke();
-      if (major) {
-        ctx.fillStyle = colors.dim;
-        ctx.fillText(b.tick(f), x, base - len - colors.rem * 0.7);
-      }
+  /* ---------- Directorio ---------- */
+  function fetchJson(path, timeout) {
+    var i = 0;
+    function next() {
+      if (i >= SERVERS.length) return Promise.reject(new Error("offline"));
+      var base = SERVERS[i++], ctl = window.AbortController ? new AbortController() : null;
+      var t = setTimeout(function () { if (ctl) ctl.abort(); }, timeout || 9000);
+      return fetch(base + path, ctl ? { signal: ctl.signal } : undefined)
+        .then(function (r) { clearTimeout(t); if (!r.ok) throw new Error("http"); return r.json(); })
+        .catch(function () { clearTimeout(t); return next(); });
     }
+    return next();
+  }
 
-    // marcas de estaciones encontradas
-    ctx.fillStyle = colors.text;
-    var list = found[state.band];
-    for (var i = 0; i < list.length; i++) {
-      var sx = half + (list[i] - cur) * ppu;
-      if (sx < -4 || sx > w + 4) continue;
-      ctx.beginPath();
-      ctx.arc(sx, base + 1, 2.4, 0, Math.PI * 2);
-      ctx.fill();
+  function readCache(cc) {
+    try {
+      var c = JSON.parse(localStorage.getItem(CACHE_PREFIX + cc));
+      if (c && Array.isArray(c.list) && c.list.length) return c;
+    } catch (e) {}
+    return null;
+  }
+  function writeCache(cc, list) { try { localStorage.setItem(CACHE_PREFIX + cc, JSON.stringify({ t: Date.now(), list: list })); } catch (e) {} }
+
+  var regionNames = null;
+  try { if (window.Intl && Intl.DisplayNames) regionNames = new Intl.DisplayNames(["es"], { type: "region" }); } catch (e) {}
+  function countryName(cc) { try { return (regionNames && regionNames.of(cc)) || cc; } catch (e) { return cc; } }
+
+  function loadStations(force) {
+    var cc = state.country, c = readCache(cc);
+    all = c ? c.list : [];
+    renderList();
+    if (c && !force && Date.now() - c.t < CACHE_TTL) { el.note.textContent = ""; return; }
+    el.note.textContent = c ? "" : "Cargando emisoras…";
+    fetchJson("/json/stations/search?countrycode=" + cc + "&hidebroken=true&order=clickcount&reverse=true&limit=300").then(function (raw) {
+      var list = dedupe(raw.map(normalize).filter(Boolean));
+      if (!list.length) throw new Error("empty");
+      if (cc !== state.country) { writeCache(cc, list); return; }     // cambió de país mientras cargaba
+      all = list; writeCache(cc, list); el.note.textContent = ""; renderList();
+    }).catch(function () {
+      if (cc !== state.country) return;
+      el.note.textContent = all.length ? "Sin conexión: se muestra la última lista guardada." : "No hay emisoras para " + countryName(cc) + " o no hay conexión a internet.";
+      renderList();
+    });
+  }
+
+  function worldSearch(q) {
+    el.note.textContent = "Buscando en todo el mundo…";
+    fetchJson("/json/stations/search?name=" + encodeURIComponent(q) + "&hidebroken=true&order=clickcount&reverse=true&limit=60").then(function (raw) {
+      extra = { q: q, list: dedupe(raw.map(normalize).filter(Boolean)) };
+      el.note.textContent = extra.list.length ? "" : "Sin resultados para «" + q + "».";
+      renderList();
+    }).catch(function () { el.note.textContent = "No se pudo buscar. Revisa la conexión a internet."; });
+  }
+
+  /* ---------- Reproducción ---------- */
+  var audio = new Audio();
+  audio.preload = "none";
+  audio.setAttribute("playsinline", "");
+
+  function applyVolume() {
+    var q = window.RadioQuick ? window.RadioQuick.get() : { volume: 60, mute: false };
+    audio.volume = Math.max(0, Math.min(1, (q.volume || 0) / 100));
+    audio.muted = !!q.mute;
+  }
+  window.addEventListener("radio:quickchange", applyVolume);
+  applyVolume();
+
+  function setStatus(s) { status = s; renderNow(); }
+
+  function stopStream() {
+    clearTimeout(retryTimer); token++;
+    audio.pause(); audio.removeAttribute("src");
+    try { audio.load(); } catch (e) {}
+  }
+
+  function emitChange() {
+    window.dispatchEvent(new CustomEvent("radio:tunerchange", { detail: { power: state.power, name: state.station ? state.station.name : "" } }));
+  }
+
+  function takeOver() {
+    // Un solo origen de audio
+    if (window.RadioMusic && window.RadioMusic.pause) window.RadioMusic.pause();
+    if (window.RadioBluetooth && window.RadioBluetooth.get && window.RadioBluetooth.get()) window.RadioBluetooth.set(false);
+  }
+
+  function connect(isRetry) {
+    var st = state.station; if (!st) return;
+    var my = ++token;
+    clearTimeout(retryTimer);
+    if (!isRetry) retries = 0;
+    setStatus("connecting");
+    audio.src = st.url;
+    applyVolume();
+    var p = audio.play();
+    if (p && p.catch) p.catch(function (err) {
+      if (my !== token) return;
+      if (err && err.name === "NotAllowedError") {       // el navegador pide un toque antes de sonar
+        state.power = false; save(); setStatus("paused"); renderAll(); emitChange();
+      } else if (err && err.name !== "AbortError") fail(my);
+    });
+  }
+
+  function fail(my) {
+    if (my !== token) return;
+    if (!navigator.onLine) { setStatus("error"); return; }
+    if (retries < 3) { retries++; setStatus("connecting"); retryTimer = setTimeout(function () { if (state.power) connect(true); }, 2000 * retries); }
+    else {
+      setStatus("error");
+      toast({ title: "No se pudo reproducir", text: (state.station ? state.station.name + ". " : "") + "Prueba con otra emisora.", kind: "bad" });
     }
   }
 
-  /* El dial se vuelve a pintar si cambia el tema, el acento, el tamaño o el texto */
-  new MutationObserver(function () { readColors(); draw(); })
-    .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-accent", "style"] });
-  if (window.ResizeObserver) new ResizeObserver(function () { readColors(); draw(); }).observe(el.dial);
-  window.addEventListener("resize", function () { readColors(); draw(); });
+  audio.addEventListener("playing", function () { retries = 0; setStatus("live"); });
+  audio.addEventListener("waiting", function () { if (state.power && status === "live") setStatus("connecting"); });
+  audio.addEventListener("error", function () { if (state.power) fail(token); });
+  audio.addEventListener("ended", function () { if (state.power) fail(token); });    // un stream en vivo no debería terminar: se reconecta
+  audio.addEventListener("stalled", function () {
+    var my = token;
+    setTimeout(function () { if (my === token && state.power && audio.readyState < 3 && status !== "error") { retries = Math.min(retries, 2); fail(my); } }, 8000);
+  });
+  window.addEventListener("online", function () { if (state.power && state.station && status !== "live") connect(); });
 
-  /* ---------- Sintonía ---------- */
-  function glide(target) { return Math.min(700, 220 + Math.abs(target - cur) * 4); }
-
-  function stepBy(d) {
-    if (scanning) return;
-    animateTo(state.freq[state.band] + d, 90, linear, save);
-  }
-
-  function seek(dir) {
-    if (scanning) return;
-    var list = found[state.band].slice().sort(function (a, b) { return a - b; });
-    if (!list.length) { say("No hay estaciones. Toca «Buscar estaciones».", 2500); return; }
-    var r = Math.round(cur), target = null, i;
-    if (dir > 0) {
-      for (i = 0; i < list.length; i++) if (list[i] > r) { target = list[i]; break; }
-      if (target === null) target = list[0];
-    } else {
-      for (i = list.length - 1; i >= 0; i--) if (list[i] < r) { target = list[i]; break; }
-      if (target === null) target = list[list.length - 1];
-    }
-    animateTo(target, glide(target), easeOut, save);
-  }
-
-  function setBand(band) {
-    if (band === state.band) return;
-    if (scanning) cancelScan();
-    stopAnim();
-    exitSaving();
-    state.band = band;
-    cur = state.freq[band];
-    save();
-    say(defaultHint());
-    renderAll();
+  function play(st) {
+    if (!st) return;
+    state.station = st; state.power = true; save();
+    takeOver();
+    connect();
+    renderAll(); emitChange(); mediaSession();
   }
 
   function setPower(on) {
-    state.power = on;
-    renderPower();
-    save();
-    updateReadout();
+    on = !!on;
+    if (on === state.power) return;
+    if (on) {
+      if (!state.station) { if (all.length) play(all[0]); return; }
+      play(state.station); return;
+    }
+    state.power = false; save();
+    stopStream(); setStatus("paused");
+    renderAll(); emitChange();
   }
 
-  /* Búsqueda automática: recorre toda la banda y va llenando la lista */
-  function scan() {
-    if (scanning) { cancelScan(); return; }
-    scanning = true;
-    exitSaving();
-    el.radio.dataset.scanning = "";
-    el.scan.textContent = "Detener";
-    el.scan.setAttribute("aria-pressed", "true");
-    el.note.textContent = "Buscando…";
-    found[state.band] = [];
-    renderList();
-    draw();
-    var b = BANDS[state.band];
-    animateTo(b.min, 300, easeOut, function () {
-      sweeping = true;
-      animateTo(b.max, 3200, linear, finishScan);
+  function currentList() { return visible(); }
+  function step(dir) {
+    var list = currentList();
+    if (!list.length) list = all;
+    if (!list.length) return;
+    var i = -1;
+    for (var k = 0; k < list.length; k++) if (state.station && list[k].id === state.station.id) { i = k; break; }
+    var n = i < 0 ? (dir > 0 ? 0 : list.length - 1) : (i + dir + list.length) % list.length;
+    play(list[n]);
+  }
+
+  function mediaSession() {
+    if (!("mediaSession" in navigator) || !state.station || !window.MediaMetadata) return;
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: state.station.name, artist: "Radio por internet", artwork: state.station.logo ? [{ src: state.station.logo }] : [] });
+      navigator.mediaSession.setActionHandler("play", function () { setPower(true); });
+      navigator.mediaSession.setActionHandler("pause", function () { setPower(false); });
+      navigator.mediaSession.setActionHandler("nexttrack", function () { step(1); });
+      navigator.mediaSession.setActionHandler("previoustrack", function () { step(-1); });
+      navigator.mediaSession.playbackState = "playing";
+    } catch (e) {}
+  }
+
+  /* ---------- Favoritos ---------- */
+  function isFav(st) { return !!st && state.favs.some(function (f) { return f.id === st.id; }); }
+  function toggleFav() {
+    var st = state.station; if (!st) return;
+    if (isFav(st)) state.favs = state.favs.filter(function (f) { return f.id !== st.id; });
+    else if (state.favs.length >= MAX_FAVS) { toast({ title: "Favoritos llenos", text: "Quita alguno para añadir otro.", kind: "bad" }); return; }
+    else state.favs.push(st);
+    save(); renderNow(); renderPresets(); renderList();
+  }
+
+  /* ---------- Interfaz ---------- */
+  var STATUS_TXT = { idle: "Sin emisora", connecting: "Conectando…", live: "En vivo", error: "Sin señal", paused: "Pausada" };
+
+  function setLogo(node, img, ini, st) {
+    ini.textContent = st ? st.name.trim().charAt(0).toUpperCase() : "♪";
+    img.hidden = true; img.removeAttribute("src");
+    if (st && st.logo) {
+      img.onload = function () { img.hidden = false; ini.hidden = true; };
+      img.onerror = function () { img.hidden = true; ini.hidden = false; };
+      ini.hidden = false;
+      img.src = st.logo;
+    } else ini.hidden = false;
+  }
+
+  function renderNow() {
+    var st = state.station;
+    el.root.dataset.power = state.power ? "on" : "off";
+    el.root.dataset.state = status;
+    el.state.textContent = STATUS_TXT[status] || "";
+    el.state.classList.toggle("is-live", status === "live");
+    el.name.textContent = st ? st.name : "Elige una emisora";
+    el.rds.textContent = st ? subtitle(st) + (st.codec ? " · " + st.codec + (st.kbps ? " " + st.kbps + " kbps" : "") : "") : "Radio por internet";
+    var on = state.power;
+    el.power.setAttribute("aria-pressed", String(on));
+    el.power.setAttribute("aria-label", on ? "Pausar radio" : "Reproducir radio");
+    el.fav.disabled = !st;
+    var f = isFav(st);
+    el.fav.setAttribute("aria-pressed", String(f));
+    el.fav.setAttribute("aria-label", f ? "Quitar de favoritos" : "Guardar en favoritos");
+    el.fav.querySelector("span").textContent = f ? "Guardada" : "Favorito";
+    if (el.logo.dataset.id !== (st ? st.id : "")) { el.logo.dataset.id = st ? st.id : ""; setLogo(el.logo, el.logoImg, el.initial, st); }
+  }
+
+  function tile(st, cls, onTap) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = cls; b.dataset.id = st.id;
+    var on = state.station && state.station.id === st.id;
+    b.setAttribute("aria-pressed", String(!!on));
+    var lg = document.createElement("span"); lg.className = cls + "-logo"; lg.setAttribute("aria-hidden", "true");
+    var ini = document.createElement("span"); ini.textContent = st.name.trim().charAt(0).toUpperCase(); lg.appendChild(ini);
+    if (st.logo) {
+      var im = document.createElement("img"); im.alt = ""; im.loading = "lazy"; im.decoding = "async";
+      im.onload = function () { ini.hidden = true; lg.appendChild(im); };
+      im.src = st.logo;
+    }
+    var tx = document.createElement("span"); tx.className = cls + "-txt";
+    var n = document.createElement("span"); n.className = cls + "-name"; n.textContent = st.name;
+    tx.appendChild(n);
+    if (cls === "radio__station") { var g = document.createElement("span"); g.className = "radio__station-genre"; g.textContent = subtitle(st); tx.appendChild(g); }
+    b.appendChild(lg); b.appendChild(tx);
+    b.addEventListener("click", function () { onTap(st); });
+    return b;
+  }
+
+  function renderPresets() {
+    el.presets.textContent = "";
+    if (!state.favs.length) {
+      var p = document.createElement("p"); p.className = "radio__empty";
+      p.textContent = "Toca ☆ en la emisora que suena para guardarla aquí.";
+      el.presets.appendChild(p); return;
+    }
+    var fr = document.createDocumentFragment();
+    state.favs.forEach(function (s) { fr.appendChild(tile(s, "radio__preset", play)); });
+    el.presets.appendChild(fr);
+  }
+
+  function visible() {
+    var q = norm(el.q.value).trim();
+    var base = extra && extra.q === el.q.value.trim() ? extra.list : all;
+    return base.filter(function (s) {
+      if (state.cat !== "all" && !inCat(s, state.cat)) return false;
+      if (!q) return true;
+      return norm(s.name).indexOf(q) >= 0 || norm(s.tags.join(" ")).indexOf(q) >= 0 || norm(s.place).indexOf(q) >= 0;
     });
   }
-  function resetScanUi() {
-    scanning = false; sweeping = false;
-    delete el.radio.dataset.scanning;
-    el.scan.textContent = "Buscar estaciones";
-    el.scan.setAttribute("aria-pressed", "false");
+
+  function renderList() {
+    var list = visible(), q = el.q.value.trim();
+    el.list.textContent = "";
+    var fr = document.createDocumentFragment();
+    list.forEach(function (s) { var li = document.createElement("li"); li.appendChild(tile(s, "radio__station", play)); fr.appendChild(li); });
+    el.list.appendChild(fr);
+    if (!list.length) {
+      var li = document.createElement("li"); li.className = "radio__empty";
+      if (!all.length) li.textContent = "Cargando emisoras…";
+      else if (q.length >= 2) {
+        li.textContent = "No hay resultados en " + countryName(state.country) + ". ";
+        var b = document.createElement("button"); b.type = "button"; b.className = "btn-pill radio__world";
+        b.textContent = "Buscar «" + q + "» en todo el mundo";
+        b.addEventListener("click", function () { worldSearch(q); });
+        li.appendChild(document.createElement("br")); li.appendChild(b);
+      } else li.textContent = "No hay emisoras en esta categoría.";
+      el.list.appendChild(li);
+    }
   }
-  function finishScan() {
-    resetScanUi();
-    var list = found[state.band];
-    el.note.textContent = list.length + (list.length === 1 ? " estación encontrada" : " estaciones encontradas") + " · demostración";
-    renderList();
-    if (list.length) animateTo(list[0], 500, easeOut, save);
-    else save();
+
+  function renderCats() {
+    el.cats.querySelectorAll(".radio__cat").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.cat === state.cat)); });
   }
-  function cancelScan() {
-    stopAnim();
-    resetScanUi();
-    el.note.textContent = NOTE_DEFAULT;
-    setCur(Math.round(cur));
-    renderList();
-    draw();
-    save();
+
+  function renderAll() { renderNow(); renderPresets(); renderCats(); renderList(); }
+
+  /* ---------- Países ---------- */
+  var FALLBACK_CC = ["CR", "MX", "CO", "AR", "CL", "PE", "EC", "VE", "UY", "PY", "BO", "PA", "GT", "SV", "HN", "NI", "DO", "CU", "PR", "ES", "US", "BR", "FR", "IT", "DE", "GB", "PT", "CA", "JP", "KR", "CN", "IN", "AU", "NL", "AT", "CH", "IE", "RU", "TR", "ZA", "EG", "MA", "NG", "JM", "HT", "TT"];
+  var countries = null;     // [{cc, n, count}]
+
+  function readCountries() {
+    try { var c = JSON.parse(localStorage.getItem(COUNTRIES_KEY)); if (c && Array.isArray(c.list) && c.list.length) return c; } catch (e) {}
+    return null;
+  }
+  function prepareCountries(list) {
+    return list.map(function (c) { return { cc: c.cc, n: countryName(c.cc), count: c.count || 0 }; })
+      .sort(function (a, b) { if (a.cc === "CR") return -1; if (b.cc === "CR") return 1; return a.n.localeCompare(b.n, "es"); });
+  }
+  function loadCountries() {
+    var c = readCountries();
+    if (c) countries = prepareCountries(c.list);
+    else countries = prepareCountries(FALLBACK_CC.map(function (cc) { return { cc: cc, count: 0 }; }));
+    renderCountries();
+    if (c && Date.now() - c.t < COUNTRIES_TTL) return;
+    fetchJson("/json/countries?order=stationcount&reverse=true").then(function (raw) {
+      var list = raw.filter(function (r) { return r && /^[A-Z]{2}$/.test(r.iso_3166_1 || "") && r.stationcount > 0; })
+        .map(function (r) { return { cc: r.iso_3166_1, count: r.stationcount }; });
+      if (!list.length) return;
+      try { localStorage.setItem(COUNTRIES_KEY, JSON.stringify({ t: Date.now(), list: list })); } catch (e) {}
+      countries = prepareCountries(list); renderCountries();
+    }).catch(function () { el.cNote.textContent = "Sin conexión: se muestran los países más comunes."; });
+  }
+
+  function renderCountryButton() {
+    el.cc.textContent = state.country;
+    el.countryName.textContent = countryName(state.country);
+  }
+  function renderCountries() {
+    if (!countries) return;
+    var q = norm(el.cq.value).trim();
+    el.cList.textContent = "";
+    var fr = document.createDocumentFragment();
+    countries.filter(function (c) { return !q || norm(c.n).indexOf(q) >= 0 || c.cc.toLowerCase() === q; }).forEach(function (c) {
+      var li = document.createElement("li"), b = document.createElement("button");
+      b.type = "button"; b.className = "radio__country-item"; b.dataset.cc = c.cc; b.setAttribute("aria-pressed", String(c.cc === state.country));
+      var cc = document.createElement("span"); cc.className = "radio__cc"; cc.textContent = c.cc;
+      var tx = document.createElement("span"); tx.className = "radio__country-txt";
+      var n = document.createElement("b"); n.textContent = c.n; tx.appendChild(n);
+      if (c.count) { var sm = document.createElement("small"); sm.textContent = c.count + (c.count === 1 ? " emisora" : " emisoras"); tx.appendChild(sm); }
+      b.appendChild(cc); b.appendChild(tx); li.appendChild(b); fr.appendChild(li);
+    });
+    el.cList.appendChild(fr);
+    if (!el.cList.children.length) { var e = document.createElement("li"); e.className = "radio__empty"; e.textContent = "No se encontró ese país."; el.cList.appendChild(e); }
+  }
+  function openCountries() {
+    el.cq.value = ""; el.cNote.textContent = "";
+    if (!countries) loadCountries(); else { renderCountries(); loadCountries(); }
+    el.cPanel.hidden = false;
+  }
+  function closeCountries() { el.cPanel.hidden = true; if (document.activeElement && el.cPanel.contains(document.activeElement)) document.activeElement.blur(); }
+  function setCountry(cc) {
+    closeCountries();
+    if (cc === state.country) return;
+    state.country = cc; save();
+    extra = null; el.q.value = "";
+    renderCountryButton();
+    loadStations(false);
   }
 
   /* ---------- Eventos ---------- */
-  el.band.addEventListener("click", function (e) {
-    var btn = e.target.closest(".seg__btn");
-    if (btn) setBand(btn.dataset.band);
-  });
-
   el.power.addEventListener("click", function () { setPower(!state.power); });
-  el.next.addEventListener("click", function () { seek(1); });
-  el.prev.addEventListener("click", function () { seek(-1); });
-  el.scan.addEventListener("click", scan);
-  el.save.addEventListener("click", function () { if (saving) { exitSaving(); say(defaultHint()); } else enterSaving(); });
-
-  // Sintonía fina: mantener presionado repite
-  function hold(btn, delta) {
-    var delay = null, timer = null;
-    function stop() { clearTimeout(delay); clearInterval(timer); delay = timer = null; }
-    btn.addEventListener("pointerdown", function (e) {
-      e.preventDefault();
-      stop();
-      stepBy(delta);
-      delay = setTimeout(function () { timer = setInterval(function () { stepBy(delta); }, 90); }, 400);
-    });
-    ["pointerup", "pointerleave", "pointercancel"].forEach(function (ev) { btn.addEventListener(ev, function () { if (delay || timer) { stop(); save(); } }); });
-    btn.addEventListener("click", function (e) { if (e.detail === 0) stepBy(delta); });
-  }
-  hold(el.down, -1);
-  hold(el.up, 1);
-
-  // Arrastrar el dial
-  var drag = null;
-  el.dial.addEventListener("pointerdown", function (e) {
-    if (scanning) return;
-    stopAnim();
-    drag = { x: e.clientX, cur: cur };
-    el.dial.setPointerCapture(e.pointerId);
+  el.prev.addEventListener("click", function () { step(-1); });
+  el.next.addEventListener("click", function () { step(1); });
+  el.fav.addEventListener("click", toggleFav);
+  el.country.addEventListener("click", openCountries);
+  el.cBack.addEventListener("click", closeCountries);
+  el.cq.addEventListener("input", renderCountries);
+  el.cq.addEventListener("keydown", function (e) { if (e.key === "Enter") el.cq.blur(); });
+  el.cList.addEventListener("click", function (e) { var b = e.target.closest(".radio__country-item"); if (b) setCountry(b.dataset.cc); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !el.cPanel.hidden) closeCountries(); });
+  el.cats.addEventListener("click", function (e) {
+    var b = e.target.closest(".radio__cat"); if (!b) return;
+    state.cat = b.dataset.cat; save(); renderCats(); renderList();
   });
-  el.dial.addEventListener("pointermove", function (e) {
-    if (!drag) return;
-    var ppu = (colors ? colors.rem : 16) * 0.8;
-    setCur(drag.cur - (e.clientX - drag.x) / ppu);
-  });
-  function endDrag() {
-    if (!drag) return;
-    drag = null;
-    animateTo(Math.round(cur), 140, easeOut, save);
-  }
-  el.dial.addEventListener("pointerup", endDrag);
-  el.dial.addEventListener("pointercancel", endDrag);
-  el.dial.addEventListener("wheel", function (e) {
-    e.preventDefault();
-    stepBy(e.deltaY > 0 ? -1 : 1);
-  }, { passive: false });
-  el.dial.addEventListener("keydown", function (e) {
-    var k = e.key;
-    if (k === "ArrowRight" || k === "ArrowUp") stepBy(1);
-    else if (k === "ArrowLeft" || k === "ArrowDown") stepBy(-1);
-    else if (k === "PageUp") seek(1);
-    else if (k === "PageDown") seek(-1);
-    else if (k === "Home") animateTo(BANDS[state.band].min, 400, easeOut, save);
-    else if (k === "End") animateTo(BANDS[state.band].max, 400, easeOut, save);
-    else return;
-    e.preventDefault();
-  });
+  var qTimer = null;
+  el.q.addEventListener("input", function () { clearTimeout(qTimer); qTimer = setTimeout(renderList, 120); });
+  el.q.addEventListener("keydown", function (e) { if (e.key === "Enter") el.q.blur(); });
 
-  /* ---------- API ---------- */
+  /* ---------- API pública (la usan la música y el Bluetooth) ---------- */
   window.RadioTuner = {
-    get: function () {
-      var b = BANDS[state.band], f = state.freq[state.band], st = stationAt(state.band, f);
-      return { band: state.band, freq: b.fmt(f), unit: b.unit, name: st ? st.name : "", power: state.power };
-    },
-    tune: function (band, step) { setBand(band); animateTo(step, 300, easeOut, save); },
-    seekNext: function () { seek(1); },
-    seekPrev: function () { seek(-1); },
-    setPower: setPower
+    get: function () { return { power: state.power, name: state.station ? state.station.name : "", status: status }; },
+    setPower: setPower,
+    play: play,
+    next: function () { step(1); },
+    prev: function () { step(-1); },
+    refresh: function () { loadStations(true); }
   };
 
   /* ---------- Inicio ---------- */
-  el.note.textContent = NOTE_DEFAULT;
-  say(defaultHint());
-  readColors();
   renderAll();
-  // La fuente del dial puede cargar después: repinta cuando esté lista
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { readColors(); draw(); });
+  renderCountryButton();
+  loadStations(false);
+
+  // Al encender: continúa con la última emisora (ajuste «Radio al encender»)
+  var resumeOn = state.power && !!state.station;
+  if (state.power) { state.power = false; renderNow(); status = "paused"; renderNow(); }
+  if (resumeOn) {
+    var started = false;
+    var go = function () {
+      if (started) return; started = true;
+      var s = window.RadioSystem ? window.RadioSystem.get() : {};
+      if (s.radioResume !== false) setPower(true);
+    };
+    if (document.documentElement.getAttribute("data-boot") === "off") setTimeout(go, 600);
+    else { window.addEventListener("radio:booted", function () { setTimeout(go, 300); }, { once: true }); setTimeout(go, 9500); }
+  }
 })();

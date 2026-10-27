@@ -114,3 +114,6 @@
   .qs__tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .qs__sliders { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Como app Android el brillo es real: no se usa el velo simulado */
+html[data-native="1"] .dim { display: none; }

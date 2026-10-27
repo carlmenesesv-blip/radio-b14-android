@@ -38,3 +38,10 @@ y vuelve a compilar. (El script copia la interfaz y deja fuera `server.js`, la p
 - Música desde el teléfono: usa «Servidor» en Ajustes con la dirección de tu servidor propio (`http://IP:8099`); la app permite http en la red local.
 - Requiere Android 7 (API 24) o superior. BlissOS 16 es Android 12.
 - Es un APK de depuración: sirve para instalar directo. Para publicarlo habría que firmarlo.
+
+## Integración con el sistema (launcher)
+- **Volumen, silencio y brillo** del radio controlan los reales de Android (y se sincronizan con las teclas físicas cada 3 s).
+- **Wi‑Fi y Bluetooth**: Android no permite cambiarlos desde una app; al tocarlos se abre su pantalla de ajustes.
+- **Botón flotante «Volver al radio»**: aparece sobre otras apps. Necesita el permiso «Mostrar sobre otras apps» (Ajustes › Sistema Android).
+- **Brillo del sistema**: pide «Modificar ajustes del sistema»; sin él solo cambia dentro del radio.
+- **Pantalla de inicio**: Ajustes › Sistema Android › «Elegir Radio B14 como inicio», y marcar «Siempre».

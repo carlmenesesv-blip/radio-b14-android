@@ -47,6 +47,8 @@
   <link rel="stylesheet" href="cast.css">
   <link rel="stylesheet" href="map.css">
   <link rel="stylesheet" href="apps.css">
+  <link rel="stylesheet" href="ambient.css">
+  <link rel="stylesheet" href="ignition.css">
   <link rel="stylesheet" href="osk.css">
 
   <!-- Aplica los ajustes guardados antes de pintar -->
@@ -189,6 +191,7 @@
         <button class="dock__btn" data-target="radio" aria-label="Radio"><svg class="icon"><use href="#i-radio"/></svg></button>
         <button class="dock__btn" data-target="climate" aria-label="Climatización"><svg class="icon"><use href="#i-climate"/></svg></button>
         <button class="dock__btn" data-target="vehicle" aria-label="Vehículo"><svg class="icon"><use href="#i-car"/></svg></button>
+        <button class="dock__btn" data-target="ambient" aria-label="Ambiente"><svg class="icon"><use href="#i-ambient"/></svg></button>
         <button class="dock__btn" data-target="apps" aria-label="Apps"><svg class="icon"><use href="#i-grid"/></svg></button>
         <button class="dock__btn" data-target="settings" aria-label="Ajustes"><svg class="icon"><use href="#i-settings"/></svg></button>
       </nav>
@@ -538,6 +541,77 @@
           </div>
         </section>
 
+        <!-- ================= AMBIENTE (luces RGB) ================= -->
+        <section class="view view--ambient" data-view="ambient" data-title="Ambiente">
+          <div class="amb" id="amb" data-power="off">
+
+            <!-- Vista previa -->
+            <article class="card amb__preview">
+              <header class="amb__top">
+                <span class="chip" id="amb-state" role="status">Apagada</span>
+                <button type="button" class="amb__power" id="amb-power" role="switch" aria-checked="false" aria-label="Luces ambientales">
+                  <svg class="icon" aria-hidden="true"><use href="#i-power"/></svg>
+                </button>
+              </header>
+              <svg class="amb__car" id="amb-car" viewBox="0 0 220 360" role="img" aria-label="Zonas de luz del auto">
+                <rect class="amb__body" x="30" y="14" width="160" height="332" rx="62"/>
+                <path class="amb__glass" d="M52 92 Q110 66 168 92 L160 128 Q110 114 60 128 Z"/>
+                <path class="amb__glass" d="M60 262 Q110 276 160 262 L168 296 Q110 316 52 296 Z"/>
+                <path class="amb__z" data-z="dash" d="M58 138 Q110 124 162 138"/>
+                <path class="amb__z" data-z="doors" d="M44 160 L44 252"/>
+                <path class="amb__z" data-z="doors" d="M176 160 L176 252"/>
+                <path class="amb__z" data-z="feet" d="M66 172 L66 214"/>
+                <path class="amb__z" data-z="feet" d="M154 172 L154 214"/>
+                <path class="amb__z" data-z="rear" d="M66 226 L66 250"/>
+                <path class="amb__z" data-z="rear" d="M154 226 L154 250"/>
+              </svg>
+              <p class="amb__hint" id="amb-hint"></p>
+            </article>
+
+            <!-- Controles -->
+            <article class="card amb__ctl">
+              <div class="amb__sec">
+                <div class="card__label">Color</div>
+                <div class="amb__swatches" id="amb-swatches" role="group" aria-label="Color"></div>
+                <input class="amb__range amb__range--hue" id="amb-hue" type="range" min="0" max="359" step="1" value="215" aria-label="Tono">
+              </div>
+
+              <div class="amb__sec">
+                <div class="amb__row"><div class="card__label">Brillo</div><span class="amb__val" id="amb-bri-val">80%</span></div>
+                <input class="amb__range" id="amb-bri" type="range" min="5" max="100" step="1" value="80" aria-label="Brillo">
+              </div>
+
+              <div class="amb__sec">
+                <div class="card__label">Efecto</div>
+                <div class="seg amb__fx" id="amb-fx" role="group" aria-label="Efecto">
+                  <button type="button" class="seg__btn" data-v="static" aria-pressed="true">Fija</button>
+                  <button type="button" class="seg__btn" data-v="breathe" aria-pressed="false">Respirar</button>
+                  <button type="button" class="seg__btn" data-v="rainbow" aria-pressed="false">Arcoíris</button>
+                  <button type="button" class="seg__btn" data-v="wave" aria-pressed="false">Onda</button>
+                  <button type="button" class="seg__btn" data-v="pulse" aria-pressed="false">Pulso</button>
+                </div>
+                <div class="amb__row amb__speedrow" id="amb-speedrow"><div class="card__label">Velocidad</div></div>
+                <input class="amb__range" id="amb-speed" type="range" min="1" max="10" step="1" value="5" aria-label="Velocidad del efecto">
+              </div>
+
+              <div class="amb__sec">
+                <div class="card__label">Zonas</div>
+                <div class="amb__zones" id="amb-zones" role="group" aria-label="Zonas">
+                  <button type="button" class="amb__zone" data-z="dash" aria-pressed="true">Tablero</button>
+                  <button type="button" class="amb__zone" data-z="feet" aria-pressed="true">Pies</button>
+                  <button type="button" class="amb__zone" data-z="doors" aria-pressed="true">Puertas</button>
+                  <button type="button" class="amb__zone" data-z="rear" aria-pressed="true">Traseras</button>
+                </div>
+              </div>
+
+              <div class="amb__sec">
+                <div class="card__label">Ambientes</div>
+                <div class="amb__presets" id="amb-presets"></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
         <!-- ================= MÚSICA ================= -->
         <section class="view view--music" data-view="media" data-title="Música">
           <div class="music">
@@ -554,7 +628,7 @@
                 <div class="mp__empty" id="mp-empty">
                   <div class="mp__empty-title">¿Qué quieres escuchar?</div>
                   <div class="mp__acts">
-                    <button type="button" class="mp__act" data-ms-open="bluetooth"><svg class="icon"><use href="#i-bluetooth"/></svg><span class="mp__act-t">Por Bluetooth</span><span class="mp__act-s">Lo más fácil: reproduce en tu celular</span></button>
+                    <button type="button" class="mp__act" data-ms-open="bluetooth"><svg class="icon"><use href="#i-bluetooth"/></svg><span class="mp__act-t">Por Bluetooth</span><span class="mp__act-s">Lo más usado: el sonido del celular sale por el auto</span></button>
                     <button type="button" class="mp__act" data-ms-open="phone"><svg class="icon"><use href="#i-phone"/></svg><span class="mp__act-t">Enviar desde el teléfono</span><span class="mp__act-s">Escanea un código y envía enlaces</span></button>
                     <button type="button" class="mp__act" data-ms-open="search"><svg class="icon"><use href="#i-search"/></svg><span class="mp__act-t">Buscar canciones</span><span class="mp__act-s">Por nombre o artista</span></button>
                     <button type="button" class="mp__act" data-ms-open="files"><svg class="icon"><use href="#i-usb"/></svg><span class="mp__act-t">Archivos o USB</span><span class="mp__act-s">Audio guardado en el equipo</span></button>
@@ -592,6 +666,13 @@
               </div>
             </article>
 
+
+            <!-- Apps de streaming: abren la app oficial instalada -->
+            <article class="card music__stream" id="stream">
+              <div class="card__label">Apps de música</div>
+              <div class="stream__row" id="stream-row" role="group" aria-label="Apps de música"></div>
+            </article>
+
             <!-- Mi lista -->
             <article class="card music__library">
               <header class="vh__head">
@@ -606,63 +687,74 @@
           </div>
         </section>
 
-        <!-- ================= RADIO ================= -->
+        <!-- ================= RADIO (por internet) ================= -->
         <section class="view view--radio" data-view="radio" data-title="Radio">
-          <div class="radio" data-power="on">
+          <div class="radio" id="radio" data-power="off" data-state="idle">
 
-            <!-- Sintonizador -->
-            <article class="card radio__tuner">
+            <!-- Ahora suena -->
+            <article class="card radio__now">
               <header class="radio__top">
-                <div class="seg radio__band" id="radio-band" role="group" aria-label="Banda">
-                  <button type="button" class="seg__btn" data-band="fm" aria-pressed="true">FM</button>
-                  <button type="button" class="seg__btn" data-band="am" aria-pressed="false">AM</button>
-                </div>
-                <div class="radio__meta">
-                  <span class="chip radio__stereo" id="radio-stereo">Estéreo</span>
-                  <span class="radio__signal" id="radio-signal" role="img" aria-label="Señal 0 de 4"><i></i><i></i><i></i><i></i></span>
-                </div>
+                <span class="chip radio__live" id="radio-state" role="status">Sin emisora</span>
+                <button type="button" class="btn-pill radio__fav" id="radio-fav" aria-pressed="false" aria-label="Guardar en favoritos" disabled>
+                  <svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><span>Favorito</span>
+                </button>
               </header>
 
               <div class="radio__display" aria-live="polite">
-                <div class="radio__freq"><span id="radio-freq">95.5</span><span class="card__unit" id="radio-unit">MHz</span></div>
-                <div class="radio__name" id="radio-name">—</div>
-                <div class="radio__rds" id="radio-rds">—</div>
+                <div class="radio__logo" id="radio-logo" aria-hidden="true"><img id="radio-logo-img" alt="" hidden><span id="radio-initial">♪</span></div>
+                <div class="radio__name" id="radio-name">Elige una emisora</div>
+                <div class="radio__rds" id="radio-rds">Radio por internet</div>
               </div>
 
-              <div class="radio__dial" id="radio-dial" role="slider" tabindex="0" aria-label="Sintonía" aria-valuemin="875" aria-valuemax="1080" aria-valuenow="955">
-                <canvas class="radio__canvas" id="radio-canvas"></canvas>
-                <i class="radio__needle"></i>
-              </div>
+              <div class="radio__eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
               <div class="radio__controls">
-                <button class="btn-round radio__btn" id="radio-seek-prev" aria-label="Estación anterior"><svg class="icon"><use href="#i-prev"/></svg></button>
-                <button class="btn-round radio__btn" id="radio-step-down" aria-label="Sintonía fina, bajar"><svg class="icon"><use href="#i-minus"/></svg></button>
-                <button class="radio__power" id="radio-power" aria-pressed="true" aria-label="Pausar radio">
+                <button class="btn-round radio__btn" id="radio-prev" aria-label="Emisora anterior"><svg class="icon"><use href="#i-prev"/></svg></button>
+                <button class="radio__power" id="radio-power" aria-pressed="false" aria-label="Reproducir radio">
                   <svg class="icon ico-play"><use href="#i-play"/></svg>
                   <svg class="icon ico-pause"><use href="#i-pause"/></svg>
                 </button>
-                <button class="btn-round radio__btn" id="radio-step-up" aria-label="Sintonía fina, subir"><svg class="icon"><use href="#i-plus"/></svg></button>
-                <button class="btn-round radio__btn" id="radio-seek-next" aria-label="Estación siguiente"><svg class="icon"><use href="#i-next"/></svg></button>
-              </div>
-
-              <div class="radio__actions">
-                <button type="button" class="btn-pill" id="radio-save" aria-pressed="false">Guardar en preset</button>
-                <button type="button" class="btn-pill" id="radio-scan" aria-pressed="false">Buscar estaciones</button>
+                <button class="btn-round radio__btn" id="radio-next" aria-label="Emisora siguiente"><svg class="icon"><use href="#i-next"/></svg></button>
               </div>
             </article>
 
-            <!-- Presets -->
+            <!-- Favoritos -->
             <article class="card radio__presets">
-              <div class="card__label" id="radio-presets-label">Presets FM</div>
+              <div class="card__label">Favoritos</div>
               <div class="radio__preset-grid" id="radio-presets"></div>
-              <p class="radio__hint" id="radio-hint" role="status"></p>
             </article>
 
-            <!-- Estaciones -->
+            <!-- Emisoras -->
             <article class="card radio__stations">
-              <div class="card__label">Estaciones</div>
+              <div class="radio__findrow">
+                <button type="button" class="radio__country" id="radio-country" aria-haspopup="dialog" aria-label="Cambiar de país">
+                  <span class="radio__cc" id="radio-cc">CR</span><span class="radio__country-name" id="radio-country-name">Costa Rica</span>
+                  <svg class="icon" aria-hidden="true"><use href="#i-chevron-right"/></svg>
+                </button>
+                <div class="radio__search">
+                  <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+                  <input class="radio__q" id="radio-q" type="search" enterkeyhint="search" placeholder="Buscar emisora" aria-label="Buscar emisora" autocomplete="off" spellcheck="false">
+                </div>
+              </div>
+              <div class="radio__cats" id="radio-cats" role="group" aria-label="Categoría">
+                <button type="button" class="radio__cat" data-cat="all" aria-pressed="true">Todas</button>
+                <button type="button" class="radio__cat" data-cat="news" aria-pressed="false">Noticias</button>
+                <button type="button" class="radio__cat" data-cat="music" aria-pressed="false">Música</button>
+                <button type="button" class="radio__cat" data-cat="sports" aria-pressed="false">Deportes</button>
+                <button type="button" class="radio__cat" data-cat="faith" aria-pressed="false">Cristiana</button>
+              </div>
               <ul class="radio__list" id="radio-stations"></ul>
-              <p class="radio__note" id="radio-list-note"></p>
+              <p class="radio__note" id="radio-list-note" role="status"></p>
+
+              <!-- Selector de país -->
+              <div class="radio__countries" id="radio-countries" role="dialog" aria-label="Elegir país" hidden>
+                <header class="radio__countries-top">
+                  <button type="button" class="btn-pill" id="radio-countries-back"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg><span>Volver</span></button>
+                  <input class="radio__q radio__q--plain" id="radio-cq" type="search" enterkeyhint="search" placeholder="Buscar país" aria-label="Buscar país" autocomplete="off" spellcheck="false">
+                </header>
+                <ul class="radio__country-list" id="radio-country-list"></ul>
+                <p class="radio__note" id="radio-countries-note" role="status"></p>
+              </div>
             </article>
 
           </div>
@@ -846,38 +938,84 @@
               <ul class="cv__svc" id="cv-svc"></ul>
             </article>
 
+            <!-- Encendido (relé del circuito de arranque) -->
+            <article class="card cv__ign" id="ign" data-on="false">
+              <header class="cv__head">
+                <span class="card__label">Encendido</span>
+                <span class="chip ign__chip" id="ign-chip" role="status">Circuito desconectado</span>
+              </header>
+              <p class="ign__txt" id="ign-txt">El auto no arranca hasta conectar el circuito con tu clave.</p>
+              <div class="ign__btns">
+                <button type="button" class="ign__main" id="ign-main"><svg class="icon" aria-hidden="true"><use href="#i-power"/></svg><span id="ign-main-t">ON</span></button>
+                <button type="button" class="btn-pill" id="ign-chg">Cambiar clave</button>
+              </div>
+              <p class="cv__note" id="ign-hw"></p>
+            </article>
+
+            <!-- Espejos laterales -->
+            <article class="card cv__mir" id="mir">
+              <header class="cv__head">
+                <span class="card__label">Espejos</span>
+                <div class="seg mir__side" id="mir-side" role="group" aria-label="Espejo">
+                  <button type="button" class="seg__btn" data-v="L" aria-pressed="true">Izquierdo</button>
+                  <button type="button" class="seg__btn" data-v="R" aria-pressed="false">Derecho</button>
+                </div>
+              </header>
+              <div class="mir__pad" role="group" aria-label="Mover espejo">
+                <button type="button" class="mir__k mir__k--u" data-d="up" aria-label="Subir"><svg class="icon"><use href="#i-chevron-up"/></svg></button>
+                <button type="button" class="mir__k mir__k--l" data-d="left" aria-label="Izquierda"><svg class="icon"><use href="#i-chevron-left"/></svg></button>
+                <span class="mir__c" id="mir-c">I</span>
+                <button type="button" class="mir__k mir__k--r" data-d="right" aria-label="Derecha"><svg class="icon"><use href="#i-chevron-right"/></svg></button>
+                <button type="button" class="mir__k mir__k--d" data-d="down" aria-label="Bajar"><svg class="icon" style="transform:rotate(180deg)"><use href="#i-chevron-up"/></svg></button>
+              </div>
+              <p class="cv__note" id="mir-hw">Mantén pulsada la flecha para mover el espejo.</p>
+            </article>
+
+
           </div>
         </section>
         <!-- ================= AJUSTES ================= -->
         <section class="view view--apps" data-view="apps" data-title="Apps">
           <div class="ap" id="ap">
-            <!-- Lanzador -->
+            <!-- Cajón de apps (launcher) -->
             <div class="ap__launcher" id="ap-launcher">
-              <header class="ap__head">
-                <p class="ap__hint">Abre tus apps sin salir del sistema. Con el botón <b>Sistema</b> vuelves al instante.</p>
-                <button type="button" class="btn-pill" id="ap-edit" aria-pressed="false">Editar</button>
-              </header>
-              <form class="card ap__search" id="ap-search" autocomplete="off">
-                <div class="seg ap__seg" id="ap-search-seg" role="group" aria-label="Buscar en">
-                  <button type="button" class="seg__btn" aria-pressed="true" data-s="youtube">YouTube</button>
-                  <button type="button" class="seg__btn" aria-pressed="false" data-s="ytmusic">YT Music</button>
-                  <button type="button" class="seg__btn" aria-pressed="false" data-s="spotify">Spotify</button>
-                  <button type="button" class="seg__btn" aria-pressed="false" data-s="web">Web</button>
+              <header class="ap__top">
+                <div class="ap__searchbox">
+                  <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+                  <input id="ap-q" class="ap__q" type="search" enterkeyhint="search" placeholder="Buscar apps" aria-label="Buscar apps" autocomplete="off" spellcheck="false">
+                  <button type="button" class="ap__clear" id="ap-q-clear" aria-label="Borrar búsqueda" hidden><svg class="icon"><use href="#i-close"/></svg></button>
                 </div>
-                <input id="ap-search-q" class="ap__input ap__input--wide" type="search" enterkeyhint="search" placeholder="Buscar en YouTube" aria-label="Buscar">
-                <button type="submit" class="btn-pill ap__add-ok">Buscar</button>
-              </form>
-              <div class="ap__grid" id="ap-grid" role="list"></div>
-              <section class="ap__all" id="ap-all" hidden aria-label="Todas las apps">
-                <button type="button" class="btn-pill" id="ap-all-back"><svg class="icon"><use href="#i-back"/></svg><span>Accesos</span></button>
-                <div class="ap__all-grid" id="ap-all-grid"></div>
+                <button type="button" class="btn-round ap__plus" id="ap-add-btn" aria-label="Añadir acceso web"><svg class="icon"><use href="#i-plus"/></svg></button>
+              </header>
+
+              <!-- Con texto escrito: buscar también en las apps de streaming y en la web -->
+              <div class="ap__web" id="ap-web" hidden>
+                <span class="ap__web-lbl" id="ap-web-lbl">Buscar en</span>
+                <button type="button" class="ap__chip" data-s="youtube">YouTube</button>
+                <button type="button" class="ap__chip" data-s="ytmusic">YT Music</button>
+                <button type="button" class="ap__chip" data-s="spotify">Spotify</button>
+                <button type="button" class="ap__chip" data-s="web">Web</button>
+              </div>
+
+              <section class="ap__favs" id="ap-favs" hidden aria-label="Favoritas">
+                <div class="ap__favs-row" id="ap-favs-row" role="list"></div>
               </section>
-              <form class="card ap__add" id="ap-add" hidden autocomplete="off">
-                <div class="card__label">Añadir acceso</div>
+
+              <div class="ap__scroll" id="ap-scroll">
+                <div class="ap__count" id="ap-count" role="status"></div>
+                <div class="ap__grid" id="ap-grid" role="list"></div>
+              </div>
+
+              <!-- Menú de pulsación larga -->
+              <div class="ap__menu" id="ap-menu" role="menu" hidden></div>
+
+              <form class="card ap__add" id="ap-add" hidden autocomplete="off" aria-label="Añadir acceso web">
+                <div class="card__label">Añadir acceso web</div>
                 <div class="ap__add-row">
                   <input id="ap-name" class="ap__input" placeholder="Nombre" maxlength="18" aria-label="Nombre" required>
                   <input id="ap-url" class="ap__input ap__input--wide" placeholder="Dirección (ej. tiktok.com)" inputmode="url" aria-label="Dirección web" required>
                   <button type="submit" class="btn-pill ap__add-ok">Añadir</button>
+                  <button type="button" class="btn-pill" id="ap-add-cancel">Cancelar</button>
                 </div>
               </form>
             </div>
@@ -1034,6 +1172,28 @@
 
   <!-- Atenuador de brillo -->
   <div class="dim" id="dim" aria-hidden="true"></div>
+
+
+  <!-- ===== Ventana: clave de encendido ===== -->
+  <div class="ign-dlg" id="ign-dlg" role="dialog" aria-modal="true" aria-labelledby="ign-dlg-t" aria-hidden="true" hidden>
+    <div class="ign-dlg__panel">
+      <h2 class="ign-dlg__t" id="ign-dlg-t"></h2>
+      <p class="ign-dlg__s" id="ign-dlg-s"></p>
+      <div class="ign-dlg__dots" id="ign-dots" aria-hidden="true"></div>
+      <p class="ign-dlg__err" id="ign-err" role="alert"></p>
+      <div class="ign-dlg__pad" id="ign-pad">
+        <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+        <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+        <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+        <button type="button" data-k="back" aria-label="Borrar">⌫</button><button type="button" data-k="0">0</button><button type="button" data-k="ok" class="ign-dlg__ok">Listo</button>
+      </div>
+      <div class="ign-dlg__ask" id="ign-ask" hidden>
+        <button type="button" class="ign-dlg__yes" id="ign-yes">Sí, desconectar</button>
+        <button type="button" class="ign-dlg__no" id="ign-no">No, dejar conectado</button>
+      </div>
+      <button type="button" class="btn-pill ign-dlg__cancel" id="ign-cancel">Cancelar</button>
+    </div>
+  </div>
 
   <!-- ===== Cámara de reversa (pantalla completa) ===== -->
   <div class="cam" id="cam" role="dialog" aria-modal="true" aria-label="Cámara de reversa" aria-hidden="true" data-state="connecting" data-guides="on" data-mirror="off">
@@ -1210,6 +1370,9 @@
   <script src="volume.js"></script>
   <script src="radio.js"></script>
   <script src="vehicle.js"></script>
+  <script src="ambient.js"></script>
+  <script src="ignition.js"></script>
+  <script src="mirrors.js"></script>
   <script src="climate.js"></script>
   <script src="car.js"></script>
   <script src="camera.js"></script>
@@ -1220,6 +1383,8 @@
   <script src="tilemap.js"></script>
   <script src="map.js"></script>
   <script src="apps.js"></script>
+  <script src="streaming.js"></script>
+  <script src="android.js"></script>
   <script src="osk.js"></script>
   <script src="boot.js"></script>
   <script src="main.js"></script>
