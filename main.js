@@ -12,6 +12,8 @@ const config = require('./lib/config');
 const apps = require('./lib/apps');
 const serial = require('./lib/serial');
 const displays = require('./lib/displays');
+const embed = require('./lib/embed');
+const helper = require('./lib/winhelper');
 
 const SMOKE = process.argv.includes('--smoke');
 const WWW = app.isPackaged ? path.join(process.resourcesPath, 'www') : path.join(__dirname, 'www');
@@ -115,6 +117,14 @@ function suspend() {
   else if (mode === 'hibernate') execFile('shutdown.exe', ['/h'], () => {});
 }
 
+let wifi = {};
+function pollWifi() {
+  if (process.platform !== 'win32') return;
+  execFile('netsh', ['wlan', 'show', 'interfaces'], { windowsHide: true, timeout: 5000 }, (err, out) => {
+    if (!err && out) wifi = { wifi: /^\s*(State|Estado)\s*:\s*(connected|conectado)/im.test(out) };
+    else wifi = {};
+  });
+}
 let lastStatus = null;
 function startSerial() {
   const c = config.get();
@@ -125,9 +135,42 @@ function startSerial() {
 
 ipcMain.on('host:apps', (e) => { e.returnValue = apps.apps(); });
 ipcMain.on('host:icon', (e, pkg) => { e.returnValue = apps.icon(pkg); });
-ipcMain.on('host:launch', (_e, pkg) => { apps.launch(pkg).then((ok) => { if (ok) leaveRadio(); }); });
+const placed = {};   // pkg -> hwnd de la ventana ya colocada
+function screenRect(rc) {
+  // rectángulo de la interfaz (px CSS de la ventana) -> píxeles físicos de pantalla, para colocar la ventana de otra app
+  if (!main || !rc) return null;
+  const cb = main.getContentBounds();
+  const dip = { x: cb.x + rc.x, y: cb.y + rc.y, width: rc.width, height: rc.height };
+  try { return screen.dipToScreenRect(main, dip); } catch (e) { return dip; }
+}
+ipcMain.on('host:launch', async (_e, pkg, rc) => {
+  const ok = await apps.launch(pkg);
+  if (!ok) return;
+  const r = screenRect(rc);
+  if (!r) { leaveRadio(); return; }
+  embed.hide();
+  let res = null;
+  if (placed[pkg]) res = await helper.place(placed[pkg], r);
+  if (!res || !res.hwnd) res = await helper.findAndPlace(process.pid, r);
+  if (res && res.hwnd) placed[pkg] = res.hwnd; else leaveRadio();   // si no se pudo acomodar, queda el botón «Radio»
+});
 ipcMain.on('host:openUrl', (_e, url) => openExternal(url));
 ipcMain.on('host:openCluster', () => { openCluster(); });
+ipcMain.on('host:embedOpen', (_e, id, url, rc) => embed.open(id, url, rc));
+ipcMain.on('host:embedShow', (_e, rc) => embed.show(rc));
+ipcMain.on('host:embedHide', () => embed.hide());
+ipcMain.handle('host:embedFreeze', () => embed.freeze());
+ipcMain.on('host:embedCmd', (_e, c) => embed.cmd(c));
+ipcMain.on('host:embedNav', (_e, u) => embed.nav(u));
+ipcMain.on('host:embedClose', (_e, id) => embed.close(id));
+ipcMain.on('host:sysVol', (_e, v) => helper.setVolume(+v));
+ipcMain.on('host:sysMute', (_e, m) => helper.setMute(!!m));
+ipcMain.on('host:sysBright', (_e, b) => helper.setBrightness(+b));
+ipcMain.on('host:sysGet', (e) => { e.returnValue = Object.assign({}, helper.state(), wifi); });
+ipcMain.on('host:openSettings', (_e, key) => {
+  const uri = { wifi: 'ms-settings:network-wifi', bluetooth: 'ms-settings:bluetooth', sound: 'ms-settings:sound', display: 'ms-settings:display' }[key];
+  if (uri) { shell.openExternal(uri).catch(() => {}); leaveRadio(); }
+});
 ipcMain.on('host:espSend', (_e, line) => { serial.send(line); });
 ipcMain.on('host:suspend', suspend);
 ipcMain.on('host:quit', () => app.quit());
@@ -148,14 +191,17 @@ app.whenReady().then(async () => {
   if (SMOKE) return smoke();
   if (config.get().keepAwake) blocker = powerSaveBlocker.start('prevent-display-sleep');
   try { await Promise.race([apps.scan(), new Promise((r) => setTimeout(r, 9000))]); } catch (e) {}
+  helper.start(); pollWifi(); setInterval(pollWifi, 15000);
   openRadio();
+  embed.init(() => main, (st) => { if (main && !main.isDestroyed()) main.webContents.send('host:embed', st); });
+  main.on('resize', () => embed.resize());
   startSerial();
   main.webContents.once('did-finish-load', () => { if (config.get().autoCluster) setTimeout(openCluster, 800); });
   screen.on('display-added', () => { if (config.get().autoCluster && !clusterWin) setTimeout(openCluster, 1500); });
   screen.on('display-removed', () => { if (clusterWin && !clusterWin.isDestroyed() && !displays.cluster(config.get(), displays.radio(config.get()))) clusterWin.close(); });
 });
 
-app.on('before-quit', () => { serial.stop(); if (blocker !== null) { try { powerSaveBlocker.stop(blocker); } catch (e) {} } });
+app.on('before-quit', () => { serial.stop(); helper.stop(); if (blocker !== null) { try { powerSaveBlocker.stop(blocker); } catch (e) {} } });
 app.on('window-all-closed', () => app.quit());
 
 /* Comprobación automática (CI): abre la interfaz sin ventana visible y verifica que carga. */
@@ -168,7 +214,16 @@ async function smoke() {
   await new Promise((r) => setTimeout(r, 2500));
   const r = await w.webContents.executeJavaScript(
     '({nav:!!window.RadioNav,esp:!!window.RadioESP&&window.RadioESP.available(),host:!!window.RadioHost,apps:typeof window.AndroidBridge.apps,power:!!window.RadioPower,title:document.title})');
+  // vista incrustada: se crea, se muestra y se congela en una captura
+  main = w;
+  embed.init(() => w, () => {});
+  embed.open('smoke', 'app://radio/cluster/display.html', { x: 0, y: 60, width: 800, height: 300 });
+  await new Promise((res) => setTimeout(res, 1500));
+  const snap = await embed.freeze();
+  r.embed = embed.info().count === 1 && typeof snap === 'string';
+  r.snap = snap.length;
+  r.sysbridge = await w.webContents.executeJavaScript('typeof window.AndroidBridge.sys+typeof window.RadioHost.embedOpen');
   console.log('SMOKE', JSON.stringify(r), 'errores:', errors.length);
-  const ok = r.nav && r.esp && r.host && r.power;
+  const ok = r.nav && r.esp && r.host && r.power && r.embed;
   app.exit(ok ? 0 : 1);
 }

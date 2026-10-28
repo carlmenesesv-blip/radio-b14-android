@@ -24,6 +24,7 @@
   var UA = navigator.userAgent || "";
   var IOS = /iPhone|iPad|iPod/i.test(UA), ANDROID = /Android/i.test(UA);
   function pref(k) { var s = window.RadioSystem && window.RadioSystem.get && window.RadioSystem.get(); return !s || s[k] !== false; }
+  var EMB = window.RadioEmbed && window.RadioEmbed.available ? window.RadioEmbed : null;   // app de Windows: apps web dentro del radio
   function has(fn) { return !!AB && typeof AB[fn] !== "undefined"; }
 
   // Accesos web predeterminados (solo cuando no hay puente Android). mode "ext": se abre fuera del radio
@@ -72,7 +73,8 @@
   function build() {
     var base = [];
     if (AB) base = androidApps();
-    else base = DEFAULTS.filter(function (d) { return data.hidden.indexOf(d.id) < 0; }).map(function (d) { return Object.assign({ kind: "web" }, d); });
+    if (EMB) base = base.concat(DEFAULTS.filter(function (d) { return data.hidden.indexOf(d.id) < 0; }).map(function (d) { return Object.assign({ kind: "web" }, d, { mode: "in" }); }));
+    else if (!AB) base = DEFAULTS.filter(function (d) { return data.hidden.indexOf(d.id) < 0; }).map(function (d) { return Object.assign({ kind: "web" }, d); });
     base.push(BROWSER);
     data.custom.forEach(function (c) { base.push(Object.assign({ kind: "custom" }, c)); });
     base.sort(function (a, b) { return a.name.localeCompare(b.name, "es", { sensitivity: "base" }); });
@@ -225,6 +227,15 @@
   }
   function openInside(a) {
     cur = a;
+    if (EMB) {
+      if (a.url && ifr.dataset.appid !== a.id) EMB.open(a.id, a.url);
+      ifr.dataset.appid = a.id;
+      addrIn.value = (a.url && EMB.id() === a.id ? EMB.url() : "") || a.url || "";
+      showFrame(true);
+      if (!a.url) addrIn.focus();
+      render();
+      return;
+    }
     if (a.url && ifr.dataset.appid !== a.id) ifr.src = a.url;
     if (!a.url && ifr.dataset.appid !== a.id) ifr.removeAttribute("src");
     ifr.dataset.appid = a.id;
@@ -237,6 +248,7 @@
   // Web: ventana emergente del tamaño de toda la pantalla (sin pestañas ni barra); si no, pestaña normal
   function openWeb(url, name, pwa, pkg) {
     var w = null;
+    if (EMB) { openInside({ id: "w:" + url, name: name, url: url, mode: "in", kind: "custom" }); if (window.RadioNav) window.RadioNav.show("apps"); return; }
     if (AB) {   // Android: abre la app instalada con la dirección; si no está, el navegador del sistema
       var okA = false;
       try { okA = AB.openUrl(url, pkg || ""); } catch (e) {}
@@ -263,6 +275,7 @@
 
   // App instalada: con el puente Android se lanza por paquete; en navegador, por esquema (spotify:, waze://…)
   function openExternal(url, name, scheme, pwa, pkg) {
+    if (EMB) { openWeb(url, name, pwa, pkg); return; }
     if (AB && pkg && pref("appsNative")) {
       var done = false;
       try { done = AB.launch(pkg); } catch (e) {}
@@ -330,7 +343,8 @@
   function exitFs() { if (document.fullscreenElement && document.exitFullscreen) { try { document.exitFullscreen(); } catch (e) {} } }
   function showFrame(on) {
     frame.hidden = !on; launcher.hidden = on;
-    note.hidden = !(on && cur && cur.url);
+    note.hidden = EMB ? true : !(on && cur && cur.url);
+    if (EMB) EMB.show(on && !!cur && !!cur.url);
     if (!on) exitFs();
     else if (!AB && pref("appsFullscreen") && frame.requestFullscreen && !fsActive()) {
       try { var p = frame.requestFullscreen(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
@@ -338,6 +352,7 @@
   }
   function close() {
     cur = null; ifr.removeAttribute("src"); delete ifr.dataset.appid; addrIn.value = "";
+    if (EMB) EMB.close();
     showFrame(false); render();
   }
 
@@ -349,14 +364,16 @@
     var u = normalize(v);
     if (!u) return;
     cur = cur || { id: "tmp", name: "Navegador", mode: "in", kind: "custom" };
-    cur.url = u; ifr.src = u; addrIn.value = u; note.hidden = false;
+    cur.url = u; addrIn.value = u; note.hidden = !!EMB ? true : false;
+    if (EMB) { if (EMB.id() === (cur.id || "tmp")) EMB.go(u); else EMB.open(cur.id || "tmp", u); ifr.dataset.appid = cur.id || "tmp"; showFrame(true); addrIn.blur(); return; }
+    ifr.src = u;
     addrIn.blur();
   });
 
   function curUrl() { return (cur && cur.url) || normalize(addrIn.value); }
-  $("ap-ext").addEventListener("click", function () { var u = curUrl(); if (u) openWeb(u, cur ? cur.name : "App", false, ""); });
-  $("ap-note-ext").addEventListener("click", function () { var u = curUrl(); if (u) openWeb(u, cur ? cur.name : "App", false, ""); });
-  $("ap-reload").addEventListener("click", function () { var u = curUrl(); if (u) ifr.src = u; });
+  $("ap-ext").addEventListener("click", function () { var u = curUrl(); if (!u) return; if (EMB && window.RadioHost.openExternal) window.RadioHost.openExternal(u); else openWeb(u, cur ? cur.name : "App", false, ""); });
+  $("ap-note-ext").addEventListener("click", function () { var u = curUrl(); if (!u) return; if (EMB && window.RadioHost.openExternal) window.RadioHost.openExternal(u); else openWeb(u, cur ? cur.name : "App", false, ""); });
+  $("ap-reload").addEventListener("click", function () { if (EMB) { EMB.reload(); return; } var u = curUrl(); if (u) ifr.src = u; });
   $("ap-close").addEventListener("click", close);
   $("ap-apps").addEventListener("click", function () { showFrame(false); render(); });
   $("ap-home").addEventListener("click", function () { exitFs(); if (window.RadioNav) window.RadioNav.show("home"); });
@@ -371,6 +388,12 @@
     if (e.key !== "Escape" || !viewEl || !viewEl.classList.contains("is-active")) return;
     if (!menu.hidden) { hideMenu(); return; }
     if (!frame.hidden) $("ap-home").click();
+  });
+
+  if (EMB) window.addEventListener("radio:embed", function (e) {
+    var d = e.detail || {};
+    if (d.url && document.activeElement !== addrIn) addrIn.value = d.url;
+    if (cur && d.url) cur.url = cur.url || d.url;
   });
 
   // Apps instaladas o quitadas mientras el radio está abierto (lo avisa la app Android)

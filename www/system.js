@@ -489,7 +489,7 @@
     row(c, "Usar la app instalada", "Si Spotify, Waze o Maps están instaladas, se abre esa app; si no, la web", function (id) { return toggle("appsNative", id); });
 
     /* ----- Sistema Android (solo cuando corre como app/launcher) ----- */
-    if (window.AndroidBridge && typeof window.AndroidBridge.sys === "function") {
+    if (window.AndroidBridge && typeof window.AndroidBridge.sys === "function" && window.AndroidBridge.platform !== "windows") {
       group(mount, "Sistema Android");
       c = card(mount, "");
       var homeHint = null, ovHint = null, wrHint = null, ovTgl = null;
@@ -523,6 +523,59 @@
       });
       shortcuts.style.flexWrap = "wrap"; shortcuts.style.gap = "0.5rem";
       c.appendChild(shortcuts);
+    }
+
+    /* ----- Windows (solo en la app de Windows) ----- */
+    if (window.RadioHost && typeof window.RadioHost.getConfig === "function") {
+      group(mount, "Windows");
+      c = card(mount, "");
+      var HC = {}, hostRows = [];
+      function hostSet(k, v, after) { var p = {}; p[k] = v; Promise.resolve(window.RadioHost.setConfig(p)).then(function (cfg) { HC = cfg || HC; paintHost(); if (after) after(); }); }
+      function hostToggle(key, id) {
+        var b = h("button", "tgl"); b.type = "button"; b.setAttribute("role", "switch"); b.setAttribute("aria-labelledby", id); b.appendChild(h("i"));
+        b.addEventListener("click", function () { hostSet(key, !HC[key]); });
+        hostRows.push(function () { b.setAttribute("aria-checked", String(!!HC[key])); });
+        return b;
+      }
+      function hostSeg(key, options, id) {
+        var sg = h("div", "seg set-seg"); sg.setAttribute("role", "group"); sg.setAttribute("aria-labelledby", id);
+        options.forEach(function (o) {
+          var bt = h("button", "seg__btn", o[0]); bt.type = "button";
+          bt.addEventListener("click", function () { hostSet(key, o[1]); });
+          hostRows.push(function () { bt.setAttribute("aria-pressed", String(HC[key] === o[1])); });
+          sg.appendChild(bt);
+        });
+        return sg;
+      }
+      row(c, "Iniciar con Windows", "El radio se abre solo al encender la laptop", function (id) { return hostToggle("openAtLogin", id); });
+      row(c, "Al apagar el auto (ACC)", "Después de guardar todo, Windows entra en este modo", function (id) {
+        return hostSeg("suspendMode", [["Nada", "none"], ["Suspender", "sleep"], ["Hibernar", "hibernate"]], id);
+      });
+      row(c, "Abrir el cluster solo", "Usa la segunda pantalla al iniciar o al conectarla", function (id) { return hostToggle("autoCluster", id); });
+      row(c, "Mantener la pantalla encendida", "Evita que Windows apague la pantalla", function (id) { return hostToggle("keepAwake", id); });
+      var dispRow = row(c, "Pantallas", "", function () { return h("span", "set-item__hint", ""); });
+      var dispHint = dispRow.querySelector(".set-item__hint");
+      var espRow = row(c, "Puerto del ESP32", "Automático detecta el USB; si falla, escribe el COM en config.json", function () { return h("span", "set-item__hint", ""); });
+      var espHint = espRow.querySelector(".set-item__hint");
+      var note = h("div", "set-item"); note.appendChild(h("span", "set-item__hint", "Las demás opciones están en %APPDATA%\\Radio B14\\config.json y se aplican al reiniciar la app."));
+      c.appendChild(note);
+      function paintHost() {
+        hostRows.forEach(function (f) { f(); });
+        if (espHint) espHint.textContent = HC.espPort === "auto" ? "Automático" : String(HC.espPort || "");
+      }
+      Promise.resolve(window.RadioHost.getConfig()).then(function (cfg) { HC = cfg || {}; paintHost(); });
+      Promise.resolve(window.RadioHost.displays()).then(function (ds) {
+        if (dispHint && ds) dispHint.textContent = ds.map(function (d, i) { return (i + 1) + ": " + d.w + "×" + d.h + (d.touch ? " táctil" : "") + (d.primary ? " principal" : ""); }).join(" · ");
+      });
+      var sh = h("div", "set-item");
+      [["Wi‑Fi", "wifi"], ["Bluetooth", "bluetooth"], ["Sonido", "sound"], ["Pantalla", "display"]].forEach(function (pp) {
+        sh.appendChild(button(pp[0] + " de Windows", function () { window.AndroidBridge && window.AndroidBridge.openSettings(pp[1]); }));
+      });
+      sh.style.flexWrap = "wrap"; sh.style.gap = "0.5rem";
+      c.appendChild(sh);
+      var qb = h("div", "set-item");
+      qb.appendChild(button("Salir de la app", function () { window.RadioHost.quit(); }));
+      c.appendChild(qb);
     }
 
     /* ----- Vehículo ----- */
@@ -692,7 +745,7 @@
     ["Vehículo", ["Vehículo", "Climatización", "Seguridad", "Llave y volante"]],
     ["Navegación", ["Navegación"]],
     ["Conexiones", ["Bluetooth y ESP32"]],
-    ["Sistema", ["Sistema"]]
+    ["Sistema", ["Sistema", "Windows"]]
   ];
   var CAT_KEY = "radio-settings-cat";
   function organize(mount) {

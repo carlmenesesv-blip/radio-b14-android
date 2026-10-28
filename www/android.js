@@ -11,7 +11,8 @@
   var Q = window.RadioQuick;
   if (!AB || typeof AB.sys !== "function" || !Q) return;
 
-  document.documentElement.setAttribute("data-native", "1");   // el brillo es real: se quita el velo simulado
+  function markNative(s) { if (s && typeof s.bright === "number") document.documentElement.setAttribute("data-native", "1"); }   // el brillo es real: se quita el velo simulado
+  if (AB.platform !== "windows") document.documentElement.setAttribute("data-native", "1");
 
   var pulling = false, last = {}, info = {}, timer = null;
 
@@ -20,7 +21,7 @@
   // Sistema → interfaz
   function pull() {
     var s = read(); if (!s) return;
-    info = s;
+    info = s; markNative(s);
     var patch = {};
     if (typeof s.vol === "number") patch.volume = s.vol;
     if (typeof s.mute === "boolean") patch.mute = s.mute;
