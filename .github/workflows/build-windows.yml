@@ -35,7 +35,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp "dist/Radio B14 Setup 1.0.0.exe" RadioB14-Setup.exe
-          ls dist/*.exe
+          ls -la dist
+          cp dist/*Setup*.exe RadioB14-Setup.exe
+          for f in dist/*.exe; do case "$f" in *Setup*) ;; *) cp "$f" RadioB14-Portable.exe;; esac; done
           gh release delete windows-latest --yes --cleanup-tag || true
-          gh release create windows-latest RadioB14-Setup.exe dist/*portable*.exe --title "Radio B14 (Windows)" --notes "Instalador de Windows compilado automáticamente."
+          gh release create windows-latest RadioB14-Setup.exe RadioB14-Portable.exe --title "Radio B14 (Windows)" --notes "Instalador de Windows compilado automáticamente."
