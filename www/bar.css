@@ -1,0 +1,116 @@
+/* ==========================================================
+   BAR — barra de abajo: clima fijo + ventanas de clima y volumen
+   Sección: BARRA INFERIOR
+   ========================================================== */
+
+:root { --barh: 5rem; }
+@media (orientation: portrait) { :root { --barh: 9.4rem; } }
+
+/* ---------- Barra inferior única: [volumen · clima] · pestañas · [clima · volumen] ---------- */
+.bar {
+  grid-area: bar; align-self: stretch;
+  display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 0.6rem;
+  padding: 0 0.4rem;
+  background: var(--dock-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+.sbar { flex: none; display: flex; flex-direction: row; align-items: center; gap: 0.3rem; }
+.bar > .dock { flex: 1 1 auto; justify-content: center; min-width: 0; }
+.sbar__b {
+  position: relative; overflow: hidden; isolation: isolate;
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;
+  height: 2.8rem; min-width: 3.4rem; padding: 0 0.8rem;
+  border-radius: var(--radius-pill); background: var(--surface-inset); color: var(--text);
+  touch-action: manipulation; white-space: nowrap;
+  transition: transform 160ms ease-out, background 160ms ease-out;
+}
+.sbar__b:active { transform: scale(0.97); }
+.sbar__b[aria-expanded="true"] { background: var(--surface-strong); }
+.sbar__b:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.sbar__b .icon { width: 1.25rem; height: 1.25rem; flex: none; }
+.sbar__v, .sbar__t b { font-size: 1rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.sbar__t small { font-size: 0.68rem; color: var(--text-dim); margin-left: 0.08rem; }
+.sbar__t { display: inline-flex; align-items: baseline; }
+.sbar__vol::before {            /* el nivel se ve como relleno detrás del botón */
+  content: ""; position: absolute; inset: 0 auto 0 0; width: var(--lv, 60%); z-index: -1;
+  background: var(--dock-active-bg); opacity: 0.22; transition: width 120ms ease-out, opacity 160ms ease-out;
+}
+.sbar__off, .sbar.is-muted .sbar__on { display: none; }
+.sbar.is-muted .sbar__off { display: block; }
+.sbar.is-muted .sbar__v { color: var(--text-dim); }
+.sbar.is-muted .sbar__vol::before { opacity: 0.08; }
+.sbar[data-power="off"] .sbar__cl .sbar__ico, .sbar[data-power="off"] .sbar__t { opacity: 0.5; }
+@media (max-width: 62rem) { .sbar__b { height: 2.6rem; min-width: 3rem; padding: 0 0.6rem; } }
+@media (orientation: portrait) {
+  .bar { display: grid; grid-template-columns: 1fr 1fr; border-radius: var(--radius-xl); }
+  .bar > .dock { grid-column: 1 / -1; grid-row: 2; }
+  .sbar { min-width: 0; } .sbar--r { justify-content: flex-end; } .sbar__b { flex: 1; }
+}
+
+/* ---------- Ventanas (clima y volumen) ---------- */
+.cpop, .vpop {
+  position: fixed; inset: 0; z-index: 90;
+  visibility: hidden; pointer-events: none; opacity: 0;
+  transition: opacity var(--dur) var(--ease), visibility 0s linear var(--dur);
+}
+.cpop.is-open, .vpop.is-open { visibility: visible; pointer-events: auto; opacity: 1; transition-delay: 0s; }
+.cpop__scrim, .vpop__scrim { position: absolute; inset: 0; }
+.cpop__scrim { background: var(--qs-scrim, rgba(0, 0, 0, 0.5)); }
+.vpop__scrim { background: transparent; }
+
+.cpop__panel, .vpop__panel {
+  position: absolute; bottom: calc(var(--barh) + var(--gap));
+  background: var(--qs-bg, var(--surface-strong));
+  border: 1px solid var(--border-strong); border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+  transform: translateY(1rem); transition: transform var(--dur) var(--ease);
+}
+.cpop.is-open .cpop__panel, .vpop.is-open .vpop__panel { transform: none; }
+
+/* Clima */
+.cpop__panel {
+  left: 50%; translate: -50% 0;
+  width: min(64rem, calc(100vw - 2 * var(--gap)));
+  max-height: calc(100dvh - var(--barh) - 2 * var(--gap));
+  display: flex; flex-direction: column; gap: 0.7rem; padding: 0.9rem var(--pad) var(--pad);
+}
+.cpop__head { flex: none; display: flex; align-items: center; justify-content: space-between; }
+.cpop__t { font-size: 1.1rem; font-weight: 500; }
+.cpop__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; container-type: inline-size; container-name: climview; }
+.cpop__body::-webkit-scrollbar { display: none; }
+.cpop .clim { height: auto; min-height: 0; grid-template-rows: auto auto; }
+
+/* Volumen */
+.vpop__panel {
+  right: var(--gap);
+  width: min(26rem, calc(100vw - 2 * var(--gap)));
+  display: flex; flex-direction: column; gap: 0.8rem; padding: var(--pad);
+}
+.vpop__head { display: flex; align-items: center; gap: 0.5rem; }
+.vpop__t { margin-right: auto; }
+.vpop__mute { display: inline-flex; align-items: center; gap: 0.45rem; }
+.vpop__mute .icon { width: 1.1rem; height: 1.1rem; }
+.vpop__m-off { display: none; }
+.vpop__mute[aria-pressed="true"] .vpop__m-on { display: none; }
+.vpop__mute[aria-pressed="true"] .vpop__m-off { display: block; }
+.vpop__t { font-size: 1.05rem; font-weight: 500; }
+.vpop__mute { min-height: 2.75rem; display: inline-flex; align-items: center; gap: 0.45rem; }
+.vpop__mute[aria-pressed="true"] { background: var(--dock-active-bg); color: var(--dock-active-fg); border-color: transparent; }
+.vpop__row { display: grid; grid-template-columns: auto minmax(0, 1fr) 2.4ch; align-items: center; gap: 0.6rem; }
+.vpop__ico { width: 1.3rem; height: 1.3rem; color: var(--text-dim); }
+.vpop__lbl { font-size: 0.85rem; }
+.vpop__val { font-size: 0.95rem; font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
+.vpop__track {
+  position: relative; height: 2.9rem; border-radius: var(--radius-pill); background: var(--surface-inset);
+  overflow: hidden; touch-action: none; cursor: pointer;
+}
+.vpop__fill { position: absolute; inset: 0 auto 0 0; width: var(--v, 60%); background: var(--dock-active-bg); transition: width 120ms ease-out; }
+.vpop__track.is-dragging .vpop__fill { transition: none; }
+.vpop__track:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.vpop__note { font-size: 0.74rem; line-height: 1.35; color: var(--text-dim); }
+.vpop__note[hidden] { display: none; }
+.vpop[data-side="drv"] .vpop__panel { right: auto; left: var(--gap); }
+@media (orientation: portrait) { .vpop[data-side="drv"] .vpop__panel, .vpop__panel { left: var(--gap); right: var(--gap); width: auto; } }

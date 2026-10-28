@@ -1,0 +1,132 @@
+/* ==========================================================
+   TOKENS — variables de diseño y temas (oscuro / claro)
+   Sección: SISTEMA DE DISEÑO
+   ========================================================== */
+
+:root {
+  --font: "Outfit", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --radius-xl: 2rem;
+  --radius-lg: 1.5rem;
+  --radius-md: 1rem;
+  --radius-pill: 999px;
+
+  --gap: 0.9rem;
+  --pad: 1.1rem;
+
+  --dur-fast: 160ms;
+  --dur: 320ms;
+  --ease: cubic-bezier(0.22, 0.8, 0.24, 1);
+
+  /* Valores que controla la sección Ajustes */
+  --blur: 0px;     /* sin desenfoque en todo el sistema */
+  --text-scale: 1;
+}
+
+/* ---------- TEMA OSCURO (glass + glow rojo) ---------- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #08080a;
+  --text: #f4f1f0;
+  --text-dim: rgba(244, 241, 240, 0.52);
+  --text-faint: rgba(244, 241, 240, 0.28);
+
+  --solid: #1a1a1e;   /* fondo opaco de ventanas y avisos (sin desenfoque) */
+  --surface: rgba(255, 255, 255, 0.045);
+  --surface-strong: rgba(255, 255, 255, 0.09);
+  --surface-inset: rgba(255, 255, 255, 0.04);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+
+  --accent: #ff3b30;
+  --accent-soft: rgba(255, 59, 48, 0.16);
+  --ok: #2fd27a;
+  --warn: #f5c518;
+  --bad: #ff5a4f;
+  --info: #4da3ff;
+
+  /* Luces del vehículo: color de la luz y color legible para iconos/texto */
+  --fog: #ffb020;      --fog-ink: #ffb020;
+  --fan: #4da3ff;      --fan-ink: #4da3ff;
+  --amb: #9d7bff;      --amb-ink: #b7a0ff;
+  --lamp: #fff1bd;     --lamp-ink: #fff1bd;
+
+  --glow-a: rgba(255, 36, 24, 0.5);
+  --glow-b: rgba(255, 110, 50, 0.16);
+  --glow-opacity: 0; /* sin resplandor rojo de fondo */
+
+  --dock-bg: rgba(255, 255, 255, 0.07);
+  --dock-active-bg: #f4f1f0;
+  --dock-active-fg: #0a0a0c;
+
+  --car-body-1: #3a3a40;
+  --car-body-2: #0d0d10;
+  --car-glass: #050507;
+  --car-line: rgba(255, 255, 255, 0.22);
+
+  /* Mapa, portadas y barras de progreso */
+  --map-bg: var(--surface);
+  --map-road: var(--text-faint);
+  --map-halo: var(--accent-soft);
+  --map-scrim: transparent;
+  --track-bg: rgba(255, 255, 255, 0.1);
+  --cover-lg: radial-gradient(circle at 35% 30%, var(--accent), transparent 70%), var(--surface-inset);
+  --cover-sm: linear-gradient(135deg, var(--surface-strong), var(--surface-inset));
+  --cover-icon: 0;
+}
+
+/* ---------- TEMA CLARO (minimal, tarjetas blancas) ---------- */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #e3e3e6;
+  --text: #111113;
+  --text-dim: rgba(17, 17, 19, 0.5);
+  --text-faint: rgba(17, 17, 19, 0.28);
+
+  --solid: #ffffff;
+  --surface: rgba(255, 255, 255, 0.82);
+  --surface-strong: #ffffff;
+  --surface-inset: rgba(17, 17, 19, 0.045);
+  --border: rgba(17, 17, 19, 0.06);
+  --border-strong: rgba(17, 17, 19, 0.14);
+  --shadow: 0 18px 44px rgba(30, 30, 40, 0.12);
+
+  --accent: #111113;
+  --accent-soft: rgba(17, 17, 19, 0.07);
+  --ok: #17a85a;
+  --warn: #d9a400;
+  --bad: #d93025;
+  --info: #1a6fd6;
+
+  /* Luces del vehículo: color de la luz y color legible para iconos/texto */
+  --fog: #ffb020;      --fog-ink: #9a5b00;
+  --fan: #2f8cff;      --fan-ink: #1a6fd6;
+  --amb: #8b5cf6;      --amb-ink: #6d3fd8;
+  --lamp: #ffd96a;     --lamp-ink: #8a6500;
+
+  --glow-a: rgba(255, 255, 255, 0.9);
+  --glow-b: rgba(255, 255, 255, 0.4);
+  --glow-opacity: 0.8;
+
+  --dock-bg: rgba(255, 255, 255, 0.7);
+  --dock-active-bg: #111113;
+  --dock-active-fg: #ffffff;
+
+  --car-body-1: #5a5a62;
+  --car-body-2: #15151a;
+  --car-glass: #0a0a0d;
+  --car-line: rgba(255, 255, 255, 0.55);
+
+  /* Mapa, portadas y barras de progreso */
+  --map-bg: #e9ebee;
+  --map-road: #ffffff;
+  --map-halo: rgba(17, 17, 19, 0.12);
+  --map-scrim: rgba(233, 235, 238, 0.88);
+  --track-bg: rgba(17, 17, 19, 0.1);
+  --cover-lg: linear-gradient(135deg, #f3f3f6, #d0d0d8);
+  --cover-sm: linear-gradient(135deg, #f5f5f8, #d9d9e0);
+  --cover-icon: 0.4;
+}

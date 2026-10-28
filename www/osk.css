@@ -1,0 +1,78 @@
+/* ==========================================================
+   OSK — teclado en pantalla
+   Oscuro y claro. Sección: ENTRADA
+   ========================================================== */
+.osk {
+  --k-bg: #17171b; --k-key: rgba(255, 255, 255, 0.11); --k-key-fn: rgba(255, 255, 255, 0.06); --k-fg: #f4f1f0; --k-dim: rgba(244, 241, 240, 0.5);
+  --k-h: clamp(2.7rem, 8.4vh, 4rem);
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 9000;
+  display: flex; flex-direction: column; gap: 0.5rem;
+  padding: 0.6rem max(0.8rem, calc((100vw - 64rem) / 2)) calc(0.7rem + env(safe-area-inset-bottom, 0px));
+  background: var(--k-bg); color: var(--k-fg);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -1.2rem 3rem rgba(0, 0, 0, 0.35);
+  transform: translateY(100%); transition: transform 200ms ease-out;
+  user-select: none; -webkit-user-select: none; touch-action: manipulation;
+}
+.osk[hidden] { display: none; }
+.osk.is-in { transform: none; }
+:root[data-theme="light"] .osk {
+  --k-bg: #e9ebef; --k-key: #ffffff; --k-key-fn: rgba(17, 17, 19, 0.09); --k-fg: #111113; --k-dim: rgba(17, 17, 19, 0.55);
+  border-top-color: rgba(17, 17, 19, 0.12); box-shadow: 0 -1rem 2.5rem rgba(0, 0, 0, 0.12);
+}
+
+.osk__top { display: flex; align-items: center; gap: 0.6rem; }
+.osk__mirror {
+  flex: 1; min-width: 0; min-height: 2.9rem; padding: 0.3rem 1rem; border-radius: 999px;
+  display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden;
+  background: var(--k-key-fn); border: 1px solid rgba(128, 128, 128, 0.22);
+}
+.osk__lbl { font-size: 0.68rem; color: var(--k-dim); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.osk__txt { font-size: 1.1rem; line-height: 1.3; white-space: pre; overflow: hidden; padding-right: 0.5rem; }
+.osk.is-empty .osk__txt { min-height: 1.4rem; }
+.osk__caret { position: absolute; right: 0.85rem; bottom: 0.5rem; width: 2px; height: 1.1rem; background: var(--k-fg); animation: oskBlink 1s steps(1) infinite; }
+@keyframes oskBlink { 50% { opacity: 0; } }
+:root[data-motion="reduce"] .osk__caret { animation: none; }
+.osk__hide {
+  flex: none; width: 2.9rem; height: 2.9rem; border-radius: 50%; display: grid; place-items: center;
+  background: var(--k-key); color: var(--k-fg); transition: transform 160ms ease-out;
+}
+.osk__hide svg.icon { width: 1.4rem; height: 1.4rem; }
+.osk__hide:active { transform: scale(0.92); }
+
+.osk__keys { display: flex; flex-direction: column; gap: 0.45rem; }
+.osk__row { display: flex; gap: 0.4rem; }
+.osk__key {
+  flex: 1 1 0; min-width: 0; height: var(--k-h); border-radius: 0.8rem;
+  display: grid; place-items: center; font-size: 1.25rem; font-weight: 400;
+  background: var(--k-key); color: var(--k-fg);
+  transition: transform 80ms ease-out, background 120ms ease-out;
+}
+.osk__key:active { transform: scale(0.95); background: var(--k-key-fn); }
+.osk__key--fn { background: var(--k-key-fn); font-size: 1.05rem; }
+.osk__key--w15 { flex-grow: 1.5; }
+.osk__key--w2 { flex-grow: 2.2; }
+.osk__key--space { flex-grow: 5; }
+.osk__key--ghost { background: transparent; pointer-events: none; }
+.osk__key--go { background: var(--k-fg); color: var(--k-bg); font-weight: 500; font-size: 1.05rem; }
+.osk__key--go:active { background: var(--k-fg); opacity: 0.8; }
+.osk__key svg.icon { width: 1.4rem; height: 1.4rem; }
+.osk__key.is-on { background: var(--k-fg); color: var(--k-bg); }
+.osk__key.is-lock svg { fill: currentColor; }
+
+/* Teclado numérico */
+.osk__keys.is-num { display: grid; grid-template-columns: repeat(4, 1fr); width: min(28rem, 100%); margin-inline: auto; gap: 0.45rem; }
+.osk__keys.is-num .osk__key { height: calc(var(--k-h) * 0.9); }
+.osk__keys.is-num .osk__key--go { height: auto; }
+
+/* Acentos */
+.osk__pop { position: absolute; z-index: 2; display: flex; gap: 0.35rem; padding: 0.4rem; border-radius: 1rem; background: var(--k-bg); border: 1px solid rgba(128, 128, 128, 0.35); box-shadow: 0 0.6rem 1.6rem rgba(0, 0, 0, 0.35); }
+.osk__pop[hidden] { display: none; }
+.osk__alt { flex: none; width: 3.2rem; height: var(--k-h); }
+
+/* El contenido se acorta para que ningún campo quede tapado */
+html[data-osk] .views { margin-bottom: var(--osk-h, 0px); }
+html[data-osk] .ap__frame:fullscreen { padding-bottom: calc(0.8rem + var(--osk-h, 0px)); }
+html[data-osk] .ap__frame:-webkit-full-screen { padding-bottom: calc(0.8rem + var(--osk-h, 0px)); }
+
+@media (prefers-reduced-motion: reduce) { .osk { transition: none; } }

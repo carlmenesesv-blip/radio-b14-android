@@ -1,0 +1,103 @@
+/* ==========================================================
+   CAMERA — cámara de reversa (pantalla completa, acceso manual)
+   Siempre oscura, sin importar el tema: no deslumbra al conducir.
+   Sección: CÁMARA
+   ========================================================== */
+
+.cam {
+  position: fixed; inset: 0; z-index: 350;
+  display: flex; flex-direction: column;
+  background: #000; color: #fff;
+  opacity: 0; visibility: hidden;
+  transition: opacity 240ms ease-out, visibility 0s linear 240ms;
+}
+.cam.is-open { opacity: 1; visibility: visible; transition-delay: 0s; }
+
+/* ---------- Imagen ---------- */
+.cam__view { position: absolute; inset: 0; overflow: hidden; background: #050506; }
+.cam__video, .cam__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
+.cam[data-mirror="on"] :is(.cam__video, .cam__img) { transform: scaleX(-1); }
+.cam__video[hidden], .cam__img[hidden] { display: none; }
+
+/* ---------- Guías de estacionamiento ---------- */
+.cam__guides { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity 160ms ease-out; }
+.cam[data-guides="on"][data-state="live"] .cam__guides { opacity: 1; }
+.cam__guides path { fill: none; stroke-width: 0.9; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-width: 4px; filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.7)); }
+.cam__guides .g--near { stroke: #ff4d42; }
+.cam__guides .g--mid  { stroke: #ffc933; }
+.cam__guides .g--far  { stroke: #35d37f; }
+
+/* ---------- Sin señal / conectando ---------- */
+.cam__empty {
+  position: absolute; inset: 0; display: none;
+  flex-direction: column; align-items: center; justify-content: center; gap: 0.8rem;
+  padding: 6rem 2rem 9rem; text-align: center;
+}
+.cam:not([data-state="live"]) .cam__empty { display: flex; }
+.cam__empty svg.icon { width: 3rem; height: 3rem; opacity: 0.7; }
+.cam__empty-title { font-size: 1.5rem; font-weight: 400; }
+.cam__empty-msg { max-width: 34rem; font-size: 0.9rem; color: rgba(255, 255, 255, 0.72); line-height: 1.45; }
+.cam[data-state="connecting"] .cam__empty svg.icon { animation: cam-pulse 1.2s ease-in-out infinite; }
+@keyframes cam-pulse { 50% { opacity: 0.25; } }
+
+/* ---------- Barras ---------- */
+.cam__bar, .cam__tools { position: absolute; left: 0; right: 0; z-index: 2; padding: 0.9rem 1.2rem; }
+.cam__bar {
+  top: 0; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  background: linear-gradient(rgba(0, 0, 0, 0.75), transparent);
+  padding-bottom: 2.4rem;
+}
+.cam__title { display: flex; align-items: center; gap: 0.8rem; font-size: 1.15rem; }
+.cam__chip { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.28rem 0.7rem; border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.14); font-size: 0.72rem; }
+.cam__chip i { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: #ffc933; }
+.cam[data-state="live"] .cam__chip i { background: #35d37f; box-shadow: 0 0 0.5rem #35d37f; }
+.cam[data-state="nosignal"] .cam__chip i { background: #ff4d42; }
+
+.cam__close {
+  width: 3.2rem; height: 3.2rem; width: max(3.2rem, 44px); height: max(3.2rem, 44px);
+  border-radius: 50%; display: grid; place-items: center;
+  background: rgba(255, 255, 255, 0.16); color: #fff;
+  transition: transform 160ms ease-out, background 160ms ease-out;
+}
+.cam__close:active { transform: scale(0.97); }
+
+.cam__tools {
+  bottom: 0; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.7rem;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  padding-top: 2.4rem;
+}
+.cam__row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; justify-content: center; }
+.cam .seg { background: rgba(255, 255, 255, 0.12); }
+.cam .seg__btn { color: rgba(255, 255, 255, 0.72); }
+.cam .seg__btn[aria-pressed="true"] { background: #fff; color: #0a0a0c; }
+
+.cam__field {
+  min-height: 2.8rem; min-height: max(2.8rem, 44px); min-width: 12rem; max-width: 24rem; flex: 1 1 14rem;
+  padding: 0 1rem; border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.12); color: #fff; border: 1px solid rgba(255, 255, 255, 0.18);
+  font: inherit; font-size: 0.85rem; user-select: text; -webkit-user-select: text;
+}
+.cam__field::placeholder { color: rgba(255, 255, 255, 0.55); }
+.cam__field option { color: #000; }
+.cam__field[hidden], .cam__go[hidden] { display: none; }
+
+.cam .btn-pill { background: rgba(255, 255, 255, 0.14); color: #fff; border-color: rgba(255, 255, 255, 0.18); display: inline-flex; align-items: center; gap: 0.5rem; min-height: max(2.8rem, 44px); }
+.cam .btn-pill svg.icon { width: 1.15rem; height: 1.15rem; }
+.cam .btn-pill[aria-pressed="true"] { background: #fff; color: #0a0a0c; }
+
+.cam :is(button, select, input):focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+@media (orientation: portrait) {
+  .cam__tools { flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cam[data-state="connecting"] .cam__empty svg.icon { animation: none; }
+}
+
+/* ---------- Correcciones ---------- */
+.cam [hidden] { display: none !important; }
+.cam .seg__btn { flex: none; padding: 0 1.1rem; }
+.cam__tools { gap: 0.6rem 1.4rem; }
+.cam__row { flex-wrap: nowrap; }
+.cam__field { flex: 0 1 20rem; }
+@media (max-width: 40rem) { .cam__row { flex-wrap: wrap; } }

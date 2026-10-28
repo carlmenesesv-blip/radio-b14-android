@@ -1,0 +1,62 @@
+/* ==========================================================
+   CALLS — pestaña Llamadas (teclado, recientes y favoritos)
+   Sección: LLAMADAS
+   ========================================================== */
+
+.view--calls { overflow: hidden; container-type: inline-size; container-name: callsview; }
+.calls { height: 100%; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: var(--gap); }
+.calls > .card { min-height: 0; }
+
+/* ---------- Teclado ---------- */
+.dial { display: flex; flex-direction: column; gap: 0.6rem; padding: 0.9rem 1rem; }
+.dial__screen { flex: none; display: flex; align-items: center; gap: 0.5rem; min-height: 3rem; }
+.dial__num { flex: 1; min-width: 0; font-size: 1.7rem; font-weight: 300; letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; user-select: text; }
+.dial__num[data-empty="true"] { font-size: 1rem; letter-spacing: 0; color: var(--text-dim); }
+.dial__del { flex: none; width: 2.75rem; height: 2.75rem; border-radius: 50%; display: grid; place-items: center; color: var(--text-dim); touch-action: manipulation; }
+.dial__del:disabled { opacity: 0.3; }
+.dial__del:active:not(:disabled) { transform: scale(0.97); }
+.dial__keys { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); gap: 0.4rem; }
+.dial__k {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.05rem; min-height: 2.75rem;
+  border-radius: var(--radius-md); background: var(--surface-inset); color: var(--text); touch-action: manipulation;
+  transition: transform 160ms ease-out, background 160ms ease-out;
+}
+.dial__k:active { transform: scale(0.97); background: var(--surface-strong); }
+.dial__k b { font-size: 1.35rem; font-weight: 400; line-height: 1; }
+.dial__k small { font-size: 0.5rem; letter-spacing: 0.12em; color: var(--text-dim); min-height: 0.6rem; }
+.dial__act { flex: none; display: flex; gap: 0.6rem; align-items: center; }
+.dial__fav { flex: none; width: 3rem; height: 3rem; }
+.dial__fav:disabled { opacity: 0.3; }
+.dial__call {
+  flex: 1; min-height: 3rem; border-radius: var(--radius-pill); display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  background: var(--dock-active-bg); color: var(--dock-active-fg); font-size: 0.95rem; touch-action: manipulation;
+  transition: transform 160ms ease-out, opacity 160ms ease-out;
+}
+.dial__call:disabled { opacity: 0.35; }
+.dial__call:active:not(:disabled) { transform: scale(0.97); }
+.dial__save { flex: none; display: flex; gap: 0.5rem; }
+.dial__save[hidden] { display: none; }
+.dial__save .set-input { flex: 1; }
+
+/* ---------- Lista ---------- */
+.calls__list { display: flex; flex-direction: column; gap: 0.7rem; padding: 0.9rem 1rem; }
+.calls__items { flex: 1 1 0; min-height: 0; list-style: none; overflow-y: auto; scrollbar-width: none; }
+.calls__items::-webkit-scrollbar { display: none; }
+.calls__item { display: flex; align-items: center; gap: 0.7rem; min-height: 3.2rem; padding: 0.3rem 0; }
+.calls__item + .calls__item { border-top: 1px solid var(--border); }
+.calls__who { flex: 1; min-width: 0; text-align: left; display: flex; flex-direction: column; gap: 0.1rem; min-height: 2.75rem; justify-content: center; touch-action: manipulation; }
+.calls__who b { font-weight: 400; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.calls__who small { font-size: 0.7rem; color: var(--text-dim); }
+.calls__go, .calls__rm { flex: none; width: 2.75rem; height: 2.75rem; border-radius: 50%; display: grid; place-items: center; background: var(--surface-inset); touch-action: manipulation; }
+.calls__rm { color: var(--text-dim); background: none; }
+.calls__go:active, .calls__rm:active { transform: scale(0.97); }
+.calls__empty { margin: auto; text-align: center; color: var(--text-dim); font-size: 0.85rem; max-width: 18rem; }
+.calls__empty[hidden] { display: none; }
+.dial__k:focus-visible, .dial__call:focus-visible, .calls__go:focus-visible, .calls__who:focus-visible, .calls__rm:focus-visible, .dial__del:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+@media (orientation: portrait) {
+  .view--calls { overflow-y: auto; }
+  .calls { height: auto; grid-template-columns: minmax(0, 1fr); }
+  .dial__keys { min-height: 18rem; }
+  .calls__list { min-height: 14rem; }
+}

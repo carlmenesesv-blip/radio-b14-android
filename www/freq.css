@@ -1,0 +1,20 @@
+/* ==========================================================
+   FREQ — tarjeta «Más usadas» en Inicio (4 apps que se ordenan solas)
+   Sección: MÁS USADAS
+   ========================================================== */
+
+.card--freq { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.7rem 0.8rem; }
+.card--freq[hidden] { display: none; }
+.freq__t { flex: none; font-size: 0.85rem; font-weight: 500; display: flex; align-items: baseline; gap: 0.5rem; min-width: 0; }
+.freq__t small { font-size: 0.6rem; font-weight: 400; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.freq__grid { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 0.4rem; }
+.freq__app {
+  display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 0.6rem;
+  padding: 0.3rem 0.5rem; background: var(--surface-inset); min-width: 0; min-height: 44px; border-radius: var(--radius-md);
+  touch-action: manipulation; transition: transform 160ms ease-out, background 160ms ease-out;
+}
+.freq__app:active { transform: scale(0.97); background: var(--surface-strong); }
+.freq__app:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.freq__app .ap__ico { width: 2.6rem; height: 2.6rem; flex: none; }
+.freq__name { min-width: 0; font-size: 0.78rem; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card--freq[data-empty="true"] .freq__t small { opacity: 0.8; }

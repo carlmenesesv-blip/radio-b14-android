@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Radio OS</title>
+
+  <!-- Tema aplicado antes de pintar para evitar parpadeo -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("radio-theme");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Animación de inicio: si está desactivada en Ajustes, no se pinta -->
+  <script>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem("radio-system"));
+        if (s && s.bootAnim === false && !/[?&]boot=1\b/.test(location.search)) document.documentElement.setAttribute("data-boot", "off");
+      } catch (e) {}
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="boot.css">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="base.css">
+  <link rel="stylesheet" href="dock.css">
+  <link rel="stylesheet" href="home.css">
+  <link rel="stylesheet" href="statusbar.css">
+  <link rel="stylesheet" href="volume.css">
+  <link rel="stylesheet" href="settings.css">
+  <link rel="stylesheet" href="radio.css">
+  <link rel="stylesheet" href="vehicle.css">
+  <link rel="stylesheet" href="climate.css">
+  <link rel="stylesheet" href="car.css">
+  <link rel="stylesheet" href="camera.css">
+  <link rel="stylesheet" href="bluetooth.css">
+  <link rel="stylesheet" href="bar.css">
+  <link rel="stylesheet" href="freq.css">
+  <link rel="stylesheet" href="calls.css">
+  <link rel="stylesheet" href="system.css">
+  <link rel="stylesheet" href="cast.css">
+  <link rel="stylesheet" href="map.css">
+  <link rel="stylesheet" href="apps.css">
+  <link rel="stylesheet" href="ambient.css">
+  <link rel="stylesheet" href="ignition.css">
+  <link rel="stylesheet" href="cluster.css">
+  <link rel="stylesheet" href="osk.css">
+
+  <!-- Aplica los ajustes guardados antes de pintar -->
+  <script src="settings.js"></script>
+</head>
+<body>
+
+  <!-- ===== Animación de inicio ===== -->
+  <div class="boot" id="boot" aria-hidden="true">
+    <div class="boot__glow"></div>
+    <span class="boot__skip">Toca para omitir</span>
+    <div class="boot__stage">
+      <div class="boot__lamps"><i class="boot__lamp boot__lamp--l"></i><i class="boot__lamp boot__lamp--r"></i></div>
+      <div class="boot__brand"><span class="boot__word">RADIO</span><span class="boot__num">B14</span></div>
+    </div>
+    <div class="boot__foot"><div class="boot__bar"><i></i></div><div class="boot__msg" id="boot-msg">Iniciando sistema</div></div>
+  </div>
+
+  <!-- ===== Sprite de iconos ===== -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></symbol>
+    <symbol id="i-climate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.6"/><path d="M12 10.4C12 6 14 3 17 3c2 0 3 1.6 2.2 3.4C18.200 8.600 15 10 12 10.400z"/><path d="M13.600 12c4.400 0 7.400 2 7.400 5 0 2-1.600 3-3.400 2.200C15.400 18.200 14 15 13.600 12z"/><path d="M12 13.600C12 18 10 21 7 21c-2 0-3-1.600-2.200-3.400C5.800 15.400 9 14 12 13.600z"/><path d="M10.400 12C6 12 3 10 3 7c0-2 1.600-3 3.400-2.200C8.600 5.800 10 9 10.400 12z"/></symbol>
+    <symbol id="i-car" viewBox="0 0 24 24"><path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v3H3z"/><circle cx="7.500" cy="16" r="0.1"/><circle cx="16.500" cy="16" r="0.1"/><path d="M5 11h14"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.500" width="10" height="19" rx="2.500"/><path d="M11 18.500h2"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.500"/><path d="M20 20l-4.200-4.200"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.500 11.500a6.500 6.500 0 0 0 13 0M12 18v3"/></symbol>
+    <symbol id="i-usb" viewBox="0 0 24 24"><path d="M12 21V5M12 5l-2.500 2.500M12 5l2.500 2.500M12 14l-4-3v-1.500M12 12l4-2.500V8"/><circle cx="8" cy="9" r="1.200"/><rect x="14.800" y="6" width="2.400" height="2.400"/><circle cx="12" cy="21" r="1.300"/></symbol>
+    <symbol id="i-navarrow" viewBox="0 0 24 24"><path d="M12 3l7 17-7-4-7 4z"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s6.500-5.800 6.500-11A6.500 6.500 0 0 0 5.500 10c0 5.200 6.500 11 6.500 11z"/><circle cx="12" cy="10" r="2.300"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.500l2.600 5.400 5.900.8-4.300 4.100 1 5.800-5.200-2.800-5.200 2.800 1-5.800L3.500 9.700l5.900-.8z"/></symbol>
+    <symbol id="i-work" viewBox="0 0 24 24"><rect x="3.500" y="7.500" width="17" height="12" rx="2"/><path d="M9 7.500V6a1.500 1.500 0 0 1 1.500-1.500h3A1.500 1.500 0 0 1 15 6v1.500M3.500 12.500h17"/></symbol>
+    <symbol id="i-traffic" viewBox="0 0 24 24"><rect x="7.500" y="2.500" width="9" height="19" rx="3"/><circle cx="12" cy="7.500" r="1.400"/><circle cx="12" cy="12" r="1.400"/><circle cx="12" cy="16.500" r="1.400"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.500"/><circle cx="12" cy="12" r="8"/><path d="M12 1.500v3M12 19.500v3M1.500 12h3M19.500 12h3"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+    <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2.200"/><circle cx="18" cy="6" r="2.200"/><path d="M8.200 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.800"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.400 15a1.700 1.700 0 0 0 .3 1.800l.1.100a2 2 0 1 1-2.800 2.800l-.1-.1a1.700 1.700 0 0 0-1.800-.3 1.700 1.700 0 0 0-1 1.500V21a2 2 0 1 1-4 0v-.1a1.700 1.700 0 0 0-1.100-1.500 1.700 1.700 0 0 0-1.800.3l-.1.100a2 2 0 1 1-2.800-2.800l.1-.1a1.700 1.700 0 0 0 .3-1.800 1.700 1.700 0 0 0-1.500-1H3a2 2 0 1 1 0-4h.1a1.700 1.700 0 0 0 1.500-1.100 1.700 1.700 0 0 0-.3-1.800l-.1-.1a2 2 0 1 1 2.800-2.800l.1.100a1.700 1.700 0 0 0 1.800.3H9a1.700 1.700 0 0 0 1-1.500V3a2 2 0 1 1 4 0v.1a1.700 1.700 0 0 0 1 1.500 1.700 1.700 0 0 0 1.800-.3l.1-.1a2 2 0 1 1 2.800 2.800l-.1.100a1.700 1.700 0 0 0-.3 1.800V9a1.700 1.700 0 0 0 1.500 1H21a2 2 0 1 1 0 4h-.1a1.700 1.700 0 0 0-1.500 1z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24"><path d="M19 5v14L8 12z"/><path d="M5 5v14"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="M5 5v14l11-7z"/><path d="M19 5v14"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.500v15l12-7.500z"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2 9a15 15 0 0 1 20 0M5 12.500a10.500 10.500 0 0 1 14 0M8.500 16a5.500 5.500 0 0 1 7 0"/><circle cx="12" cy="19.500" r="0.8"/></symbol>
+    <symbol id="i-bluetooth" viewBox="0 0 24 24"><path d="M7 7l10 10-5 4V3l5 4L7 17"/></symbol>
+    <symbol id="i-signal" viewBox="0 0 24 24"><path d="M4 20v-3M9 20v-7M14 20v-11M19 20V4"/></symbol>
+    <symbol id="i-volume" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.500 8.500a5 5 0 0 1 0 7M19 6a8.500 8.500 0 0 1 0 12"/></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l5 6M22 9l-5 6"/></symbol>
+    <symbol id="i-chevron-up" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></symbol>
+    <symbol id="i-radio" viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="11" rx="2.5"/><path d="M7 9l9-5.500"/><circle cx="8.500" cy="14.500" r="2"/><path d="M14 13h4M14 16h4"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6.500" y="5" width="3.500" height="14" rx="1"/><rect x="14" y="5" width="3.500" height="14" rx="1"/></symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-fog" viewBox="0 0 24 24"><path d="M9 5v14"/><path d="M9 5c-4.2 0-7 3-7 7s2.800 7 7 7"/><path d="M13 7h4M13 12h4M13 17h4"/><path d="M20 4c-1.800 2.700 1.800 5.300 0 8s1.800 5.300 0 8"/></symbol>
+    <symbol id="i-headlight" viewBox="0 0 24 24"><path d="M9 5v14"/><path d="M9 5c-4.2 0-7 3-7 7s2.800 7 7 7"/><path d="M13 7.500l8 2M13 12l8 2M13 16.500l8 2"/></symbol>
+    <symbol id="i-snow" viewBox="0 0 24 24"><path d="M12 3v18M4.200 7.500l15.600 9M4.200 16.500l15.600-9"/><path d="M9.500 4.500L12 7l2.500-2.500M9.500 19.500L12 17l2.500 2.500M3.500 10.500l3.400-.9-.9-3.400M20.500 13.500l-3.400.9.9 3.400M3.500 13.500l3.400.9-.9 3.400M20.500 10.500l-3.400-.9.9-3.400"/></symbol>
+    <symbol id="i-recirc" viewBox="0 0 24 24"><path d="M3 15l1.600-4.700A2 2 0 0 1 6.500 9h11a2 2 0 0 1 1.900 1.300L21 15v3H3z"/><path d="M8.500 14.500a3.500 3.500 0 0 1 6-2.500"/><path d="M15 9.800V12h-2.200"/></symbol>
+    <symbol id="i-defrost-front" viewBox="0 0 24 24"><path d="M3.500 18L6 6.500Q12 4.500 18 6.500L20.500 18z"/><path d="M9 16c-1-1 1-2 0-3s1-2 0-3M12 16c-1-1 1-2 0-3s1-2 0-3M15 16c-1-1 1-2 0-3s1-2 0-3"/></symbol>
+    <symbol id="i-defrost-rear" viewBox="0 0 24 24"><rect x="3.500" y="5.500" width="17" height="13" rx="3"/><path d="M9 16c-1-1 1-2 0-3s1-2 0-3M12 16c-1-1 1-2 0-3s1-2 0-3M15 16c-1-1 1-2 0-3s1-2 0-3"/></symbol>
+    <symbol id="i-seat" viewBox="0 0 24 24"><path d="M6.500 3.500l2.700 10.500h6.300l2.300 4.500"/><path d="M9.200 14L8.400 18.500H14"/><path d="M18.500 4c-1 1 1 2 0 3.200M21.500 4c-1 1 1 2 0 3.200"/></symbol>
+    <symbol id="i-wheel" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.200"/><path d="M3.200 11h6.600M14.200 11h6.600M12 14.200V21"/></symbol>
+    <symbol id="i-flow-face" viewBox="0 0 24 24"><circle cx="8" cy="5.500" r="2.200"/><path d="M4.500 21v-6a3.500 3.500 0 0 1 7 0v6"/><path d="M21 7h-6M17.500 4.500L15 7l2.500 2.500"/></symbol>
+    <symbol id="i-flow-both" viewBox="0 0 24 24"><circle cx="8" cy="5.500" r="2.200"/><path d="M4.500 21v-6a3.500 3.500 0 0 1 7 0v6"/><path d="M21 7h-6M17.500 4.500L15 7l2.500 2.500"/><path d="M21 18h-6M17.500 15.500L15 18l2.500 2.500"/></symbol>
+    <symbol id="i-flow-feet" viewBox="0 0 24 24"><circle cx="8" cy="5.500" r="2.200"/><path d="M4.500 21v-6a3.500 3.500 0 0 1 7 0v6"/><path d="M21 18h-6M17.500 15.500L15 18l2.500 2.500"/></symbol>
+    <symbol id="i-flow-wind" viewBox="0 0 24 24"><path d="M3.500 13L6 4.500Q12 3 18 4.500L20.500 13z"/><path d="M12 11V7M10 8.800L12 6.800l2 2"/><path d="M21 20h-6M17.500 17.500L15 20l2.500 2.500" transform="translate(0 -1)"/></symbol>
+    <symbol id="i-auto" viewBox="0 0 24 24"><path d="M5 19L12 5l7 14"/><path d="M8 14h8"/></symbol>
+    <symbol id="i-sync" viewBox="0 0 24 24"><path d="M4 8h14M14.500 4.500L18 8l-3.500 3.500"/><path d="M20 16H6M9.500 12.500L6 16l3.500 3.500"/></symbol>
+    <symbol id="i-door" viewBox="0 0 24 24"><path d="M6 21V4.500A1.500 1.500 0 0 1 7.500 3h9A1.500 1.500 0 0 1 18 4.500V21"/><path d="M4 21h16M14.500 12.500h1.500"/></symbol>
+    <symbol id="i-tire" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500"/><circle cx="12" cy="12" r="3.500"/><path d="M12 3.500v5M12 15.500v5M3.500 12h5M15.500 12h5"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M10 5H3M12 19H3M14 3v4M16 17v4M21 12h-9M21 19h-5M21 5h-7M8 10v4M8 12H3"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6.500" height="6.500" rx="1.600"/><rect x="13.500" y="4" width="6.500" height="6.500" rx="1.600"/><rect x="4" y="13.500" width="6.500" height="6.500" rx="1.600"/><rect x="13.500" y="13.500" width="6.500" height="6.500" rx="1.600"/></symbol>
+    <symbol id="i-reload" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.700-6"/><path d="M20 4v5h-5"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+    <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.500 6.500a4 4 0 0 0 4.700 4.700l-8.700 8.700a2.100 2.100 0 0 1-3-3l8.700-8.700A4 4 0 0 0 14.500 6.500z"/><path d="M14.500 6.500l2.500 2.500"/></symbol>
+    <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M4 18a8.500 8.500 0 1 1 16 0"/><path d="M12 18l4-6"/><circle cx="12" cy="18" r="1"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.500l4.500 4.500L19 7.500"/></symbol>
+    <symbol id="i-fan" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.500"/><path d="M12 10.500C10.600 6.500 11 3.500 13 3.500c2 0 2.600 2 1.600 4.200-.7 1.500-1.600 2.500-2.600 2.800z"/><path d="M12 10.500C10.600 6.500 11 3.500 13 3.500c2 0 2.600 2 1.600 4.200-.7 1.500-1.600 2.500-2.600 2.800z" transform="rotate(120 12 12)"/><path d="M12 10.500C10.600 6.500 11 3.500 13 3.500c2 0 2.600 2 1.600 4.200-.7 1.500-1.600 2.500-2.600 2.800z" transform="rotate(240 12 12)"/></symbol>
+    <symbol id="i-ambient" viewBox="0 0 24 24"><rect x="3" y="13" width="18" height="5" rx="2.500"/><path d="M12 4v3.500M5.500 6.500l2.200 2.400M18.500 6.500l-2.200 2.400"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M3 8h4l1.500-2.500h7L17 8h4v11H3z"/><circle cx="12" cy="13.500" r="3.500"/></symbol>
+    <symbol id="i-fuel" viewBox="0 0 24 24"><path d="M4 20V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v15"/><path d="M3 20h12"/><path d="M6.500 8h5"/><path d="M14 9h2a2 2 0 0 1 2 2v5a1.500 1.500 0 0 0 3 0V8l-3-3"/></symbol>
+    <symbol id="i-battery" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M7 8V5.500h3V8M14 8V5.500h3V8"/><path d="M6.500 14h4M8.500 12v4M14 14h3.500"/></symbol>
+    <symbol id="i-thermo" viewBox="0 0 24 24"><path d="M14 14.800V5a2 2 0 0 0-4 0v9.800a4 4 0 1 0 4 0z"/><path d="M12 9v7"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.500l9.500 16.500h-19z"/><path d="M12 10v4.500M12 17.300v.2"/></symbol>
+    <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M6.400 6.400a8 8 0 1 0 11.200 0"/></symbol>
+    <symbol id="i-dim" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z"/></symbol>
+    <symbol id="i-cabin" viewBox="0 0 24 24"><path d="M4.500 14.500a7.500 7.500 0 0 1 15 0z"/><path d="M8 18.500h8"/><path d="M12 3v2M4.800 6l1.400 1.400M19.200 6l-1.400 1.400"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-flip" viewBox="0 0 24 24"><path d="M12 3v18" stroke-dasharray="2 3"/><path d="M8.500 7L3 12l5.500 5z"/><path d="M15.500 7L21 12l-5.500 5z"/></symbol>
+    <symbol id="i-guides" viewBox="0 0 24 24"><path d="M6.500 21L9.500 4M17.500 21L14.500 4"/><path d="M5.500 17h13M7.300 11h9.400"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.700 0l3-3a4 4 0 0 0-5.700-5.700l-1 1"/><path d="M14 10a4 4 0 0 0-5.700 0l-3 3a4 4 0 0 0 5.700 5.700l1-1"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6.500A2.500 2.500 0 0 1 5.500 4H9l2 2.500h7.500A2.500 2.500 0 0 1 21 9v8.500a2.500 2.500 0 0 1-2.500 2.500h-13A2.500 2.500 0 0 1 3 17.500z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.500-4M4 5v3.500h3.500"/><path d="M4 13a8 8 0 0 0 14.500 4M20 19v-3.500h-3.500"/></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="2.500"/><path d="M16 10.500l5-3v9l-5-3"/></symbol>
+  <symbol id="i-sunrise" viewBox="0 0 24 24"><path d="M5 18a7 7 0 0 1 14 0M12 4v5M7 8l2 2M17 8l-2 2M2 18h20M9 6l3-3 3 3"/></symbol><symbol id="i-sunset" viewBox="0 0 24 24"><path d="M5 18a7 7 0 0 1 14 0M12 9V4M7 8l2 2M17 8l-2 2M2 18h20M9 6l3 3 3-3"/></symbol><symbol id="i-humid" viewBox="0 0 24 24"><path d="M12 3s6 6.500 6 11a6 6 0 0 1-12 0c0-4.500 6-11 6-11z"/><path d="M9.500 15a2.500 2.500 0 0 0 2.500 2.500"/></symbol><symbol id="i-wind" viewBox="0 0 24 24"><path d="M3 9h11a3 3 0 1 0-3-3M3 15h15a3 3 0 1 1-3 3M3 12h8"/></symbol><symbol id="i-call" viewBox="0 0 24 24"><path d="M5 4h3.500l1.700 4.200-2.200 1.400a11 11 0 0 0 6.400 6.400l1.400-2.200L20 15.500V19a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2z"/></symbol><symbol id="i-backspace" viewBox="0 0 24 24"><path d="M9 5h11a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-6-7z"/><path d="M13 9.500l5 5M18 9.500l-5 5"/></symbol><symbol id="i-display" viewBox="0 0 24 24"><rect x="3" y="4.500" width="18" height="12" rx="2"/><path d="M9 20h6M12 16.500V20"/></symbol><symbol id="i-recent" viewBox="0 0 24 24"><path d="M3.500 12a8.500 8.500 0 1 0 2.600-6.100"/><path d="M3.500 4.500v4.500H8"/><path d="M12 7.500V12l3 2"/></symbol><symbol id="i-w-clear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.500v2M12 19.500v2M4.200 4.200l1.400 1.400M18.400 18.400l1.400 1.400M2.500 12h2M19.500 12h2M4.200 19.800l1.400-1.400M18.400 5.600l1.400-1.400"/></symbol><symbol id="i-w-part" viewBox="0 0 24 24"><circle cx="8.500" cy="8.500" r="3"/><path d="M8.500 2.500v1.200M2.500 8.500h1.200M4.300 4.300l.9.9M12.700 4.300l-.9.9"/><path d="M8 20h9.500a3.800 3.800 0 0 0 .4-7.600A5.200 5.200 0 0 0 8 13.500 3.300 3.300 0 0 0 8 20z"/></symbol><symbol id="i-w-cloud" viewBox="0 0 24 24"><path d="M7 19h10.500a4 4 0 0 0 .4-8A6 6 0 0 0 6.500 12.500 3.300 3.300 0 0 0 7 19z"/></symbol><symbol id="i-w-rain" viewBox="0 0 24 24"><path d="M7 15h10.500a4 4 0 0 0 .4-8A6 6 0 0 0 6.500 8.500 3.300 3.300 0 0 0 7 15z"/><path d="M8.500 18l-1 2.500M12.500 18l-1 2.500M16.500 18l-1 2.500"/></symbol><symbol id="i-w-storm" viewBox="0 0 24 24"><path d="M7 14.500h10.500a4 4 0 0 0 .4-8A6 6 0 0 0 6.500 8 3.300 3.300 0 0 0 7 14.500z"/><path d="M12.500 14l-2.500 4h3l-2 4"/></symbol><symbol id="i-w-fog" viewBox="0 0 24 24"><path d="M7 13h10.500a4 4 0 0 0 .4-8A6 6 0 0 0 6.500 6.500 3.300 3.300 0 0 0 7 13z"/><path d="M4 16.500h16M7 20h10"/></symbol><symbol id="i-w-snow" viewBox="0 0 24 24"><path d="M7 14h10.500a4 4 0 0 0 .4-8A6 6 0 0 0 6.500 7.500 3.300 3.300 0 0 0 7 14z"/><path d="M9 18h.01M12 20h.01M15 18h.01M12 17h.01" stroke-width="2.600"/></symbol><symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3.500s6 6.200 6 10.500a6 6 0 0 1-12 0c0-4.300 6-10.500 6-10.500z"/></symbol><symbol id="i-bt-rx" viewBox="0 0 24 24"><path d="M7 7l10 10-5 4V3l5 4L7 17"/><path d="M3 9.500a8 8 0 0 0 0 5M21 9.500a8 8 0 0 1 0 5"/></symbol>
+  </svg>
+
+  <!-- ===== Fondo ===== -->
+  <div class="bg" aria-hidden="true">
+    <div class="bg__glow bg__glow--a"></div>
+    <div class="bg__glow bg__glow--b"></div>
+  </div>
+
+  <div class="shell">
+
+    <!-- ===== BARRA INFERIOR ÚNICA: volumen y clima a cada lado, pestañas al centro ===== -->
+    <div class="bar" id="bar">
+    <div class="sbar sbar--l" id="sbar-l" data-side="drv" role="group" aria-label="Lado del conductor">
+      <button type="button" class="sbar__b sbar__vol" id="vol-drv" data-side="drv" aria-haspopup="dialog" aria-expanded="false" aria-label="Volumen">
+        <svg class="icon sbar__on"><use href="#i-volume"/></svg>
+        <svg class="icon sbar__off"><use href="#i-mute"/></svg>
+        <b class="sbar__v" id="vol-drv-v">60</b>
+      </button>
+      <button type="button" class="sbar__b sbar__cl" id="cb-drv" data-side="drv" aria-haspopup="dialog" aria-expanded="false" aria-label="Climatización del conductor">
+        <svg class="icon sbar__ico"><use href="#i-climate"/></svg>
+        <span class="sbar__t"><b id="cb-drv-v">22</b><small id="cb-drv-u">°C</small></span>
+      </button>
+    </div>
+    <aside class="dock" aria-label="Navegación principal">
+      <div class="theme-switch" role="group" aria-label="Tema">
+        <button class="theme-switch__btn" data-theme-set="light" aria-pressed="false" aria-label="Tema claro">
+          <svg class="icon"><use href="#i-sun"/></svg>
+        </button>
+        <button class="theme-switch__btn" data-theme-set="dark" aria-pressed="true" aria-label="Tema oscuro">
+          <svg class="icon"><use href="#i-moon"/></svg>
+        </button>
+      </div>
+
+      <div class="dock__divider"></div>
+
+      <nav class="dock__nav">
+        <button class="dock__btn" data-target="home" aria-current="page" aria-label="Inicio"><svg class="icon"><use href="#i-home"/></svg></button>
+        <button class="dock__btn" data-target="map" aria-label="Mapa"><svg class="icon"><use href="#i-map"/></svg></button>
+        <button class="dock__btn" data-target="calls" aria-label="Llamadas"><svg class="icon"><use href="#i-call"/></svg></button>
+        <button class="dock__btn" data-target="media" aria-label="Bluetooth"><svg class="icon"><use href="#i-bluetooth"/></svg></button>
+        <button class="dock__btn" data-target="radio" aria-label="Radio"><svg class="icon"><use href="#i-radio"/></svg></button>
+        <button class="dock__btn" data-target="vehicle" aria-label="Vehículo"><svg class="icon"><use href="#i-car"/></svg></button>
+        <button class="dock__btn" data-target="cluster" aria-label="Cluster"><svg class="icon"><use href="#i-gauge"/></svg></button>
+        <button class="dock__btn" data-target="ambient" aria-label="Ambiente"><svg class="icon"><use href="#i-ambient"/></svg></button>
+        <button class="dock__btn" data-target="apps" aria-label="Apps"><svg class="icon"><use href="#i-grid"/></svg></button>
+        <button class="dock__btn" data-target="settings" aria-label="Ajustes"><svg class="icon"><use href="#i-settings"/></svg></button>
+      </nav>
+    </aside>
+    <div class="sbar sbar--r" id="sbar-r" data-side="pax" role="group" aria-label="Lado del copiloto">
+      <button type="button" class="sbar__b sbar__vol" id="vol-pax" data-side="pax" aria-haspopup="dialog" aria-expanded="false" aria-label="Volumen">
+        <svg class="icon sbar__on"><use href="#i-volume"/></svg>
+        <svg class="icon sbar__off"><use href="#i-mute"/></svg>
+        <b class="sbar__v" id="vol-pax-v">60</b>
+      </button>
+      <button type="button" class="sbar__b sbar__cl" id="cb-pax" data-side="pax" aria-haspopup="dialog" aria-expanded="false" aria-label="Climatización del copiloto">
+        <svg class="icon sbar__ico"><use href="#i-climate"/></svg>
+        <span class="sbar__t"><b id="cb-pax-v">22</b><small id="cb-pax-u">°C</small></span>
+      </button>
+    </div>
+    </div>
+
+    <!-- ===== ESCENARIO ===== -->
+    <main class="stage">
+
+      <header class="topbar">
+        <div>
+          <div class="topbar__title" id="view-title">Inicio</div>
+          <div class="topbar__sub" id="date-label">—</div>
+        </div>
+        <div class="topbar__status">
+          <span><strong id="temp-out">25</strong><span id="temp-unit">°C</span></span>
+          <!-- Accesos rápidos (la barra de estado es la de Android) -->
+          <button type="button" class="qsbtn" id="statusbar" aria-label="Abrir accesos rápidos" aria-expanded="false">
+            <span class="qsbtn__icons">
+              <svg class="icon is-off" id="sb-alert" role="img" aria-label="Alerta del vehículo"><use href="#i-alert"/></svg>
+              <svg class="icon" id="sb-dnd"><use href="#i-moon"/></svg>
+              <svg class="icon" id="sb-data"><use href="#i-signal"/></svg>
+              <svg class="icon" id="sb-wifi"><use href="#i-wifi"/></svg>
+              <svg class="icon" id="sb-bluetooth"><use href="#i-bluetooth"/></svg>
+              <svg class="icon" id="sb-gps"><use href="#i-map"/></svg>
+              <svg class="icon" id="sb-volume"><use href="#i-volume"/></svg>
+              <svg class="icon" id="sb-mute"><use href="#i-mute"/></svg>
+            </span>
+            <span class="qsbtn__time" id="sb-time">--:--</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="views">
+
+        <!-- ================= HOME ================= -->
+        <section class="view is-active" data-view="home" data-title="Inicio">
+          <div class="home" id="home" data-media="idle">
+
+            <!-- Izquierda: el tiempo -->
+            <article class="card card--wx" id="wx" data-state="idle" aria-label="El tiempo">
+              <header class="wx__top">
+                <svg class="icon wx__ico" id="wx-ico" aria-hidden="true"><use href="#i-w-clear"/></svg>
+                <div class="wx__main">
+                  <div class="wx__desc" id="wx-desc">Sin datos del tiempo</div>
+                  <div class="wx__temp"><b id="wx-temp">--</b><small id="wx-unit">°C</small></div>
+                </div>
+                <div class="wx__where"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg><span id="wx-city">Mi ubicación</span></div>
+              </header>
+              <div class="wx__sun" aria-label="Amanecer y atardecer">
+                <span class="wx__sunt"><svg class="icon"><use href="#i-sunrise"/></svg><b id="wx-rise">--:--</b></span>
+                <span class="wx__len"><i></i><em id="wx-len">—</em></span>
+                <span class="wx__sunt"><svg class="icon"><use href="#i-sunset"/></svg><b id="wx-set">--:--</b></span>
+              </div>
+              <div class="wx__facts">
+                <span class="wx__f" title="Probabilidad de lluvia"><svg class="icon"><use href="#i-drop"/></svg><span><small>Lluvia</small><b id="wx-rain">—</b></span></span>
+                <span class="wx__f" title="Humedad"><svg class="icon"><use href="#i-humid"/></svg><span><small>Humedad</small><b id="wx-hum">—</b></span></span>
+                <span class="wx__f" title="Viento"><svg class="icon"><use href="#i-wind"/></svg><span><small>Viento</small><b id="wx-wind">—</b></span></span>
+              </div>
+              <ul class="wx__days" id="wx-days" aria-label="Próximos 7 días">
+                  <li class="wx__day" data-i="0"><span class="wx__dn">—</span><svg class="icon"><use href="#i-w-cloud"/></svg><b class="wx__dh">--</b><small class="wx__dl">--</small></li>
+                  <li class="wx__day" data-i="1"><span class="wx__dn">—</span><svg class="icon"><use href="#i-w-cloud"/></svg><b class="wx__dh">--</b><small class="wx__dl">--</small></li>
+                  <li class="wx__day" data-i="2"><span class="wx__dn">—</span><svg class="icon"><use href="#i-w-cloud"/></svg><b class="wx__dh">--</b><small class="wx__dl">--</small></li>
+                  <li class="wx__day" data-i="3"><span class="wx__dn">—</span><svg class="icon"><use href="#i-w-cloud"/></svg><b class="wx__dh">--</b><small class="wx__dl">--</small></li>
+                  <li class="wx__day" data-i="4"><span class="wx__dn">—</span><svg class="icon"><use href="#i-w-cloud"/></svg><b class="wx__dh">--</b><small class="wx__dl">--</small></li>
+                  <li class="wx__day" data-i="5"><span class="wx__dn">—</span><svg class="icon"><use href="#i-w-cloud"/></svg><b class="wx__dh">--</b><small class="wx__dl">--</small></li>
+                  <li class="wx__day" data-i="6"><span class="wx__dn">—</span><svg class="icon"><use href="#i-w-cloud"/></svg><b class="wx__dh">--</b><small class="wx__dl">--</small></li>
+              </ul>
+              <span id="wx-minmax" hidden></span>
+            </article>
+
+            <!-- Centro: el auto (pequeño e informativo: el protagonista es el cluster) -->
+            <article class="card card--car" id="car" data-fog="off" data-fan="off" data-amb="off" data-head="off" data-cabin="off">
+              <header class="car__stats">
+                <div class="stat stat--speed">
+                  <span class="stat__l">Velocidad</span>
+                  <span class="stat__t"><b id="car-speed">0</b><small>km/h</small></span>
+                </div>
+                <div class="stat stat--fuel" id="fuel" data-state="ok">
+                  <span class="stat__l">Combustible <span class="status" id="fuel-status" data-state="ok"><i aria-hidden="true"></i><b>Nivel normal</b></span></span>
+                  <span class="stat__t"><b id="fuel-val">62</b><small>%</small></span>
+                  <div class="fuel__gauge" id="fuel-gauge" role="img" aria-label="Nivel de combustible 62 por ciento"><span class="fuel__bar"><span class="fuel__fill"></span></span></div>
+                </div>
+                <div class="stat stat--health" id="health" data-state="ok">
+                  <span class="status" id="health-overall" data-state="ok" role="status"><i aria-hidden="true"></i><b>Normal</b></span>
+                  <div class="metric" id="m-volt" data-state="ok" role="group" aria-label="Voltaje">
+                    <span class="stat__l">Batería</span>
+                    <span class="stat__t"><b id="volt-val">13.8</b><small>V</small></span>
+                    <div class="zone" id="volt-zone" aria-hidden="true"><i class="zone__mark"></i></div>
+                    <span class="status" id="volt-status" data-state="ok"><i aria-hidden="true"></i><b>Normal</b></span>
+                  </div>
+                  <div class="metric" id="m-temp" data-state="ok" role="group" aria-label="Temperatura del motor">
+                    <span class="stat__l">Motor</span>
+                    <span class="stat__t"><b id="temp-val">88</b><small>°C</small></span>
+                    <div class="zone" id="temp-zone" aria-hidden="true"><i class="zone__mark"></i></div>
+                    <span class="status" id="temp-status" data-state="ok"><i aria-hidden="true"></i><b>Normal</b></span>
+                  </div>
+                </div>
+              </header>
+
+              <div class="car__stage">
+                <svg class="car__svg" viewBox="-60 -220 1144 1756" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="beamHead" gradientUnits="userSpaceOnUse" x1="0" y1="100" x2="0" y2="-220">
+                      <stop offset="0" stop-color="var(--lamp)" stop-opacity="0.8"/>
+                      <stop offset="1" stop-color="var(--lamp)" stop-opacity="0"/>
+                    </linearGradient>
+                    <linearGradient id="beamFog" gradientUnits="userSpaceOnUse" x1="0" y1="130" x2="0" y2="-160">
+                      <stop offset="0" stop-color="var(--fog)" stop-opacity="0.85"/>
+                      <stop offset="1" stop-color="var(--fog)" stop-opacity="0"/>
+                    </linearGradient>
+                    <filter id="carBlur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="26"/></filter>
+                  </defs>
+
+                  <!-- haces de luz (detrás del auto) -->
+                  <g class="car__beams" aria-hidden="true">
+                    <path class="beam beam--head" d="M300 100 L392 100 L450 -220 L150 -220z"/>
+                    <path class="beam beam--head" d="M730 100 L638 100 L580 -220 L880 -220z"/>
+                    <path class="beam beam--fog" d="M300 130 L258 106 L-50 10 L-50 -160 L190 -160z"/>
+                    <path class="beam beam--fog" d="M730 130 L772 106 L1080 10 L1080 -160 L840 -160z"/>
+                  </g>
+
+                  <!-- foto del auto (vista superior) -->
+                  <image class="car__photo" href="car-top.png" x="0" y="0" width="1024" height="1536"/>
+
+                  <!-- iluminación ambiental interna -->
+                  <g class="car__amb" aria-hidden="true">
+                    <ellipse class="amb-blob" cx="515" cy="790" rx="150" ry="330" filter="url(#carBlur)"/>
+                    <path class="amb-glass" d="M276 412 Q515 372 752 412 L704 602 Q515 620 326 602z"/>
+                    <path class="amb-glass" d="M312 958 L718 958 Q752 1010 768 1122 Q772 1190 700 1206 Q515 1238 330 1206 Q258 1190 262 1122 Q276 1010 312 958z"/>
+                    <path class="amb-line" d="M262 520 C252 700 252 900 262 1040"/>
+                    <path class="amb-line" d="M768 520 C778 700 778 900 768 1040"/>
+                  </g>
+
+                  <!-- luz de cabina -->
+                  <g class="car__dome" aria-hidden="true">
+                    <ellipse class="dome-glow" cx="515" cy="785" rx="130" ry="110" filter="url(#carBlur)"/>
+                    <ellipse class="dome-lamp" cx="515" cy="785" rx="58" ry="44"/>
+                  </g>
+
+                  <!-- ventilador forzado -->
+                  <g class="car__fan" transform="translate(515 235) scale(5.2)" aria-hidden="true">
+                    <circle class="fan-glow" r="26" filter="url(#carBlur)"/>
+                    <circle class="fan-ring" r="19"/>
+                    <g class="fan-rot">
+                      <path class="fan-blade" d="M0 -3 C-6 -10 -5 -17 1 -17 C6 -17 7 -9 3 -3z"/>
+                      <path class="fan-blade" d="M0 -3 C-6 -10 -5 -17 1 -17 C6 -17 7 -9 3 -3z" transform="rotate(120)"/>
+                      <path class="fan-blade" d="M0 -3 C-6 -10 -5 -17 1 -17 C6 -17 7 -9 3 -3z" transform="rotate(240)"/>
+                      <circle class="fan-hub" r="3"/>
+                    </g>
+                  </g>
+
+                  <!-- faros y neblineras -->
+                  <path class="lamp lamp--head" d="M286 130 C294 102 322 84 392 78 L396 96 C346 102 318 118 304 142z"/>
+                  <path class="lamp lamp--head" d="M744 130 C736 102 708 84 638 78 L634 96 C684 102 712 118 726 142z"/>
+                  <circle class="lamp lamp--fog" cx="310" cy="158" r="22"/>
+                  <circle class="lamp lamp--fog" cx="720" cy="158" r="22"/>
+                </svg>
+              </div>
+
+              <div class="car__controls" role="group" aria-label="Controles del vehículo">
+                <button type="button" class="ctl rocker" id="sw-fog" data-sw="fog" role="switch" aria-checked="false" aria-label="Neblineras">
+                  <span class="ctl__ico"><svg class="icon"><use href="#i-fog"/></svg></span>
+                  <span class="ctl__label">Neblineras</span>
+                  <span class="rocker__state">Apagado</span>
+                </button>
+                <button type="button" class="ctl rocker" id="sw-fan" data-sw="fan" role="switch" aria-checked="false" aria-label="Ventilador forzado">
+                  <span class="ctl__ico"><svg class="icon"><use href="#i-fan"/></svg></span>
+                  <span class="ctl__label">Ventilador</span>
+                  <span class="rocker__state">Apagado</span>
+                </button>
+                <button type="button" class="ctl rocker" id="sw-amb" data-sw="amb" role="switch" aria-checked="false" aria-label="Iluminación ambiental interna">
+                  <span class="ctl__ico"><svg class="icon"><use href="#i-ambient"/></svg></span>
+                  <span class="ctl__label">Ambiente</span>
+                  <span class="rocker__state">Apagado</span>
+                </button>
+                <button type="button" class="ctl qbtn" id="qb-head" data-ctl="head" aria-pressed="false" aria-label="Faros">
+                  <span class="ctl__ico"><svg class="icon"><use href="#i-headlight"/></svg></span>
+                  <span class="ctl__label">Faros</span>
+                </button>
+                <button type="button" class="ctl qbtn" id="qb-cabin" data-ctl="cabin" aria-pressed="false" aria-label="Luz de cabina">
+                  <span class="ctl__ico"><svg class="icon"><use href="#i-cabin"/></svg></span>
+                  <span class="ctl__label">Cabina</span>
+                </button>
+                <button type="button" class="ctl qbtn" id="qb-dim" data-ctl="dim" aria-pressed="false" aria-label="Atenuar pantalla">
+                  <span class="ctl__ico"><svg class="icon"><use href="#i-dim"/></svg></span>
+                  <span class="ctl__label">Atenuar</span>
+                </button>
+                <button type="button" class="ctl qbtn" id="qb-screen" data-ctl="screen"  aria-label="Apagar pantalla">
+                  <span class="ctl__ico"><svg class="icon"><use href="#i-display"/></svg></span>
+                  <span class="ctl__label">Pantalla</span>
+                </button>
+                <button type="button" class="ctl cam-btn" id="cam-open" data-ctl="cam" aria-haspopup="dialog" aria-label="Cámara de reversa">
+                  <span class="ctl__ico"><svg class="icon"><use href="#i-camera"/></svg></span>
+                  <span class="ctl__label">Cámara</span>
+                </button>
+              </div>
+            </article>
+
+            <!-- Derecha: música, apps más usadas, y abajo mapa y puertas en pequeño -->
+            <div class="home__col home__col--r">
+              <article class="card card--media" id="hm" data-state="idle">
+                <div class="media__cover" id="hm-cover" aria-hidden="true">
+                  <svg class="icon media__note"><use href="#i-music"/></svg>
+                  <span class="media__eq"><i></i><i></i><i></i><i></i><i></i></span>
+                </div>
+                <div class="media__txt">
+                  <div class="media__src" id="hm-src">Música</div>
+                  <div class="media__title" id="hm-title">Sin música</div>
+                  <div class="media__artist" id="hm-artist">Toca para escuchar la radio</div>
+                </div>
+                <div class="media__ctrl">
+                  <button type="button" class="btn-round" id="hm-prev" aria-label="Emisora anterior"><svg class="icon"><use href="#i-prev"/></svg></button>
+                  <button type="button" class="btn-round btn-round--main" id="hm-play" aria-label="Reproducir"><svg class="icon" id="hm-play-ico"><use href="#i-play"/></svg></button>
+                  <button type="button" class="btn-round" id="hm-next" aria-label="Emisora siguiente"><svg class="icon"><use href="#i-next"/></svg></button>
+                </div>
+              </article>
+
+              <article class="card card--freq" id="freq" data-empty="true" aria-label="Apps más usadas">
+                <div class="freq__t">Más usadas <small id="freq-sub">Se ordenan solas según tus costumbres</small></div>
+                <div class="freq__grid" id="freq-grid" role="list"></div>
+              </article>
+
+              <div class="home__mini">
+              <article class="card card--map card--mini">
+                <svg class="map__canvas" viewBox="0 0 600 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                  <path class="map__road" d="M-20 90 C 120 110, 200 40, 330 70 S 520 150, 640 120"/>
+                  <path class="map__road" d="M180 -20 C 200 100, 150 200, 230 320"/>
+                  <path class="map__road map__road--thin" d="M-20 230 C 150 210, 300 260, 640 220"/>
+                  <path class="map__road map__road--thin" d="M420 -20 C 400 80, 460 180, 430 320"/>
+                  <circle class="map__halo" cx="300" cy="170" r="42"/>
+                  <circle class="map__dot" cx="300" cy="170" r="7"/>
+                </svg>
+                <div class="map__live" id="home-map" aria-hidden="true"></div>
+                <div class="map__info">
+                  <div>
+                    <div class="map__name">Mi ubicación</div>
+                    <div class="map__addr">Toca para abrir el mapa</div>
+                  </div>
+                  <div class="map__ring"><span id="map-range">246</span></div>
+                </div>
+              </article>
+
+
+                <article class="card card--doors">
+                  <button type="button" class="btn-round" aria-label="Bloqueo"><svg class="icon"><use href="#i-lock"/></svg></button>
+                  <div class="doors__txt">
+                    <div class="doors__state">Bloqueadas</div>
+                    <div class="doors__sub">Puertas</div>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ================= LLAMADAS ================= -->
+        <section class="view view--calls" data-view="calls" data-title="Llamadas">
+          <div class="calls" id="calls">
+            <article class="card dial">
+              <div class="dial__screen" aria-live="polite">
+                <span class="dial__num" id="dial-num" data-empty="true">Marca un número</span>
+                <button type="button" class="dial__del" id="dial-del" aria-label="Borrar" disabled><svg class="icon"><use href="#i-backspace"/></svg></button>
+              </div>
+              <div class="dial__keys" role="group" aria-label="Teclado numérico">
+            <button type="button" class="dial__k" data-k="1"><b>1</b><small></small></button>
+            <button type="button" class="dial__k" data-k="2"><b>2</b><small>ABC</small></button>
+            <button type="button" class="dial__k" data-k="3"><b>3</b><small>DEF</small></button>
+            <button type="button" class="dial__k" data-k="4"><b>4</b><small>GHI</small></button>
+            <button type="button" class="dial__k" data-k="5"><b>5</b><small>JKL</small></button>
+            <button type="button" class="dial__k" data-k="6"><b>6</b><small>MNO</small></button>
+            <button type="button" class="dial__k" data-k="7"><b>7</b><small>PQRS</small></button>
+            <button type="button" class="dial__k" data-k="8"><b>8</b><small>TUV</small></button>
+            <button type="button" class="dial__k" data-k="9"><b>9</b><small>WXYZ</small></button>
+            <button type="button" class="dial__k" data-k="*"><b>*</b><small></small></button>
+            <button type="button" class="dial__k" data-k="0"><b>0</b><small>+</small></button>
+            <button type="button" class="dial__k" data-k="#"><b>#</b><small></small></button>
+              </div>
+              <div class="dial__act">
+                <button type="button" class="btn-round dial__fav" id="dial-fav" aria-label="Guardar en favoritos" disabled><svg class="icon"><use href="#i-star"/></svg></button>
+                <button type="button" class="dial__call" id="dial-call" aria-label="Llamar" disabled><svg class="icon"><use href="#i-call"/></svg><span>Llamar</span></button>
+              </div>
+              <form class="dial__save" id="dial-save" hidden>
+                <input class="set-input" id="dial-name" type="text" placeholder="Nombre del favorito" aria-label="Nombre del favorito" autocomplete="off" maxlength="30">
+                <button type="submit" class="btn-pill">Guardar</button>
+              </form>
+            </article>
+            <article class="card calls__list">
+              <div class="seg" id="calls-tabs" role="group" aria-label="Lista">
+                <button type="button" class="seg__btn" data-value="recent" aria-pressed="true">Recientes</button>
+                <button type="button" class="seg__btn" data-value="favs" aria-pressed="false">Favoritos</button>
+              </div>
+              <ul class="calls__items" id="calls-items"></ul>
+              <p class="calls__empty" id="calls-empty">Aún no hay llamadas hechas desde aquí.</p>
+              <p class="set-hint" id="calls-note">La llamada se hace con el teléfono vinculado por Bluetooth.</p>
+            </article>
+          </div>
+        </section>
+
+        <!-- ============ SECCIONES PENDIENTES ============ -->
+        <section class="view view--map" data-view="map" data-title="Mapa">
+          <div class="nav" id="nav" data-mode="browse" data-mt="dark" data-gps="wait" data-tiles="ok">
+            <div class="nav__map" id="nav-map"></div>
+
+            <!-- Búsqueda -->
+            <div class="nav__top" data-tm-ignore>
+              <form class="nav__search" id="nav-form" role="search" autocomplete="off">
+                <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+                <input class="nav__input" id="nav-q" type="search" inputmode="search" enterkeyhint="search" placeholder="¿A dónde vamos?" aria-label="Buscar un lugar o dirección" autocomplete="off" spellcheck="false">
+                <button type="button" class="nav__ibtn" id="nav-clear" aria-label="Borrar" hidden><svg class="icon"><use href="#i-close"/></svg></button>
+                <button type="button" class="nav__ibtn" id="nav-mic" aria-label="Buscar por voz"><svg class="icon"><use href="#i-mic"/></svg></button>
+              </form>
+              <div class="nav__panel" id="nav-panel" hidden>
+                <div class="nav__quick" id="nav-quick"></div>
+                <ul class="nav__list" id="nav-results" aria-live="polite"></ul>
+                <button type="button" class="nav__panel-close" id="nav-panel-close">Cerrar</button>
+              </div>
+            </div>
+
+            <!-- Aviso de GPS -->
+            <div class="nav__gps" id="nav-gps" role="status" data-tm-ignore>
+              <span id="nav-gps-text">Buscando señal GPS…</span>
+              <button type="button" class="nav__gps-btn" id="nav-gps-btn" hidden></button>
+            </div>
+
+            <!-- Controles -->
+            <div class="nav__ctl" data-tm-ignore>
+              <button type="button" class="nav__cbtn" id="nav-zin" aria-label="Acercar"><svg class="icon"><use href="#i-plus"/></svg></button>
+              <button type="button" class="nav__cbtn" id="nav-zout" aria-label="Alejar"><svg class="icon"><use href="#i-minus"/></svg></button>
+              <button type="button" class="nav__cbtn nav__cbtn--center" id="nav-center" aria-label="Centrar en mi ubicación"><svg class="icon"><use href="#i-target"/></svg></button>
+              <button type="button" class="nav__cbtn" id="nav-traffic" aria-label="Tráfico en vivo de Waze" aria-pressed="false"><svg class="icon"><use href="#i-traffic"/></svg></button>
+            </div>
+
+            <!-- Guía giro a giro -->
+            <div class="nav__guide" id="nav-guide" hidden data-tm-ignore>
+              <div class="nav__turn" id="ng-icon" aria-hidden="true"></div>
+              <div class="nav__guide-t">
+                <div class="nav__dist" id="ng-dist">—</div>
+                <div class="nav__instr" id="ng-instr" aria-live="polite">—</div>
+                <div class="nav__then" id="ng-then"></div>
+              </div>
+            </div>
+            <div class="nav__bar" id="nav-bar" hidden data-tm-ignore>
+              <div class="nav__stat"><b id="nb-eta">--:--</b><span>llegada</span></div>
+              <div class="nav__stat"><b id="nb-time">—</b><span>restante</span></div>
+              <div class="nav__stat"><b id="nb-dist">—</b><span>distancia</span></div>
+              <span class="nav__sim">Simulación</span>
+              <button type="button" class="nav__bbtn" id="nb-voice" aria-label="Guía por voz" aria-pressed="true"><svg class="icon"><use href="#i-volume"/></svg></button>
+              <button type="button" class="nav__bbtn" id="nb-waze" aria-label="Seguir en Waze"><svg class="icon"><use href="#i-external"/></svg></button>
+              <button type="button" class="btn-pill nav__stop" id="nb-stop">Salir</button>
+            </div>
+
+            <!-- Tarjeta del destino -->
+            <div class="nav__card" id="nav-card" hidden data-tm-ignore>
+              <header class="nav__card-h">
+                <div class="nav__card-t">
+                  <div class="nav__name" id="nc-name">—</div>
+                  <div class="nav__sub" id="nc-sub"></div>
+                </div>
+                <button type="button" class="btn-round" id="nc-close" aria-label="Cerrar"><svg class="icon"><use href="#i-close"/></svg></button>
+              </header>
+              <div class="nav__routes" id="nc-routes"></div>
+              <p class="nav__cmsg" id="nc-msg" role="status"></p>
+              <div class="nav__acts">
+                <button type="button" class="btn-pill nav__go" id="nc-go" disabled><svg class="icon"><use href="#i-navarrow"/></svg>Iniciar</button>
+                <button type="button" class="btn-pill" id="nc-sim" disabled><svg class="icon"><use href="#i-route"/></svg>Probar recorrido</button>
+                <button type="button" class="btn-pill" id="nc-waze"><svg class="icon"><use href="#i-external"/></svg>Abrir en Waze</button>
+                <button type="button" class="btn-pill" id="nc-save"><svg class="icon"><use href="#i-star"/></svg>Guardar</button>
+              </div>
+              <div class="nav__save" id="nc-save-row" hidden>
+                <button type="button" class="nav__chip" data-save="home"><svg class="icon"><use href="#i-home"/></svg><span>Casa</span></button>
+                <button type="button" class="nav__chip" data-save="work"><svg class="icon"><use href="#i-work"/></svg><span>Trabajo</span></button>
+                <button type="button" class="nav__chip" data-save="fav"><svg class="icon"><use href="#i-star"/></svg><span>Favorito</span></button>
+              </div>
+            </div>
+
+            <!-- Tráfico de Waze (mapa embebido) -->
+            <div class="nav__waze" id="nav-waze" hidden data-tm-ignore>
+              <header class="nav__waze-h">
+                <div class="nav__waze-t"><b>Tráfico en vivo · Waze</b><span>Si no carga, ábrelo en la app de Waze.</span></div>
+                <button type="button" class="btn-pill" id="nw-open"><svg class="icon"><use href="#i-external"/></svg>Abrir Waze</button>
+                <button type="button" class="btn-round" id="nw-close" aria-label="Cerrar tráfico"><svg class="icon"><use href="#i-close"/></svg></button>
+              </header>
+              <iframe class="nav__waze-f" id="nw-frame" title="Mapa de tráfico de Waze" src="about:blank" allow="geolocation" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+            </div>
+
+            <!-- Flotantes sobre el mapa a pantalla completa: accesos rápidos, velocidad y música -->
+            <div class="nav__hud" id="nav-hud" data-tm-ignore>
+              <button type="button" class="hud__qs" id="hud-qs" aria-label="Accesos rápidos"><svg class="icon"><use href="#i-sliders"/></svg></button>
+              <div class="hud__speed" role="status" aria-label="Velocidad"><b id="hud-speed">0</b><small id="hud-unit">km/h</small></div>
+              <div class="hud__media" id="hud-media" data-state="idle">
+                <span class="hud__eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                <div class="hud__txt"><b id="hud-title">Sin música</b><small id="hud-sub">Radio</small></div>
+                <button type="button" class="hud__play" id="hud-play" aria-label="Reproducir"><svg class="icon" id="hud-play-ico"><use href="#i-play"/></svg></button>
+              </div>
+            </div>
+
+            <div class="nav__nomap" role="status">No cargan los mapas. Revisa internet o cambia el proveedor en Ajustes → Navegación.</div>
+            <div class="nav__attr" id="nav-attr" data-tm-ignore>© OpenStreetMap © CARTO</div>
+          </div>
+        </section>
+
+        <!-- ================= AMBIENTE (luces RGB) ================= -->
+        <section class="view view--ambient" data-view="ambient" data-title="Ambiente">
+          <div class="amb" id="amb" data-power="off">
+
+            <!-- Vista previa -->
+            <article class="card amb__preview">
+              <header class="amb__top">
+                <span class="chip" id="amb-state" role="status">Apagada</span>
+                <button type="button" class="amb__power" id="amb-power" role="switch" aria-checked="false" aria-label="Luces ambientales">
+                  <svg class="icon" aria-hidden="true"><use href="#i-power"/></svg>
+                </button>
+              </header>
+              <svg class="amb__car" id="amb-car" viewBox="0 0 220 360" role="img" aria-label="Zonas de luz del auto">
+                <rect class="amb__body" x="30" y="14" width="160" height="332" rx="62"/>
+                <path class="amb__glass" d="M52 92 Q110 66 168 92 L160 128 Q110 114 60 128 Z"/>
+                <path class="amb__glass" d="M60 262 Q110 276 160 262 L168 296 Q110 316 52 296 Z"/>
+                <path class="amb__z" data-z="dash" d="M58 138 Q110 124 162 138"/>
+                <path class="amb__z" data-z="doors" d="M44 160 L44 252"/>
+                <path class="amb__z" data-z="doors" d="M176 160 L176 252"/>
+                <path class="amb__z" data-z="feet" d="M66 172 L66 214"/>
+                <path class="amb__z" data-z="feet" d="M154 172 L154 214"/>
+                <path class="amb__z" data-z="rear" d="M66 226 L66 250"/>
+                <path class="amb__z" data-z="rear" d="M154 226 L154 250"/>
+              </svg>
+              <p class="amb__hint" id="amb-hint"></p>
+            </article>
+
+            <!-- Controles -->
+            <article class="card amb__ctl">
+              <div class="amb__sec">
+                <div class="card__label">Color</div>
+                <div class="amb__swatches" id="amb-swatches" role="group" aria-label="Color"></div>
+                <input class="amb__range amb__range--hue" id="amb-hue" type="range" min="0" max="359" step="1" value="215" aria-label="Tono">
+              </div>
+
+              <div class="amb__sec">
+                <div class="amb__row"><div class="card__label">Brillo</div><span class="amb__val" id="amb-bri-val">80%</span></div>
+                <input class="amb__range" id="amb-bri" type="range" min="5" max="100" step="1" value="80" aria-label="Brillo">
+              </div>
+
+              <div class="amb__sec">
+                <div class="card__label">Efecto</div>
+                <div class="seg amb__fx" id="amb-fx" role="group" aria-label="Efecto">
+                  <button type="button" class="seg__btn" data-v="static" aria-pressed="true">Fija</button>
+                  <button type="button" class="seg__btn" data-v="breathe" aria-pressed="false">Respirar</button>
+                  <button type="button" class="seg__btn" data-v="rainbow" aria-pressed="false">Arcoíris</button>
+                  <button type="button" class="seg__btn" data-v="wave" aria-pressed="false">Onda</button>
+                  <button type="button" class="seg__btn" data-v="pulse" aria-pressed="false">Pulso</button>
+                </div>
+                <div class="amb__row amb__speedrow" id="amb-speedrow"><div class="card__label">Velocidad</div></div>
+                <input class="amb__range" id="amb-speed" type="range" min="1" max="10" step="1" value="5" aria-label="Velocidad del efecto">
+              </div>
+
+              <div class="amb__sec">
+                <div class="card__label">Zonas</div>
+                <div class="amb__zones" id="amb-zones" role="group" aria-label="Zonas">
+                  <button type="button" class="amb__zone" data-z="dash" aria-pressed="true">Tablero</button>
+                  <button type="button" class="amb__zone" data-z="feet" aria-pressed="true">Pies</button>
+                  <button type="button" class="amb__zone" data-z="doors" aria-pressed="true">Puertas</button>
+                  <button type="button" class="amb__zone" data-z="rear" aria-pressed="true">Traseras</button>
+                </div>
+              </div>
+
+              <div class="amb__sec">
+                <div class="card__label">Ambientes</div>
+                <div class="amb__presets" id="amb-presets"></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ================= CLUSTER (tablero digital) ================= -->
+        <section class="view view--cluster" data-view="cluster" data-title="Cluster">
+          <div class="cl" id="cl">
+            <article class="card cl__preview" id="cl-prev">
+              <header class="cl__head">
+                <span class="card__label">Vista del cluster</span>
+                <div class="cl__acts">
+                  <button type="button" class="btn-pill" id="cl-reload"><svg class="icon" aria-hidden="true"><use href="#i-reload"/></svg><span>Reiniciar</span></button>
+                  <button type="button" class="btn-pill cl__full-btn" id="cl-full"><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg><span>Pantalla completa</span></button>
+                </div>
+              </header>
+              <div class="cl__stage" id="cl-stage">
+                <iframe id="cl-frame" title="Cluster" allow="geolocation; fullscreen"></iframe>
+                <button type="button" class="cl__close" id="cl-close" aria-label="Salir de pantalla completa" hidden><svg class="icon"><use href="#i-close"/></svg></button>
+              </div>
+              <p class="cv__note" id="cl-note"></p>
+            </article>
+
+            <article class="card cl__ctl">
+              <div class="cl__sec">
+                <div class="card__label">Interfaz</div>
+                <div class="seg" id="cl-ui" role="group" aria-label="Interfaz del cluster"></div>
+                <p class="cv__note" id="cl-ui-hint"></p>
+              </div>
+              <div class="cl__sec cl__screen" id="cl-display" aria-label="Pantalla del cluster"></div>
+              <div id="cl-groups"></div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ================= MÚSICA ================= -->
+        <section class="view view--music" data-view="media" data-title="Bluetooth">
+          <div class="music">
+            <article class="card btcard" id="btcard" data-active="off">
+              <div class="bt">
+                <div class="bt__ico" aria-hidden="true"><svg class="icon"><use href="#i-bt-rx"/></svg></div>
+                <div class="bt__body">
+                  <h3 class="cast__title">Música del celular por Bluetooth</h3>
+                  <ol class="cast__steps">
+                    <li>Enciende el receptor Bluetooth del auto y busca <b id="bt-name">el receptor</b> en tu celular.</li>
+                    <li>Toca el nombre para vincularlo (solo la primera vez).</li>
+                    <li>Reproduce lo que quieras en cualquier app: el sonido sale por el auto.</li>
+                  </ol>
+                  <p class="cast__status" id="bt-status" data-state="wait" role="status">—</p>
+                  <div class="set-actions">
+                    <button type="button" class="btn-pill nav__go" id="bt-listen"><svg class="icon"><use href="#i-bluetooth"/></svg>Ya conecté mi celular</button>
+                    <button type="button" class="btn-pill" id="bt-on" hidden>Activar receptor</button>
+                    <a class="btn-pill bt__link" id="bt-settings" href="intent:#Intent;action=android.settings.BLUETOOTH_SETTINGS;end" hidden>Abrir ajustes Bluetooth</a>
+                  </div>
+                </div>
+              </div>
+              <div class="bt__live" id="bt-live" hidden>
+                <svg class="icon"><use href="#i-bluetooth"/></svg>
+                <div class="bt__live-t">Escuchando por Bluetooth</div>
+                <p>Pausa y cambia de canción en el celular; el volumen se ajusta abajo.</p>
+                <button type="button" class="btn-pill" id="bt-stop">Dejar de escuchar</button>
+              </div>
+            </article>
+          </div>
+        </section>
+
+
+        <!-- ================= RADIO (por internet) ================= -->
+        <section class="view view--radio" data-view="radio" data-title="Radio">
+          <div class="radio" id="radio" data-power="off" data-state="idle">
+
+            <!-- Ahora suena -->
+            <article class="card radio__now">
+              <header class="radio__top">
+                <span class="chip radio__live" id="radio-state" role="status">Sin emisora</span>
+                <button type="button" class="btn-pill radio__fav" id="radio-fav" aria-pressed="false" aria-label="Guardar en favoritos" disabled>
+                  <svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><span>Favorito</span>
+                </button>
+              </header>
+
+              <div class="radio__display" aria-live="polite">
+                <div class="radio__logo" id="radio-logo" aria-hidden="true"><img id="radio-logo-img" alt="" hidden><span id="radio-initial">♪</span></div>
+                <div class="radio__name" id="radio-name">Elige una emisora</div>
+                <div class="radio__rds" id="radio-rds">Radio por internet</div>
+              </div>
+
+              <div class="radio__eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+              <div class="radio__controls">
+                <button class="btn-round radio__btn" id="radio-prev" aria-label="Emisora anterior"><svg class="icon"><use href="#i-prev"/></svg></button>
+                <button class="radio__power" id="radio-power" aria-pressed="false" aria-label="Reproducir radio">
+                  <svg class="icon ico-play"><use href="#i-play"/></svg>
+                  <svg class="icon ico-pause"><use href="#i-pause"/></svg>
+                </button>
+                <button class="btn-round radio__btn" id="radio-next" aria-label="Emisora siguiente"><svg class="icon"><use href="#i-next"/></svg></button>
+              </div>
+            </article>
+
+            <!-- Favoritos -->
+            <article class="card radio__presets">
+              <div class="card__label">Favoritos</div>
+              <div class="radio__preset-grid" id="radio-presets"></div>
+            </article>
+
+            <!-- Emisoras -->
+            <article class="card radio__stations">
+              <div class="radio__findrow">
+                <button type="button" class="radio__country" id="radio-country" aria-haspopup="dialog" aria-label="Cambiar de país">
+                  <span class="radio__cc" id="radio-cc">CR</span><span class="radio__country-name" id="radio-country-name">Costa Rica</span>
+                  <svg class="icon" aria-hidden="true"><use href="#i-chevron-right"/></svg>
+                </button>
+                <div class="radio__search">
+                  <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+                  <input class="radio__q" id="radio-q" type="search" enterkeyhint="search" placeholder="Buscar emisora" aria-label="Buscar emisora" autocomplete="off" spellcheck="false">
+                </div>
+              </div>
+              <div class="radio__cats" id="radio-cats" role="group" aria-label="Categoría">
+                <button type="button" class="radio__cat" data-cat="all" aria-pressed="true">Todas</button>
+                <button type="button" class="radio__cat" data-cat="news" aria-pressed="false">Noticias</button>
+                <button type="button" class="radio__cat" data-cat="music" aria-pressed="false">Música</button>
+                <button type="button" class="radio__cat" data-cat="sports" aria-pressed="false">Deportes</button>
+                <button type="button" class="radio__cat" data-cat="faith" aria-pressed="false">Cristiana</button>
+              </div>
+              <ul class="radio__list" id="radio-stations"></ul>
+              <p class="radio__note" id="radio-list-note" role="status"></p>
+
+              <!-- Selector de país -->
+              <div class="radio__countries" id="radio-countries" role="dialog" aria-label="Elegir país" hidden>
+                <header class="radio__countries-top">
+                  <button type="button" class="btn-pill" id="radio-countries-back"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg><span>Volver</span></button>
+                  <input class="radio__q radio__q--plain" id="radio-cq" type="search" enterkeyhint="search" placeholder="Buscar país" aria-label="Buscar país" autocomplete="off" spellcheck="false">
+                </header>
+                <ul class="radio__country-list" id="radio-country-list"></ul>
+                <p class="radio__note" id="radio-countries-note" role="status"></p>
+              </div>
+            </article>
+
+          </div>
+        </section>
+        
+        <section class="view view--car" data-view="vehicle" data-title="Vehículo">
+          <div class="cv" id="cv" data-demo="on">
+
+            <!-- Alertas -->
+            <article class="card cv__alerts" id="cv-alerts" data-state="ok" aria-live="polite">
+              <div class="cv__alerts-ico"><svg class="icon"><use href="#i-check"/></svg></div>
+              <div class="cv__alerts-txt"><b id="cv-alert-title">Todo en orden</b><span id="cv-alert-sub">Sin alertas del vehículo.</span></div>
+              <div class="cv__alerts-list" id="cv-alert-list"></div>
+            </article>
+
+            <!-- Diagrama: puertas, luces y llantas -->
+            <article class="card cv__diagram">
+              <header class="cv__head">
+                <span class="card__label">Puertas, luces y llantas</span>
+                <button type="button" class="btn-pill cv__demo" id="cv-demo" aria-pressed="true" title="Toca puertas, luces y llantas para simular datos">Demostración</button>
+              </header>
+              <div class="cv__stage">
+                <div class="cv__tires cv__tires--l">
+                  <button type="button" class="tire" data-tire="fl"><span class="tire__pos">Delantera izq.</span><span class="tire__val">—</span></button>
+                  <button type="button" class="tire" data-tire="rl"><span class="tire__pos">Trasera izq.</span><span class="tire__val">—</span></button>
+                </div>
+                <svg class="cv__car" viewBox="0 0 220 400" role="group" aria-label="Vista superior del auto">
+                  <!-- ruedas -->
+                  <g class="cv__wheels">
+                    <rect x="22" y="62" width="20" height="50" rx="6"/><rect x="178" y="62" width="20" height="50" rx="6"/>
+                    <rect x="22" y="288" width="20" height="50" rx="6"/><rect x="178" y="288" width="20" height="50" rx="6"/>
+                  </g>
+                  <!-- espejos -->
+                  <path class="cv__mirror" d="M44 124l-12 4 2 8 10-2z"/><path class="cv__mirror" d="M176 124l12 4-2 8-10-2z"/>
+                  <!-- carrocería -->
+                  <path class="cv__body" d="M110 10C152 10 172 28 176 70l4 60v160l-4 56c-4 40-24 56-66 56s-62-16-66-56l-4-56V130l4-60c4-42 24-60 66-60z"/>
+                  <path class="cv__part cv__part--hood" data-part="hood" role="button" tabindex="0" aria-label="Capó" d="M62 44C78 32 142 32 158 44l6 82H56z"/>
+                  <path class="cv__glass" d="M60 134h100l-6 42H66z"/>
+                  <rect class="cv__roof" x="66" y="180" width="88" height="66" rx="8"/>
+                  <path class="cv__glass" d="M66 250h88l6 36H60z"/>
+                  <path class="cv__part cv__part--trunk" data-part="trunk" role="button" tabindex="0" aria-label="Maletero" d="M60 294h100l-4 56c-14 12-78 12-92 0z"/>
+                  <!-- puertas -->
+                  <g class="cv__door cv__door--l" data-part="fl" role="button" tabindex="0" aria-label="Puerta del conductor" style="transform-origin:42px 132px"><rect class="cv__hit" x="10" y="132" width="34" height="76"/><rect x="31" y="132" width="12" height="76" rx="4"/></g>
+                  <g class="cv__door cv__door--l" data-part="rl" role="button" tabindex="0" aria-label="Puerta trasera izquierda" style="transform-origin:42px 214px"><rect class="cv__hit" x="10" y="214" width="34" height="70"/><rect x="31" y="214" width="12" height="70" rx="4"/></g>
+                  <g class="cv__door cv__door--r" data-part="fr" role="button" tabindex="0" aria-label="Puerta del pasajero" style="transform-origin:178px 132px"><rect class="cv__hit" x="176" y="132" width="34" height="76"/><rect x="177" y="132" width="12" height="76" rx="4"/></g>
+                  <g class="cv__door cv__door--r" data-part="rr" role="button" tabindex="0" aria-label="Puerta trasera derecha" style="transform-origin:178px 214px"><rect class="cv__hit" x="176" y="214" width="34" height="70"/><rect x="177" y="214" width="12" height="70" rx="4"/></g>
+                  <!-- luces -->
+                  <g class="cv__lamps">
+                    <rect class="lamp lamp--head" x="58" y="12" width="26" height="7" rx="3.500"/><rect class="lamp lamp--head" x="136" y="12" width="26" height="7" rx="3.500"/>
+                    <rect class="lamp lamp--brake" x="58" y="381" width="26" height="7" rx="3.500"/><rect class="lamp lamp--brake" x="136" y="381" width="26" height="7" rx="3.500"/>
+                    <rect class="lamp lamp--rev" x="90" y="383" width="40" height="5" rx="2.500"/>
+                    <circle class="lamp lamp--turn lamp--tl" cx="52" cy="26" r="5"/><circle class="lamp lamp--turn lamp--tl" cx="52" cy="376" r="5"/>
+                    <circle class="lamp lamp--turn lamp--tr" cx="168" cy="26" r="5"/><circle class="lamp lamp--turn lamp--tr" cx="168" cy="376" r="5"/>
+                  </g>
+                </svg>
+                <div class="cv__tires cv__tires--r">
+                  <button type="button" class="tire" data-tire="fr"><span class="tire__pos">Delantera der.</span><span class="tire__val">—</span></button>
+                  <button type="button" class="tire" data-tire="rr"><span class="tire__pos">Trasera der.</span><span class="tire__val">—</span></button>
+                </div>
+              </div>
+              <p class="cv__sum" id="cv-doors-sum">Todas las puertas cerradas</p>
+              <div class="cv__lights" id="cv-lights" role="group" aria-label="Luces">
+                <button type="button" class="lchip" data-light="head"><i></i>Luces</button>
+                <button type="button" class="lchip" data-light="brake"><i></i>Freno</button>
+                <button type="button" class="lchip" data-light="reverse"><i></i>Reversa</button>
+                <button type="button" class="lchip" data-light="turnL"><i></i>Giro izq.</button>
+                <button type="button" class="lchip" data-light="turnR"><i></i>Giro der.</button>
+                <button type="button" class="lchip" data-light="hazard"><i></i>Emergencia</button>
+              </div>
+            </article>
+
+            <!-- Viaje -->
+            <article class="card cv__trip">
+              <header class="cv__head">
+                <span class="card__label">Viaje</span>
+                <button type="button" class="btn-pill" id="cv-trip-reset">Reiniciar</button>
+              </header>
+              <div class="cv__trip-main"><span id="cv-trip-km">0,0</span><span class="card__unit" id="cv-trip-unit">km</span></div>
+              <div class="cv__stats">
+                <div><small>En marcha</small><b id="cv-trip-time">0:00</b></div>
+                <div><small>Promedio</small><b><span id="cv-trip-avg">0</span> <em id="cv-trip-avgu">km/h</em></b></div>
+                <div><small>Máxima</small><b><span id="cv-trip-max">0</span> <em id="cv-trip-maxu">km/h</em></b></div>
+              </div>
+              <p class="cv__note" id="cv-trip-note">Se calcula con el GPS. Activa la ubicación en los accesos rápidos.</p>
+            </article>
+
+            <!-- Mantenimiento -->
+            <article class="card cv__maint">
+              <header class="cv__head">
+                <span class="card__label">Mantenimiento</span>
+                <div class="cv__odo">
+                  <span class="cv__odo-lbl">Odómetro</span><b id="cv-odo">0</b><span class="cv__odo-u" id="cv-odo-u">km</span>
+                  <button type="button" class="btn-pill" id="cv-odo-edit">Ajustar</button>
+                </div>
+              </header>
+              <form class="cv__odo-form" id="cv-odo-form" hidden autocomplete="off">
+                <input class="set-input" id="cv-odo-in" type="text" inputmode="numeric" aria-label="Odómetro actual" placeholder="Kilometraje actual">
+                <button type="submit" class="btn-pill">Guardar</button>
+                <button type="button" class="btn-pill" id="cv-odo-cancel">Cancelar</button>
+              </form>
+              <ul class="cv__svc" id="cv-svc"></ul>
+            </article>
+
+            <!-- Encendido (relé del circuito de arranque) -->
+            <article class="card cv__ign" id="ign" data-on="false">
+              <header class="cv__head">
+                <span class="card__label">Encendido</span>
+                <span class="chip ign__chip" id="ign-chip" role="status">Circuito desconectado</span>
+              </header>
+              <p class="ign__txt" id="ign-txt">El auto no arranca hasta conectar el circuito con tu clave.</p>
+              <div class="ign__btns">
+                <button type="button" class="ign__main" id="ign-main"><svg class="icon" aria-hidden="true"><use href="#i-power"/></svg><span id="ign-main-t">ON</span></button>
+                <button type="button" class="btn-pill" id="ign-chg">Cambiar clave</button>
+              </div>
+              <p class="cv__note" id="ign-hw"></p>
+            </article>
+
+            <!-- Espejos laterales -->
+            <article class="card cv__mir" id="mir">
+              <header class="cv__head">
+                <span class="card__label">Espejos</span>
+                <div class="seg mir__side" id="mir-side" role="group" aria-label="Espejo">
+                  <button type="button" class="seg__btn" data-v="L" aria-pressed="true">Izquierdo</button>
+                  <button type="button" class="seg__btn" data-v="R" aria-pressed="false">Derecho</button>
+                </div>
+              </header>
+              <div class="mir__pad" role="group" aria-label="Mover espejo">
+                <button type="button" class="mir__k mir__k--u" data-d="up" aria-label="Subir"><svg class="icon"><use href="#i-chevron-up"/></svg></button>
+                <button type="button" class="mir__k mir__k--l" data-d="left" aria-label="Izquierda"><svg class="icon"><use href="#i-chevron-left"/></svg></button>
+                <span class="mir__c" id="mir-c">I</span>
+                <button type="button" class="mir__k mir__k--r" data-d="right" aria-label="Derecha"><svg class="icon"><use href="#i-chevron-right"/></svg></button>
+                <button type="button" class="mir__k mir__k--d" data-d="down" aria-label="Bajar"><svg class="icon" style="transform:rotate(180deg)"><use href="#i-chevron-up"/></svg></button>
+              </div>
+              <p class="cv__note" id="mir-hw">Mantén pulsada la flecha para mover el espejo.</p>
+            </article>
+
+
+          </div>
+        </section>
+        <!-- ================= AJUSTES ================= -->
+        <section class="view view--apps" data-view="apps" data-title="Apps">
+          <div class="ap" id="ap">
+            <!-- Cajón de apps (launcher) -->
+            <div class="ap__launcher" id="ap-launcher">
+              <header class="ap__top">
+                <div class="ap__searchbox">
+                  <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+                  <input id="ap-q" class="ap__q" type="search" enterkeyhint="search" placeholder="Buscar apps" aria-label="Buscar apps" autocomplete="off" spellcheck="false">
+                  <button type="button" class="ap__clear" id="ap-q-clear" aria-label="Borrar búsqueda" hidden><svg class="icon"><use href="#i-close"/></svg></button>
+                </div>
+                <button type="button" class="btn-round ap__plus" id="ap-add-btn" aria-label="Añadir acceso web"><svg class="icon"><use href="#i-plus"/></svg></button>
+              </header>
+
+              <!-- Con texto escrito: buscar también en las apps de streaming y en la web -->
+              <div class="ap__web" id="ap-web" hidden>
+                <span class="ap__web-lbl" id="ap-web-lbl">Buscar en</span>
+                <button type="button" class="ap__chip" data-s="youtube">YouTube</button>
+                <button type="button" class="ap__chip" data-s="ytmusic">YT Music</button>
+                <button type="button" class="ap__chip" data-s="spotify">Spotify</button>
+                <button type="button" class="ap__chip" data-s="web">Web</button>
+              </div>
+
+              <section class="ap__favs" id="ap-favs" hidden aria-label="Favoritas">
+                <div class="ap__favs-row" id="ap-favs-row" role="list"></div>
+              </section>
+
+              <div class="ap__scroll" id="ap-scroll">
+                <div class="ap__count" id="ap-count" role="status"></div>
+                <div class="ap__grid" id="ap-grid" role="list"></div>
+              </div>
+
+              <!-- Menú de pulsación larga -->
+              <div class="ap__menu" id="ap-menu" role="menu" hidden></div>
+
+              <form class="card ap__add" id="ap-add" hidden autocomplete="off" aria-label="Añadir acceso web">
+                <div class="card__label">Añadir acceso web</div>
+                <div class="ap__add-row">
+                  <input id="ap-name" class="ap__input" placeholder="Nombre" maxlength="18" aria-label="Nombre" required>
+                  <input id="ap-url" class="ap__input ap__input--wide" placeholder="Dirección (ej. tiktok.com)" inputmode="url" aria-label="Dirección web" required>
+                  <button type="submit" class="btn-pill ap__add-ok">Añadir</button>
+                  <button type="button" class="btn-pill" id="ap-add-cancel">Cancelar</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Visor de la app abierta -->
+            <div class="ap__frame" id="ap-frame" hidden>
+              <header class="ap__bar">
+                <button type="button" class="ap__home" id="ap-home"><svg class="icon"><use href="#i-back"/></svg><span>Sistema</span></button>
+                <button type="button" class="btn-pill ap__apps" id="ap-apps"><svg class="icon"><use href="#i-grid"/></svg><span>Apps</span></button>
+                <form class="ap__addr" id="ap-addr" autocomplete="off">
+                  <input id="ap-addr-in" class="ap__input" inputmode="url" aria-label="Dirección" placeholder="Escribe una dirección">
+                </form>
+                <button type="button" class="btn-round ap__ico" id="ap-reload" aria-label="Recargar"><svg class="icon"><use href="#i-reload"/></svg></button>
+                <button type="button" class="btn-pill ap__ext" id="ap-ext"><svg class="icon"><use href="#i-external"/></svg><span>Abrir en pestaña</span></button>
+                <button type="button" class="btn-round ap__ico" id="ap-close" aria-label="Cerrar app"><svg class="icon"><use href="#i-close"/></svg></button>
+              </header>
+              <div class="ap__body">
+                <iframe id="ap-iframe" title="App" referrerpolicy="no-referrer" allow="fullscreen; autoplay; encrypted-media; geolocation" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation"></iframe>
+                <div class="ap__note" id="ap-note"><b>¿Ves la página en blanco o con error?</b><span>Muchas apps (YouTube, Spotify, Google) no permiten abrirse dentro de otra página.</span><button type="button" class="btn-pill" id="ap-note-ext">Abrir en pestaña nueva</button></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view view--settings" data-view="settings" data-title="Ajustes">
+          <div class="settings">
+
+            <!-- Fondo de pantalla -->
+            <article class="card set-card set-card--wide">
+              <div class="card__label">Fondo de pantalla</div>
+              <div class="seg" id="set-wallpaper" role="group" aria-label="Tipo de fondo">
+                <button type="button" class="seg__btn" data-value="theme" aria-pressed="true">Predeterminado</button>
+                <button type="button" class="seg__btn" data-value="solid" aria-pressed="false">Color sólido</button>
+                <button type="button" class="seg__btn" data-value="image" aria-pressed="false">Imagen</button>
+              </div>
+
+              <div class="set-panel" id="set-panel-solid" hidden>
+                <div class="swatches" id="set-solid"></div>
+                <label class="color-pick">
+                  <input type="color" id="set-solid-custom" value="#1c1c20" aria-label="Color personalizado">
+                  <span>Color personalizado</span>
+                </label>
+                <p class="set-hint">Elige un fondo que combine con el tema claro u oscuro.</p>
+              </div>
+
+              <div class="set-panel" id="set-panel-image" hidden>
+                <div class="wp-preview" id="set-wp-preview" data-empty></div>
+                <div class="set-actions">
+                  <button type="button" class="btn-pill" id="set-wp-choose">Elegir imagen</button>
+                  <button type="button" class="btn-pill" id="set-wp-remove" disabled>Quitar imagen</button>
+                </div>
+                <input type="file" id="set-wp-file" accept="image/*" hidden>
+                <p class="set-hint" id="set-wp-msg" role="status"></p>
+              </div>
+            </article>
+
+            <!-- Tamaño del texto -->
+            <article class="card set-card">
+              <div class="card__label">Tamaño del texto</div>
+              <div class="seg" id="set-textscale" role="group" aria-label="Tamaño del texto">
+                <button type="button" class="seg__btn" data-value="0.9" aria-pressed="false">Pequeño</button>
+                <button type="button" class="seg__btn" data-value="1" aria-pressed="true">Normal</button>
+                <button type="button" class="seg__btn" data-value="1.15" aria-pressed="false">Grande</button>
+                <button type="button" class="seg__btn" data-value="1.3" aria-pressed="false">Muy grande</button>
+              </div>
+            </article>
+
+            <!-- Acento -->
+            <article class="card set-card set-card--wide">
+              <div class="card__label">Color de acento</div>
+              <div class="swatches" id="set-accent"></div>
+              <label class="color-pick">
+                <input type="color" id="set-accent-custom" value="#ff3b30" aria-label="Acento personalizado">
+                <span>Color personalizado</span>
+              </label>
+            </article>
+
+            <!-- Restablecer -->
+            <article class="card set-card set-card--wide">
+              <div class="set-actions">
+                <button type="button" class="btn-pill" id="set-reset">Restablecer apariencia</button>
+              </div>
+            </article>
+
+            <!-- Ajustes del sistema (los dibuja system.js) -->
+            <div class="sys-mount" id="sys-mount"></div>
+
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- ===== Ventana: climatización (se abre desde la barra de abajo) ===== -->
+  <div class="cpop" id="cpop" role="dialog" aria-modal="true" aria-label="Climatización" aria-hidden="true">
+    <div class="cpop__scrim" data-cp-close></div>
+    <section class="cpop__panel">
+      <header class="cpop__head">
+        <h2 class="cpop__t">Climatización</h2>
+        <button type="button" class="btn-round" data-cp-close aria-label="Cerrar"><svg class="icon"><use href="#i-close"/></svg></button>
+      </header>
+      <div class="cpop__body view--climate">
+        <div class="clim" id="clim" data-power="on" data-auto="on" data-sync="on" data-ac="on">
+
+            <!-- Conductor -->
+            <article class="card clim__zone" data-zone="driver">
+              <header class="clim__zh"><span class="card__label">Conductor</span></header>
+              <div class="clim__temp">
+                <button type="button" class="btn-round clim__step" data-zone="driver" data-dir="-1" aria-label="Bajar temperatura del conductor"><svg class="icon"><use href="#i-minus"/></svg></button>
+                <div class="clim__val" aria-live="polite"><span id="clim-d-val">22</span><span class="clim__deg" data-unit>°C</span></div>
+                <button type="button" class="btn-round clim__step" data-zone="driver" data-dir="1" aria-label="Subir temperatura del conductor"><svg class="icon"><use href="#i-plus"/></svg></button>
+              </div>
+              <input type="range" class="clim__range" id="clim-d-range" data-zone="driver" aria-label="Temperatura del conductor">
+              <div class="clim__heat">
+                <button type="button" class="heat" id="clim-d-seat" data-seat="driver" aria-label="Asiento del conductor calefactado">
+                  <svg class="icon"><use href="#i-seat"/></svg>
+                  <span class="heat__txt">Asiento</span>
+                  <span class="heat__lv" aria-hidden="true"><i></i><i></i><i></i></span>
+                </button>
+              </div>
+            </article>
+
+            <!-- Centro -->
+            <article class="card clim__center">
+              <header class="clim__top">
+                <button type="button" class="btn-round clim__power" id="clim-power" aria-pressed="true" aria-label="Climatización encendida"><svg class="icon"><use href="#i-power"/></svg></button>
+                <div class="clim__info" aria-live="polite">
+                  <div class="clim__cabin"><span id="clim-state">Auto</span></div>
+                  <div class="clim__temps"><span>Cabina <b id="clim-cabin">27</b><span data-unit>°C</span></span><span class="clim__dot" aria-hidden="true"></span><span>Exterior <b id="clim-out">25</b><span data-unit>°C</span></span></div>
+                </div>
+                <button type="button" class="btn-pill clim__auto" id="clim-auto" aria-pressed="true"><svg class="icon"><use href="#i-auto"/></svg>Auto</button>
+              </header>
+
+              <div class="clim__fan">
+                <button type="button" class="btn-round clim__fstep" id="clim-fan-dn" aria-label="Bajar ventilador"><svg class="icon"><use href="#i-minus"/></svg></button>
+                <div class="clim__fanbody">
+                  <svg class="icon clim__fanico" id="clim-fanico"><use href="#i-fan"/></svg>
+                  <div class="clim__levels" id="clim-levels" role="group" aria-label="Velocidad del ventilador">
+                    <button type="button" data-lv="1" aria-label="Velocidad 1"></button><button type="button" data-lv="2" aria-label="Velocidad 2"></button><button type="button" data-lv="3" aria-label="Velocidad 3"></button><button type="button" data-lv="4" aria-label="Velocidad 4"></button><button type="button" data-lv="5" aria-label="Velocidad 5"></button><button type="button" data-lv="6" aria-label="Velocidad 6"></button><button type="button" data-lv="7" aria-label="Velocidad 7"></button>
+                  </div>
+                  <div class="clim__fanval"><span id="clim-fan-val">3</span><small id="clim-fan-sub">Auto</small></div>
+                </div>
+                <button type="button" class="btn-round clim__fstep" id="clim-fan-up" aria-label="Subir ventilador"><svg class="icon"><use href="#i-plus"/></svg></button>
+              </div>
+
+              <div class="clim__modes" id="clim-modes" role="group" aria-label="Dirección del aire">
+                <button type="button" class="mode" data-mode="face" aria-pressed="false"><svg class="icon"><use href="#i-flow-face"/></svg><span>Rostro</span></button>
+                <button type="button" class="mode" data-mode="both" aria-pressed="true"><svg class="icon"><use href="#i-flow-both"/></svg><span>Rostro y pies</span></button>
+                <button type="button" class="mode" data-mode="feet" aria-pressed="false"><svg class="icon"><use href="#i-flow-feet"/></svg><span>Pies</span></button>
+                <button type="button" class="mode" data-mode="wind" aria-pressed="false"><svg class="icon"><use href="#i-flow-wind"/></svg><span>Parabrisas y pies</span></button>
+              </div>
+            </article>
+
+            <!-- Pasajero -->
+            <article class="card clim__zone" data-zone="pass">
+              <header class="clim__zh"><span class="card__label">Pasajero</span><button type="button" class="btn-pill clim__sync" id="clim-sync" aria-pressed="true"><svg class="icon"><use href="#i-sync"/></svg>Sincronizar</button></header>
+              <div class="clim__temp">
+                <button type="button" class="btn-round clim__step" data-zone="pass" data-dir="-1" aria-label="Bajar temperatura del pasajero"><svg class="icon"><use href="#i-minus"/></svg></button>
+                <div class="clim__val" aria-live="polite"><span id="clim-p-val">22</span><span class="clim__deg" data-unit>°C</span></div>
+                <button type="button" class="btn-round clim__step" data-zone="pass" data-dir="1" aria-label="Subir temperatura del pasajero"><svg class="icon"><use href="#i-plus"/></svg></button>
+              </div>
+              <input type="range" class="clim__range" id="clim-p-range" data-zone="pass" aria-label="Temperatura del pasajero">
+              <div class="clim__heat">
+                <button type="button" class="heat" id="clim-p-seat" data-seat="pass" aria-label="Asiento del pasajero calefactado">
+                  <svg class="icon"><use href="#i-seat"/></svg>
+                  <span class="heat__txt">Asiento</span>
+                  <span class="heat__lv" aria-hidden="true"><i></i><i></i><i></i></span>
+                </button>
+              </div>
+            </article>
+
+            <!-- Funciones -->
+            <article class="card clim__tiles">
+              <button type="button" class="tile" id="clim-ac" aria-pressed="true"><svg class="icon"><use href="#i-snow"/></svg><span class="tile__t">A/C</span><span class="tile__s">Encendido</span></button>
+              <button type="button" class="tile" id="clim-recirc" aria-pressed="false"><svg class="icon"><use href="#i-recirc"/></svg><span class="tile__t">Recirculación</span><span class="tile__s">Aire exterior</span></button>
+              <button type="button" class="tile" id="clim-dfront" aria-pressed="false"><svg class="icon"><use href="#i-defrost-front"/></svg><span class="tile__t">Parabrisas</span><span class="tile__s">Desempañar</span></button>
+              <button type="button" class="tile" id="clim-drear" aria-pressed="false"><svg class="icon"><use href="#i-defrost-rear"/></svg><span class="tile__t">Luneta</span><span class="tile__s">Desempañar</span></button>
+              <button type="button" class="tile" id="clim-wheel" aria-pressed="false"><svg class="icon"><use href="#i-wheel"/></svg><span class="tile__t">Volante</span><span class="tile__s">Calefactado</span></button>
+            </article>
+
+          </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== Ventana: volumen por lado (conductor / copiloto) ===== -->
+  <div class="vpop" id="vpop" role="dialog" aria-label="Volumen" aria-hidden="true">
+    <div class="vpop__scrim" data-vp-close></div>
+    <section class="vpop__panel">
+      <header class="vpop__head">
+        <h2 class="vpop__t">Volumen</h2>
+        <button type="button" class="btn-pill vpop__mute" id="vol-mute" aria-pressed="false" aria-label="Silenciar"><svg class="icon vpop__m-on"><use href="#i-mute"/></svg><svg class="icon vpop__m-off"><use href="#i-volume"/></svg><span>Silencio</span></button>
+      </header>
+      <div class="vpop__row">
+        <svg class="icon vpop__ico" aria-hidden="true"><use href="#i-volume"/></svg>
+        <div class="vpop__track" id="vp-main" role="slider" tabindex="0" aria-label="Volumen" aria-valuemin="0" aria-valuemax="100" aria-valuenow="60"><div class="vpop__fill"></div></div>
+        <span class="vpop__val" id="vp-main-v">60</span>
+      </div>
+      
+    </section>
+  </div>
+
+  <!-- ===== Panel de accesos rápidos ===== -->
+  <div class="qs" id="qs" aria-hidden="true">
+    <div class="qs__scrim" data-qs-close></div>
+    <section class="qs__sheet" role="dialog" aria-label="Accesos rápidos">
+
+      <header class="qs__head">
+        <div>
+          <div class="qs__time" id="qs-time">--:--</div>
+          <div class="qs__date" id="qs-date">—</div>
+        </div>
+        <button class="btn-round" data-qs-close aria-label="Cerrar accesos rápidos"><svg class="icon"><use href="#i-chevron-up"/></svg></button>
+      </header>
+
+      <div class="qs__tiles">
+        <button class="qs__tile" data-key="wifi" aria-pressed="true"><svg class="icon"><use href="#i-wifi"/></svg><span>Wi-Fi</span></button>
+        <button class="qs__tile" data-key="bluetooth" aria-pressed="true"><svg class="icon"><use href="#i-bluetooth"/></svg><span>Bluetooth</span></button>
+        <button class="qs__tile" data-key="data" aria-pressed="true"><svg class="icon"><use href="#i-signal"/></svg><span>Datos</span></button>
+        <button class="qs__tile" data-key="gps" aria-pressed="true"><svg class="icon"><use href="#i-map"/></svg><span>Ubicación</span></button>
+        <button class="qs__tile" data-key="mute" aria-pressed="false"><svg class="icon"><use href="#i-mute"/></svg><span>Silencio</span></button>
+        <button class="qs__tile" data-key="dnd" aria-pressed="false"><svg class="icon"><use href="#i-moon"/></svg><span>No molestar</span></button>
+      </div>
+
+      <div class="qs__sliders">
+        <div class="qs__slider">
+          <input type="range" id="qs-brightness" min="10" max="100" value="100" aria-label="Brillo">
+          <svg class="icon"><use href="#i-sun"/></svg>
+        </div>
+        <div class="qs__slider">
+          <input type="range" id="qs-volume" min="0" max="100" value="60" aria-label="Volumen">
+          <svg class="icon"><use href="#i-volume"/></svg>
+        </div>
+      </div>
+
+      <div class="qs__handle" id="qs-handle" aria-hidden="true"><i></i></div>
+    </section>
+  </div>
+
+  <!-- Atenuador de brillo -->
+  <div class="dim" id="dim" aria-hidden="true"></div>
+
+
+  <!-- ===== Ventana: clave de encendido ===== -->
+  <div class="ign-dlg" id="ign-dlg" role="dialog" aria-modal="true" aria-labelledby="ign-dlg-t" aria-hidden="true" hidden>
+    <div class="ign-dlg__panel">
+      <h2 class="ign-dlg__t" id="ign-dlg-t"></h2>
+      <p class="ign-dlg__s" id="ign-dlg-s"></p>
+      <div class="ign-dlg__dots" id="ign-dots" aria-hidden="true"></div>
+      <p class="ign-dlg__err" id="ign-err" role="alert"></p>
+      <div class="ign-dlg__pad" id="ign-pad">
+        <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+        <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+        <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+        <button type="button" data-k="back" aria-label="Borrar">⌫</button><button type="button" data-k="0">0</button><button type="button" data-k="ok" class="ign-dlg__ok">Listo</button>
+      </div>
+      <div class="ign-dlg__ask" id="ign-ask" hidden>
+        <button type="button" class="ign-dlg__yes" id="ign-yes">Sí, desconectar</button>
+        <button type="button" class="ign-dlg__no" id="ign-no">No, dejar conectado</button>
+      </div>
+      <button type="button" class="btn-pill ign-dlg__cancel" id="ign-cancel">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- ===== Cámara de reversa (pantalla completa) ===== -->
+  <div class="cam" id="cam" role="dialog" aria-modal="true" aria-label="Cámara de reversa" aria-hidden="true" data-state="connecting" data-guides="on" data-mirror="off">
+    <div class="cam__view">
+      <video class="cam__video" id="cam-video" autoplay muted playsinline hidden></video>
+      <img class="cam__img" id="cam-img" alt="" hidden>
+      <svg class="cam__guides" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <path class="g--near" d="M22 100 L26.4 84 M78 100 L73.6 84 M26.4 84 H73.6"/>
+        <path class="g--mid"  d="M26.4 84 L31.9 64 M73.6 84 L68.1 64 M31.9 64 H68.1"/>
+        <path class="g--far"  d="M31.9 64 L38 42 M68.1 64 L62 42 M38 42 H62"/>
+      </svg>
+      <div class="cam__empty" role="status">
+        <svg class="icon"><use href="#i-camera"/></svg>
+        <div class="cam__empty-title" id="cam-empty-title">Conectando…</div>
+        <p class="cam__empty-msg" id="cam-empty-msg"></p>
+      </div>
+    </div>
+
+    <header class="cam__bar">
+      <div class="cam__title">
+        <span>Cámara de reversa</span>
+        <span class="cam__chip" id="cam-chip"><i aria-hidden="true"></i><span>Conectando</span></span>
+      </div>
+      <button type="button" class="cam__close" id="cam-close" aria-label="Cerrar cámara"><svg class="icon"><use href="#i-close"/></svg></button>
+    </header>
+
+    <footer class="cam__tools">
+      <div class="cam__row">
+        <div class="seg" id="cam-source" role="group" aria-label="Fuente de video">
+          <button type="button" class="seg__btn" data-value="device" aria-pressed="true">Cámara</button>
+          <button type="button" class="seg__btn" data-value="url" aria-pressed="false">Red (URL)</button>
+        </div>
+        <select class="cam__field" id="cam-device" aria-label="Cámara"><option value="">Buscando cámaras…</option></select>
+        <input class="cam__field" id="cam-url" type="url" inputmode="url" placeholder="http://192.168.1.50/video.mjpg" aria-label="Dirección del flujo de video" hidden>
+        <button type="button" class="btn-pill cam__go" id="cam-go" hidden>Conectar</button>
+      </div>
+      <div class="cam__row">
+        <button type="button" class="btn-pill" id="cam-guides-btn" aria-pressed="true"><svg class="icon"><use href="#i-guides"/></svg>Guías</button>
+        <button type="button" class="btn-pill" id="cam-mirror" aria-pressed="false"><svg class="icon"><use href="#i-flip"/></svg>Espejo</button>
+        <button type="button" class="btn-pill" id="cam-retry"><svg class="icon"><use href="#i-refresh"/></svg>Reintentar</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Pantalla apagada (se enciende con un toque) -->
+  <button type="button" class="screenoff" id="screenoff" aria-hidden="true" tabindex="-1" aria-label="Encender pantalla"><span>Pantalla apagada · toca para encender</span></button>
+
+  <script src="theme.js"></script>
+  <script src="toast.js"></script>
+  <script src="nav.js"></script>
+  <script src="vendor/qr.js"></script>
+  <script src="system.js"></script>
+  <script src="link.js"></script>
+  <script src="esp.js"></script>
+  <script src="clock.js"></script>
+  <script src="statusbar.js"></script>
+  <script src="volume.js"></script>
+  <script src="radio.js"></script>
+  <script src="vehicle.js"></script>
+  <script src="ambient.js"></script>
+  <script src="ignition.js"></script>
+  <script src="mirrors.js"></script>
+  <script src="cluster/skins.js"></script>
+  <script src="cluster.js"></script>
+  <script src="climate.js"></script>
+  <script src="climpop.js"></script>
+  <script src="car.js"></script>
+  <script src="camera.js"></script>
+  <script src="bluetooth.js"></script>
+  <script src="media.js"></script>
+  <script src="weather.js"></script>
+  <script src="tilemap.js"></script>
+  <script src="map.js"></script>
+  <script src="apps.js"></script>
+  <script src="freq.js"></script>
+  <script src="calls.js"></script>
+  <script src="power.js"></script>
+  <script src="android.js"></script>
+  <script src="osk.js"></script>
+  <script src="boot.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

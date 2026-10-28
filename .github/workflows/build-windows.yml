@@ -1,0 +1,31 @@
+name: Compilar Windows
+on:
+  workflow_dispatch:
+  push:
+    branches: [ windows ]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm install
+      - name: Prueba de arranque
+        run: npx electron . --smoke
+      - run: npm run dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RadioB14-Windows
+          path: dist/*.exe
+      - name: Publicar en Releases
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp "dist/Radio B14 Setup 1.0.0.exe" RadioB14-Setup.exe
+          ls dist/*.exe
+          gh release delete windows-latest --yes --cleanup-tag || true
+          gh release create windows-latest RadioB14-Setup.exe dist/*portable*.exe --title "Radio B14 (Windows)" --notes "Instalador de Windows compilado automáticamente."

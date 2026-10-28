@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Cluster B14</title>
+<!--
+  Pantalla del cluster (la que ve el conductor; no es táctil).
+  · Muestra la interfaz elegida en el radio (cluster/skins.js) a pantalla completa.
+  · Recibe por RadioLink los ajustes (tema, paisaje, zona roja…) y los datos del ESP32.
+  · En Android se abre en la segunda pantalla (AndroidBridge.openCluster); en un navegador,
+    ábrela en otra ventana y arrástrala al monitor del cluster.
+-->
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; cursor: none; }
+  #off { position: fixed; inset: 0; background: #000; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 400ms ease-out, visibility 0s linear 400ms; z-index: 5; }
+  #off.on { opacity: 1; visibility: visible; transition-delay: 0s; }
+  iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #000; }
+</style>
+</head>
+<body>
+<iframe id="f" title="Cluster"></iframe>
+<div id="off" aria-hidden="true"></div>
+<script src="skins.js"></script>
+<script src="../link.js"></script>
+<script>
+(function () {
+  "use strict";
+  var f = document.getElementById("f"), L = window.RadioLink;
+  var cur = null, api = null, snap = null, lastStatus = null;
+
+  function skin(id) { return window.ClusterSkins.filter(function (s) { return s.id === id; })[0] || window.ClusterSkins[0]; }
+  function load(id) {
+    var s = skin(id); if (cur === s.id) return;
+    cur = s.id; api = null; f.src = s.file;
+  }
+  var media = null;
+  function pushMedia() {
+    if (!api || !api.setMedia || !media) return;
+    api.onMediaCtl = function (c) { if (L) L.send({ k: "mediactl", c: c }); };
+    try { api.setMedia(media); } catch (e) {}
+  }
+  function apply() { if (api && api.restore && snap) { try { api.restore(snap); } catch (e) {} } }
+  function toFrame(fn, a, b) { try { f.contentWindow[fn](a, b); } catch (e) {} }
+
+  f.addEventListener("load", function () {
+    try { api = f.contentWindow.ClusterAPI || null; } catch (e) { api = null; }
+    apply(); pushMedia();
+    if (lastStatus) toFrame("__b14Status", lastStatus[0], lastStatus[1]);
+    if (L) L.send({ k: "hello" });
+  });
+
+  // Interfaz que quedó guardada la última vez (hasta que el radio mande la suya)
+  var first = "riel";
+  try { first = (JSON.parse(localStorage.getItem("radio-cluster")) || {}).ui || "riel"; } catch (e) {}
+  load(first);
+
+  if (L) {
+    L.on(function (m) {
+      if (!m) return;
+      if (m.k === "cluster") {
+        if (m.ui && m.ui !== cur) load(m.ui);
+        if (m.snap) { snap = m.snap; apply(); }
+      } else if (m.k === "line") toFrame("__b14Line", m.t);
+      else if (m.k === "status") { lastStatus = [m.t, m.ok]; toFrame("__b14Status", m.t, m.ok); }
+      else if (m.k === "click" && api && api.click) { try { api.click(m.id); } catch (e) {} }
+      else if (m.k === "power") { document.getElementById("off").classList.toggle("on", m.on === false); }
+      else if (m.k === "media") { media = m; pushMedia(); }
+      else if (m.k === "odo" && api && api.setOdo) { try { api.setOdo(m.v); } catch (e) {} }
+    });
+    L.send({ k: "hello" });
+    setInterval(function () { L.send({ k: "alive" }); }, 2000);
+  }
+
+  // Si la app Android entrega el USB directamente a esta pantalla
+  window.__b14Line = function (t) { toFrame("__b14Line", t); };
+  window.__b14Status = function (t, ok) { lastStatus = [t, ok]; toFrame("__b14Status", t, ok); };
+})();
+</script>
+</body>
+</html>

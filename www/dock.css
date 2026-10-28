@@ -1,0 +1,47 @@
+/* ==========================================================
+   DOCK — barra de navegación flotante + selector de tema
+   Sección: NAVEGACIÓN
+   ========================================================== */
+
+.dock {
+  display: flex; flex-direction: row; align-items: center; gap: 0.6rem;
+  padding: 0.4rem 0;
+  justify-self: center; max-width: 100%;
+  overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: none;
+  transition: background var(--dur) var(--ease);
+}
+.dock::-webkit-scrollbar { display: none; }
+
+/* Selector sol / luna */
+.theme-switch {
+  flex: none; display: flex; flex-direction: row; gap: 0.2rem;
+  padding: 0.2rem; border-radius: var(--radius-pill);
+  background: var(--surface-inset);
+}
+.theme-switch__btn {
+  width: 2.5rem; height: 2.5rem; border-radius: 50%;
+  display: grid; place-items: center; color: var(--text-dim);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.theme-switch__btn[aria-pressed="true"] { background: var(--dock-active-bg); color: var(--dock-active-fg); }
+.theme-switch__btn:active { transform: scale(0.92); }
+
+.dock__divider { flex: none; width: 1px; height: 2rem; background: var(--border-strong); margin: 0 0.1rem; }
+
+.dock__nav { display: flex; flex-direction: row; gap: 0.3rem; }
+.dock__btn {
+  flex: none; width: 2.8rem; height: 2.8rem; border-radius: 50%;
+  display: grid; place-items: center; color: var(--text-dim);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.dock__btn:active { transform: scale(0.92); }
+.dock__btn[aria-current="page"] { background: var(--dock-active-bg); color: var(--dock-active-fg); }
+
+/* Área táctil mínima de ~44 px aunque el botón se vea más pequeño (pantallas chicas) */
+.dock__btn, .theme-switch__btn { position: relative; }
+.dock__btn::after, .theme-switch__btn::after { content: ""; position: absolute; inset: calc((100% - max(100%, 44px)) / 2); }
+
+/* Pantallas angostas: botones más compactos; si aun así no caben, la barra se desplaza */
+@media (max-width: 62rem) { .dock__btn { width: 2.6rem; height: 2.6rem; } .theme-switch__btn { width: 2.3rem; height: 2.3rem; } .dock { gap: 0.4rem; } }
+@media (orientation: portrait) { .dock { justify-self: stretch; } }

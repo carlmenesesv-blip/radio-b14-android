@@ -1,0 +1,97 @@
+/* ==========================================================
+   BOOT — animación de inicio al encender el sistema
+   Siempre oscura (como una pantalla de auto al arrancar),
+   sin importar el tema elegido. Se carga en <head> para
+   cubrir la pantalla antes del primer pintado.
+   Sección: INICIO
+   ========================================================== */
+
+.boot {
+  --b-red: #ff3b30;
+  --b-len: 3600ms;                       /* lo fija boot.js según el ajuste */
+  position: fixed; inset: 0; z-index: 9999;
+  display: grid; place-items: center;
+  background: #050507; color: #f4f1f0;
+  overflow: hidden; cursor: pointer; user-select: none; -webkit-user-select: none;
+  font-family: var(--font, "Outfit", system-ui, sans-serif);
+  /* Plan B sin JavaScript: se oculta sola */
+  animation: bootFallback 400ms ease-out 9s forwards;
+}
+html[data-boot="off"] .boot { display: none; }
+.boot.is-out { animation: bootOut 520ms cubic-bezier(0.22, 0.8, 0.24, 1) forwards; pointer-events: none; }
+.boot[hidden] { display: none; }
+
+@keyframes bootFallback { to { opacity: 0; visibility: hidden; } }
+@keyframes bootOut { to { opacity: 0; transform: scale(1.04); visibility: hidden; } }
+
+/* Resplandor de fondo */
+.boot__glow {
+  position: absolute; left: 50%; top: 46%; width: 70vmax; height: 70vmax; translate: -50% -50%;
+  background: radial-gradient(closest-side, rgba(255, 59, 48, 0.34), rgba(255, 59, 48, 0.08) 55%, transparent 75%);
+  opacity: 0; transform: scale(0.6);
+  animation: bootGlow calc(var(--b-len) * 0.9) cubic-bezier(0.22, 0.8, 0.24, 1) 150ms forwards;
+}
+@keyframes bootGlow {
+  0% { opacity: 0; transform: scale(0.6); }
+  40% { opacity: 1; transform: scale(0.95); }
+  100% { opacity: 0.55; transform: scale(1.1); }
+}
+
+.boot__stage { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2.2rem; padding: 2rem; }
+
+/* Luces: dos barras que se encienden del centro hacia afuera */
+.boot__lamps { display: flex; align-items: center; justify-content: center; gap: 1.6rem; width: min(30rem, 78vw); }
+.boot__lamp {
+  flex: 1; height: 0.28rem; border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--b-red) 35%, #fff);
+  box-shadow: 0 0 1.4rem rgba(255, 59, 48, 0.75);
+  transform: scaleX(0); opacity: 0;
+  animation: bootLamp 900ms cubic-bezier(0.22, 0.8, 0.24, 1) 250ms forwards;
+}
+.boot__lamp--l { transform-origin: right center; background: linear-gradient(270deg, transparent, var(--b-red) 35%, #fff); }
+.boot__lamp--r { transform-origin: left center; }
+.boot__lamps::before {
+  content: ""; flex: none; width: 0.7rem; height: 0.7rem; border-radius: 50%; order: 1;
+  background: #fff; box-shadow: 0 0 1.6rem 0.2rem rgba(255, 255, 255, 0.55), 0 0 3rem 0.6rem rgba(255, 59, 48, 0.5);
+  opacity: 0; transform: scale(0.2);
+  animation: bootDot 700ms ease-out 150ms forwards;
+}
+.boot__lamp--l { order: 0; } .boot__lamp--r { order: 2; }
+@keyframes bootLamp { 0% { transform: scaleX(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: scaleX(1); opacity: 1; } }
+@keyframes bootDot { 0% { opacity: 0; transform: scale(0.2); } 100% { opacity: 1; transform: scale(1); } }
+
+/* Marca */
+.boot__brand { display: flex; align-items: baseline; gap: 1.7rem; font-weight: 300; line-height: 1; }
+.boot__word, .boot__num {
+  font-size: min(5.2rem, 13vw); letter-spacing: 0.34em; margin-right: -0.34em;
+  opacity: 0; animation: bootWord 1100ms cubic-bezier(0.22, 0.8, 0.24, 1) 800ms forwards;
+}
+.boot__num { font-weight: 500; color: var(--b-red); letter-spacing: 0.1em; margin-right: 0; animation-delay: 1000ms; text-shadow: 0 0 2rem rgba(255, 59, 48, 0.55); }
+@keyframes bootWord {
+  0% { opacity: 0; letter-spacing: 0.7em; }
+  100% { opacity: 1; letter-spacing: 0.34em; }
+}
+.boot__num { animation-name: bootNum; }
+@keyframes bootNum {
+  0% { opacity: 0; letter-spacing: 0.5em; }
+  100% { opacity: 1; letter-spacing: 0.1em; }
+}
+
+/* Progreso y estado */
+.boot__foot { position: absolute; left: 50%; bottom: 3.2rem; translate: -50% 0; width: min(22rem, 70vw); display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
+.boot__bar { width: 100%; height: 2px; border-radius: 2px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.boot__bar > i { display: block; height: 100%; width: 100%; transform-origin: left center; transform: scaleX(0); background: linear-gradient(90deg, var(--b-red), #fff); animation: bootBar calc(var(--b-len) - 500ms) cubic-bezier(0.4, 0, 0.2, 1) 300ms forwards; }
+@keyframes bootBar { to { transform: scaleX(1); } }
+.boot__msg { font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(244, 241, 240, 0.55); min-height: 1.1em; transition: opacity 160ms ease-out; }
+.boot__skip { position: absolute; right: 1.4rem; top: 1.2rem; font-size: 0.72rem; letter-spacing: 0.1em; color: rgba(244, 241, 240, 0.35); opacity: 0; animation: bootSkip 400ms ease-out 1200ms forwards; }
+@keyframes bootSkip { to { opacity: 1; } }
+
+/* Reducir animaciones: aparece la marca sin movimiento y se va rápido */
+:root[data-motion="reduce"] .boot__glow { animation: none; opacity: 0.45; transform: none; }
+:root[data-motion="reduce"] .boot__lamp, :root[data-motion="reduce"] .boot__lamps::before { animation: none; transform: none; opacity: 1; }
+:root[data-motion="reduce"] .boot__word, :root[data-motion="reduce"] .boot__num { animation: none; opacity: 1; filter: none; letter-spacing: 0.2em; }
+:root[data-motion="reduce"] .boot__bar > i { animation: none; transform: scaleX(1); }
+:root[data-motion="reduce"] .boot.is-out { animation-duration: 160ms !important; }
+@media (prefers-reduced-motion: reduce) {
+  .boot__glow, .boot__lamp, .boot__lamps::before, .boot__word, .boot__num { animation-duration: 200ms; animation-delay: 0s; }
+}

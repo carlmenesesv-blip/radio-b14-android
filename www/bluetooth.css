@@ -1,0 +1,19 @@
+/* ==========================================================
+   BLUETOOTH — pestaña del receptor Bluetooth
+   (las clases .bt, .cast__title, .cast__steps y .cast__status están en cast.css)
+   Sección: BLUETOOTH
+   ========================================================== */
+
+.view--music { display: grid; place-items: center; overflow-y: auto; scrollbar-width: none; }
+.view--music::-webkit-scrollbar { display: none; }
+.music { width: min(52rem, 100%); }
+.btcard { padding: 1.6rem 1.8rem; display: flex; flex-direction: column; gap: 1.2rem; }
+.btcard .bt { padding: 0; }
+.btcard .bt__ico { width: 9rem; height: 9rem; }
+.btcard[data-active="on"] .bt__ico { background: var(--dock-active-bg); color: var(--dock-active-fg); border-color: transparent; }
+.bt__live { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 1rem 1.2rem; border-radius: var(--radius-lg); background: var(--surface-inset); border: 1px solid var(--border-strong); }
+.bt__live[hidden] { display: none; }
+.bt__live > .icon { width: 1.6rem; height: 1.6rem; color: var(--info); }
+.bt__live-t { font-size: 1.05rem; font-weight: 500; }
+.bt__live p { flex: 1 1 14rem; font-size: 0.82rem; color: var(--text-dim); }
+.btcard .btn-pill { min-height: 2.9rem; }

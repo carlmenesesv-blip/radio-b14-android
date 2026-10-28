@@ -1,0 +1,193 @@
+/* ==========================================================
+   HOME — pantalla principal
+   Tres columnas sin scroll: tiempo | auto (pequeño) | música + apps más usadas + mapa y puertas.
+   El auto es informativo; el protagonista es el cluster.
+   Sección: HOME
+   ========================================================== */
+
+.view[data-view="home"] { container-type: inline-size; container-name: homeview; }
+
+.home {
+  height: 100%;
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: minmax(0, 4fr) minmax(0, 3.5fr) minmax(0, 3.5fr);
+}
+.home__col { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; min-height: 0; }
+.home__col > .card, .home > .card { min-height: 0; }
+.home__col--r > .card--media { flex: 0 0 auto; }
+.home__col--r > .card--freq { flex: 1 1 0; }
+.home__mini { flex: 0 0 5.2rem; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--gap); min-height: 0; }
+.home__mini > .card { min-height: 0; }
+
+/* ---------- Mapa (mini) ---------- */
+.map__canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.card--map { background: var(--map-bg); padding: 0; }
+.card--map::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(120deg, var(--map-scrim) 0%, var(--map-scrim) 22%, transparent 62%); }
+.map__road { fill: none; stroke: var(--map-road); stroke-width: 10; stroke-linecap: round; }
+.map__road--thin { stroke-width: 5; opacity: 0.7; }
+.map__halo { fill: var(--map-halo); }
+.map__dot { fill: var(--text); }
+.map__info { position: absolute; z-index: 2; left: 0.7rem; top: 0.6rem; right: 0.7rem; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
+.map__name { font-size: 0.85rem; font-weight: 400; line-height: 1.1; }
+.map__addr { font-size: 0.62rem; color: var(--text-dim); margin-top: 0.25rem; }
+.map__ring { width: 1.8rem; height: 1.8rem; border-radius: 50%; border: 1px solid var(--border-strong); display: grid; place-items: center; font-size: 0.65rem; font-variant-numeric: tabular-nums; }
+
+/* ---------- Tiempo ---------- */
+.card--wx { display: flex; flex-direction: column; gap: 0.65rem; padding: 0.9rem 1rem; overflow: hidden; }
+.wx__top { flex: none; display: flex; align-items: center; gap: 0.7rem; min-width: 0; }
+.wx__ico { flex: none; width: 3.2rem; height: 3.2rem; stroke-width: 1.3; color: var(--text); }
+.wx__main { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 0.1rem; }
+.wx__desc { font-size: 0.95rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wx__temp { display: flex; align-items: baseline; gap: 0.15rem; }
+.wx__temp b { font-size: 2.5rem; font-weight: 300; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.wx__temp small { font-size: 1rem; color: var(--text-dim); }
+.wx__where { flex: none; max-width: 40%; display: inline-flex; align-items: center; gap: 0.3rem; align-self: flex-start; font-size: 0.78rem; color: var(--text-dim); }
+.wx__where .icon { width: 0.95rem; height: 0.95rem; flex: none; }
+.wx__where span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wx__sun { flex: none; display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.8rem; border-radius: var(--radius-pill); background: var(--surface-inset); font-variant-numeric: tabular-nums; }
+.wx__sunt { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; }
+.wx__sunt .icon { width: 1.1rem; height: 1.1rem; color: var(--text-dim); }
+.wx__sunt b { font-weight: 400; }
+.wx__len { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+.wx__len i { display: block; width: 100%; height: 0.2rem; border-radius: 0.2rem; background: linear-gradient(90deg, var(--fog), var(--lamp), var(--fog)); opacity: 0.8; }
+.wx__len em { font-style: normal; font-size: 0.62rem; color: var(--text-dim); white-space: nowrap; }
+.wx__facts { flex: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.4rem; }
+.wx__f { display: flex; align-items: center; gap: 0.4rem; min-width: 0; }
+.wx__f .icon { width: 1.2rem; height: 1.2rem; flex: none; color: var(--text-dim); }
+.wx__f span { display: flex; flex-direction: column; min-width: 0; }
+.wx__f small { font-size: 0.6rem; color: var(--text-dim); }
+.wx__f b { font-size: 0.85rem; font-weight: 400; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.wx__days { flex: 1 1 0; min-height: 6rem; list-style: none; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0.3rem; }
+.wx__day {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.7rem;
+  padding: 0.5rem 0.1rem; border-radius: var(--radius-pill); background: var(--surface-inset); min-width: 0;
+}
+.wx__day[hidden] { display: none; }
+.wx__day:first-child { background: var(--surface-strong); box-shadow: inset 0 0 0 1px var(--border-strong); }
+.wx__dn { font-size: 0.66rem; color: var(--text-dim); }
+.wx__day .icon { width: 1.3rem; height: 1.3rem; }
+.wx__dh { font-size: 0.8rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.wx__dl { font-size: 0.68rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.card--wx[data-state="idle"] .wx__ico { opacity: 0.4; }
+
+/* ---------- Puertas (mini) ---------- */
+.card--doors { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.7rem; }
+.card--doors .btn-round { flex: none; width: 2.4rem; height: 2.4rem; }
+.doors__txt { min-width: 0; }
+.doors__state { font-size: 0.82rem; font-weight: 400; white-space: nowrap; }
+.doors__sub { font-size: 0.64rem; color: var(--text-dim); margin-top: 0.1rem; }
+
+/* ---------- Auto (centro, pequeño e informativo) ---------- */
+.card--car { display: flex; flex-direction: column; align-items: stretch; gap: 0.5rem; padding: 0.75rem 0.8rem; }
+.car__stats { flex: none; display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; gap: 0.5rem; align-items: start; }
+.stat, .metric { min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; position: relative; }
+.stat--health { display: contents; }
+.stat__l { display: flex; align-items: center; gap: 0.3rem; font-size: 0.6rem; color: var(--text-dim); white-space: nowrap; }
+.stat__t { display: flex; align-items: baseline; gap: 0.15rem; white-space: nowrap; }
+.stat__t b { font-size: 1.1rem; font-weight: 400; line-height: 1.1; font-variant-numeric: tabular-nums; transition: color 160ms ease-out; }
+.stat__t small { font-size: 0.62rem; color: var(--text-dim); }
+.metric[data-state="warn"] .stat__t b, .stat--fuel[data-state="warn"] .stat__t b { color: var(--warn); }
+.metric[data-state="bad"] .stat__t b, .stat--fuel[data-state="bad"] .stat__t b { color: var(--bad); }
+.car__stage { flex: 1 1 0; min-height: 0; display: grid; place-items: center; }
+.car__svg { height: 100%; width: auto; max-width: 100%; }
+.car__controls { flex: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.35rem; }
+
+/* ---------- Música: fila compacta en reposo; más grande, con ecualizador y controles al sonar ---------- */
+.card--media {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; column-gap: 0.7rem; row-gap: 0.6rem;
+  padding: 0.7rem 0.8rem;
+}
+.media__cover {
+  position: relative; width: 2.8rem; height: 2.8rem; border-radius: 0.85rem; flex: none; overflow: hidden;
+  background: var(--surface-strong); border: 1px solid var(--border); color: var(--text-dim);
+  display: grid; place-items: center;
+  transition: width 320ms var(--ease), height 320ms var(--ease);
+}
+.media__note { width: 1.3rem; height: 1.3rem; }
+.media__txt { min-width: 0; }
+.media__src { font-size: 0.6rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-dim); }
+.media__title { font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.media__artist { font-size: 0.68rem; color: var(--text-dim); margin-top: 0.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.media__ctrl { display: flex; align-items: center; gap: 0.5rem; }
+.media__ctrl .btn-round { width: 2.5rem; height: 2.5rem; }
+.media__ctrl .btn-round--main { width: 2.8rem; height: 2.8rem; background: var(--dock-active-bg); color: var(--dock-active-fg); border-color: transparent; }
+.media__eq { position: absolute; inset: 0; display: none; align-items: flex-end; justify-content: center; gap: 0.2rem; padding: 22% 24%; }
+.media__eq i { display: block; width: 0.24rem; height: 30%; border-radius: 2px; background: var(--text); animation: homeEq 900ms ease-in-out infinite alternate; animation-play-state: paused; }
+.media__eq i:nth-child(2) { animation-delay: -300ms; } .media__eq i:nth-child(3) { animation-delay: -600ms; }
+.media__eq i:nth-child(4) { animation-delay: -150ms; } .media__eq i:nth-child(5) { animation-delay: -450ms; }
+@keyframes homeEq { from { height: 20%; } to { height: 100%; } }
+
+.card--media[data-state="idle"] .media__ctrl .btn-round:not(.btn-round--main) { display: none; }
+.card--media[data-state="playing"],
+.card--media[data-state="paused"] { grid-template-columns: auto minmax(0, 1fr); }
+.card--media[data-state="playing"] .media__ctrl,
+.card--media[data-state="paused"] .media__ctrl { grid-column: 1 / -1; justify-content: center; gap: 1rem; }
+.card--media[data-state="playing"] .media__cover,
+.card--media[data-state="paused"] .media__cover { width: 4.2rem; height: 4.2rem; border-radius: 1.1rem; }
+.card--media[data-state="playing"] .media__note,
+.card--media[data-state="paused"] .media__note { display: none; }
+.card--media[data-state="playing"] .media__eq,
+.card--media[data-state="paused"] .media__eq { display: flex; }
+.card--media[data-state="playing"] .media__eq i { animation-play-state: running; }
+.card--media[data-state="playing"] .media__title { font-size: 1.05rem; }
+.card--media[data-ctl="none"] .media__ctrl .btn-round:not(.btn-round--main) { display: none; }
+
+/* ---------- Lista de pistas ---------- */
+.card--list { display: flex; flex-direction: column; padding: 0.8rem; }
+.tracks { list-style: none; display: flex; flex-direction: column; flex: 1; justify-content: space-between; }
+.track { display: flex; align-items: center; gap: 0.7rem; padding: 0.35rem 0.4rem; border-radius: var(--radius-md); }
+.track + .track { border-top: 1px solid var(--border); border-radius: 0; }
+.track__cover { width: 2.3rem; height: 2.3rem; border-radius: 0.6rem; flex: none; background: var(--cover-sm); border: 1px solid var(--border); }
+
+.track__txt { min-width: 0; flex: 1; }
+.track__title { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track__artist { font-size: 0.68rem; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track__badge { font-size: 0.6rem; padding: 0.2rem 0.5rem; border-radius: var(--radius-pill); background: var(--dock-active-bg); color: var(--dock-active-fg); }
+
+/* ---------- Pantalla vertical o muy angosta: se apila y permite desplazarse ---------- */
+@media (orientation: portrait) {
+  .view[data-view="home"] { overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+  .view[data-view="home"]::-webkit-scrollbar { display: none; }
+  .home { height: auto; grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; }
+  .home__col--r { flex-direction: column; }
+  .home > .card--wx { min-height: 22rem; }
+  .card--car { order: -1; min-height: 36rem; }
+  .home__col--r > .card--freq { flex: none; min-height: 9rem; }
+  .home__mini { flex-basis: 6rem; }
+}
+
+/* ==========================================================
+   MODO CLARO — Navegación (mapa) y Reproducción (lista + media)
+   Solo afecta al tema claro; el oscuro no se toca.
+   ========================================================== */
+
+/* Texto secundario con contraste AA (antes ~3.4:1) */
+:root[data-theme="light"] .card--map,
+:root[data-theme="light"] .card--list,
+:root[data-theme="light"] .card--media, :root[data-theme="light"] .card--wx { --text-dim: rgba(17, 17, 19, 0.64); }
+
+/* ---------- Navegación: mapa claro (calles blancas sobre gris) ---------- */
+:root[data-theme="light"] .card--map { background: #e9ebee; }
+:root[data-theme="light"] .map__road {
+  stroke: #ffffff;
+  opacity: 1;
+  filter: drop-shadow(0 0 1px rgba(17, 17, 19, 0.22));
+}
+:root[data-theme="light"] .map__road--thin { opacity: 0.9; }
+:root[data-theme="light"] .map__dot { stroke: #ffffff; stroke-width: 3; }
+:root[data-theme="light"]:not([data-accent]) .map__halo { fill: rgba(10, 132, 255, 0.16); }
+:root[data-theme="light"]:not([data-accent]) .map__dot { fill: #0a84ff; }
+:root[data-theme="light"][data-accent] .map__dot { fill: var(--accent); }
+:root[data-theme="light"] .map__ring { background: rgba(255, 255, 255, 0.85); border-color: var(--border-strong); }
+
+/* ---------- Reproducción: lista de pistas ---------- */
+:root[data-theme="light"] .track__cover {
+  background: linear-gradient(135deg, #f7f7f9, #dcdde2);
+  border-color: rgba(17, 17, 19, 0.08);
+}
+:root[data-theme="light"] .track + .track { border-top-color: rgba(17, 17, 19, 0.08); }
+
+/* ---------- Reproducción: tarjeta Media (portada neutra en claro) ---------- */
+:root[data-theme="light"] .media__cover { background: linear-gradient(135deg, #f7f7f9, #e2e3e8); border-color: rgba(17, 17, 19, 0.08); }
+:root[data-theme="light"] .card--media .btn-round:not(.btn-round--main) { background: rgba(17, 17, 19, 0.06); border-color: var(--border-strong); }
