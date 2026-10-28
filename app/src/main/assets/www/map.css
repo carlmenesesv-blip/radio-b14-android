@@ -211,3 +211,39 @@
 .map__live .tm__pin-in { width: 1.8rem; height: 1.8rem; margin: -0.9rem 0 0 -0.9rem; }
 .map__live .pin-dest { width: 2.2rem; height: 2.2rem; margin: -2.2rem 0 0 -1.1rem; }
 .map__live .pin-car.is-dot i { width: 0.9rem; height: 0.9rem; margin: 0.45rem; }
+
+/* ==========================================================
+   Mapa a pantalla completa: sin barra superior y con flotantes
+   (accesos rápidos, velocidad y música que suena)
+   ========================================================== */
+html[data-view="map"] .topbar { display: none; }
+
+.nav__hud {
+  position: absolute; right: var(--g); bottom: 2.2rem; z-index: 4;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 0.55rem;
+  pointer-events: none;
+}
+.nav__hud > * { pointer-events: auto; }
+.hud__qs, .hud__speed, .hud__media {
+  background: var(--surface-strong); border: 1px solid var(--border-strong); box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(140%); backdrop-filter: blur(var(--blur)) saturate(140%);
+}
+.hud__qs { width: max(3.2rem, 44px); height: max(3.2rem, 44px); border-radius: 50%; display: grid; place-items: center; touch-action: manipulation; transition: transform 160ms ease-out; }
+.hud__qs:active { transform: scale(0.97); }
+.hud__speed { min-width: 5.2rem; padding: 0.55rem 0.9rem; border-radius: var(--radius-lg); display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.hud__speed b { font-size: 2.1rem; font-weight: 400; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.hud__speed small { font-size: 0.65rem; color: var(--text-dim); margin-top: 0.2rem; }
+.hud__media { display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.45rem 0.4rem 0.9rem; border-radius: var(--radius-pill); max-width: 17rem; }
+.hud__txt { min-width: 0; display: flex; flex-direction: column; }
+.hud__txt b { font-size: 0.82rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hud__txt small { font-size: 0.66rem; color: var(--text-dim); }
+.hud__play { flex: none; width: max(2.8rem, 44px); height: max(2.8rem, 44px); border-radius: 50%; display: grid; place-items: center; background: var(--dock-active-bg); color: var(--dock-active-fg); touch-action: manipulation; transition: transform 160ms ease-out; }
+.hud__play:active { transform: scale(0.97); }
+.hud__eq { display: none; align-items: flex-end; gap: 0.14rem; height: 1.1rem; }
+.hud__eq i { display: block; width: 0.18rem; height: 30%; border-radius: 2px; background: var(--text); animation: homeEq 900ms ease-in-out infinite alternate; }
+.hud__eq i:nth-child(2) { animation-delay: -300ms; } .hud__eq i:nth-child(3) { animation-delay: -600ms; } .hud__eq i:nth-child(4) { animation-delay: -150ms; }
+.hud__media[data-state="playing"] .hud__eq { display: flex; }
+.hud__qs:focus-visible, .hud__play:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+/* Con la guía de ruta o la tarjeta del destino abiertas, los flotantes suben para no taparlas */
+.nav[data-mode="guide"] .nav__hud { bottom: 6.2rem; }
+@container navview (max-width: 46rem) { .nav__hud { bottom: 2.2rem; } .hud__media { max-width: 13rem; } }

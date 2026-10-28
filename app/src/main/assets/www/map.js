@@ -245,13 +245,14 @@
   }
 
   function homeSpeed(kmh) {
-    var v = $("speed-val");
-    if (v) v.textContent = String(fmt.speedValue(kmh));
-    var u = document.querySelector(".card--speed .card__unit");
-    if (u) u.textContent = fmt.unitSpeed();
+    var hs = $("hud-speed");
+    if (hs) { hs.textContent = String(fmt.speedValue(kmh)); var hu = $("hud-unit"); if (hu) hu.textContent = fmt.unitSpeed(); }
     var cs = $("car-speed");
-    if (cs) { cs.textContent = String(fmt.speedValue(kmh)); var sm = cs.closest(".car__speed"); sm = sm && sm.querySelector("small"); if (sm) sm.textContent = fmt.unitSpeed(); }
+    if (cs) { cs.textContent = String(fmt.speedValue(kmh)); var sm = cs.closest(".stat__t"); sm = sm && sm.querySelector("small"); if (sm) sm.textContent = fmt.unitSpeed(); }
   }
+
+  // La velocidad también puede venir del ESP32 (sensor del auto): se refleja igual en Inicio y en el mapa
+  window.addEventListener("radio:speed", function (e) { if (e.detail) homeSpeed(e.detail.kmh); });
 
   /* Simulación del recorrido (para probar sin salir a la calle) */
   function startSim(route, kmh) {
@@ -930,7 +931,7 @@
     var ch = (e.detail && e.detail.changed) || [];
     if (ch.indexOf("mapTheme") >= 0) applyTheme();
     if (ch.indexOf("tileUrl") >= 0 || ch.indexOf("mapProvider") >= 0) applyTheme();
-    if (ch.indexOf("distance") >= 0) { if (st.pos) homeSpeed(st.pos.speed); renderRoutes(); updateDistances(); }
+    if (ch.indexOf("distance") >= 0) { homeSpeed(S && S.speed ? S.speed() : (st.pos ? st.pos.speed : 0)); renderRoutes(); updateDistances(); }
     if (ch.indexOf("voice") >= 0) bar.voice.setAttribute("aria-pressed", String(!!sys("voice")));
   });
 

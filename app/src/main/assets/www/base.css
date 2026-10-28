@@ -46,10 +46,17 @@ svg.icon { width: 1.4rem; height: 1.4rem; fill: none; stroke: currentColor; stro
   flex: 1;
   min-height: 0;
   display: grid;
+  /* Escenario arriba; barra inferior: pestañas · clima · volumen */
   grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas: "stage stage stage" "barl dock barr";
   gap: var(--gap);
   padding: var(--gap);
 }
+.stage { grid-area: stage; }
+.dock  { grid-area: dock; }
+.sbar--l { grid-area: barl; }
+.sbar--r { grid-area: barr; }
 
 .stage { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; min-height: 0; }
 
@@ -103,8 +110,5 @@ svg.icon { width: 1.4rem; height: 1.4rem; fill: none; stroke: currentColor; stro
 /* ---------- Pantalla vertical ---------- */
 @media (orientation: portrait) {
   html { font-size: calc(clamp(11px, min(2.6vw, 1.6vh), 24px) * var(--text-scale, 1)); }
-  .shell { grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr) auto; }
-  .stage { grid-column: 1; grid-row: 1; }
-  .dock  { grid-column: 1; grid-row: 2; justify-self: center; }
-  .vol   { grid-column: 2; grid-row: 1 / span 2; }
+  .shell { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto auto; grid-template-areas: "stage stage" "barl barr" "dock dock"; }
 }

@@ -45,3 +45,10 @@ y vuelve a compilar. (El script copia la interfaz y deja fuera `server.js`, la p
 - **Botón flotante «Volver al radio»**: aparece sobre otras apps. Necesita el permiso «Mostrar sobre otras apps» (Ajustes › Sistema Android).
 - **Brillo del sistema**: pide «Modificar ajustes del sistema»; sin él solo cambia dentro del radio.
 - **Pantalla de inicio**: Ajustes › Sistema Android › «Elegir Radio B14 como inicio», y marcar «Siempre».
+
+## Pendiente en Kotlin (nuevo diseño: dos pantallas + ESP32)
+
+Ver `LEEME-esp32.md` del proyecto web. La app todavía **no** implementa (no se compiló nada):
+`espSend(linea)`, `linkSend(json)`, `openCluster()` y entregar `__b14Line`/`__b14Status` a las dos WebView.
+También conviene ocultar la barra de estado de Android si se quiere la pantalla completa
+(hoy `applyImmersive()` solo oculta la de navegación).

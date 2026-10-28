@@ -1,7 +1,7 @@
 /* ==========================================================
    BLUETOOTH — escuchar el celular por el receptor Bluetooth del auto
    Una página web no puede ser receptor Bluetooth: ese audio lo
-   recibe el radio/auto por su cuenta. Aquí solo se guía el
+   recibe el receptor externo (entrada de audio del auto). Aquí solo se guía el
    emparejamiento y se pone el sistema en «modo Bluetooth»
    (pausa música y radio para que no se encimen).
    window.RadioBluetooth.get() / set(bool)
@@ -22,13 +22,14 @@
 
   function render() {
     var name = S ? String(S.get("btName") || "").trim() : "";
-    nameEl.textContent = name ? "«" + name + "»" : "este radio";
+    nameEl.textContent = name ? "«" + name + "»" : "el receptor";
     var ok = btOn();
     status.dataset.state = ok ? "ok" : "bad";
-    status.textContent = ok ? "Bluetooth del radio activado: ya puedes vincular tu celular." : "El Bluetooth del radio está apagado.";
+    status.textContent = ok ? "Receptor activado: ya puedes vincular tu celular." : "El receptor Bluetooth está apagado.";
     on.hidden = ok;
     settings.hidden = !/Android/i.test(navigator.userAgent || "");
     live.hidden = !active;
+    var card = $("btcard"); if (card) card.dataset.active = active ? "on" : "off";
     root.setAttribute("data-bt", active ? "on" : "off");
   }
 

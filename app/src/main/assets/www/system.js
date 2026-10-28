@@ -265,6 +265,7 @@
   function startUp() {
     var v = state.startView;
     if (v === "last") { try { v = localStorage.getItem(LAST_KEY) || "home"; } catch (e) { v = "home"; } }
+    if (v === "climate") v = "home";       // la climatización ahora es una ventana, no una pestaña
     if (v && v !== "home" && window.RadioNav) window.RadioNav.show(v);
     if (state.startVolumeOn && window.RadioQuick) window.RadioQuick.set({ volume: Math.min(state.startVolume, state.maxVolume), mute: false });
     clampVolume();
@@ -420,7 +421,7 @@
     row(c, "Reducir animaciones", "Transiciones más simples", function (id) { return toggle("reduceMotion", id); });
     row(c, "Alto contraste", "Textos y bordes más marcados", function (id) { return toggle("highContrast", id); });
     row(c, "Al encender, abrir", "", function (id) {
-      return seg("startView", [["Inicio", "home"], ["Mapa", "map"], ["Música", "media"], ["Radio", "radio"], ["Última", "last"]], id);
+      return seg("startView", [["Inicio", "home"], ["Mapa", "map"], ["Bluetooth", "media"], ["Radio", "radio"], ["Última", "last"]], id);
     });
 
     /* ----- Hora y unidades ----- */
@@ -585,28 +586,28 @@
     tileRow.classList.add("set-item--stack");
     refreshers.push(function () { tileRow.hidden = state.mapProvider !== "custom"; });
 
-    /* ----- Teléfono ----- */
-    group(mount, "Teléfono");
+    /* ----- Bluetooth y ESP32 ----- */
+    group(mount, "Bluetooth y ESP32");
     c = card(mount, "");
-    row(c, "Nombre Bluetooth del radio", "Se muestra en las instrucciones para vincular el celular", function (id) {
+    row(c, "Nombre del receptor Bluetooth", "Se muestra en las instrucciones para vincular el celular", function (id) {
       return textField("btName", "Nombre que ve tu celular", id);
     }).classList.add("set-item--stack");
-    row(c, "Recibir del teléfono", "Música y destinos enviados desde tu teléfono", function (id) { return toggle("castOn", id); });
-    row(c, "Pedir confirmación", "Pregunta antes de reproducir lo que llegue", function (id) { return toggle("castAsk", id); });
-    row(c, "Control remoto", "Permite pausar, cambiar de pista y subir el volumen desde el teléfono", function (id) { return toggle("castRemote", id); });
-    var code = h("span", "set-value set-code", "—");
-    code.id = "sys-code";
-    row(c, "Código de enlace", "", function () { return code; });
-    var acts = h("div", "set-actions");
-    acts.appendChild(button("Mostrar QR", function () { if (window.RadioMusic) window.RadioMusic.add("phone"); }, "sys-qr"));
-    acts.appendChild(button("Nuevo código", function () { if (window.RadioCast) window.RadioCast.newCode(); }, "sys-newcode"));
-    c.appendChild(acts);
-    row(c, "Servidor de enlace (avanzado)", "Servicio ntfy que lleva los mensajes entre el teléfono y el sistema", function (id) {
-      return textField("castServer", "https://ntfy.sh", id);
-    }).classList.add("set-item--stack");
-    row(c, "Dirección pública de la app (avanzado)", "Donde el teléfono abre esta app. Vacío usa la dirección actual", function (id) {
-      return textField("castBase", "https://mi-radio.ejemplo.com/", id);
-    }).classList.add("set-item--stack");
+    var espTxt = h("span", "set-value", "—");
+    espTxt.id = "sys-esp";
+    row(c, "ESP32 del auto", "Datos del auto y órdenes: relés, espejos, luces, volumen por lado", function () { return espTxt; });
+    function paintEsp() {
+      var E = window.RadioESP;
+      if (!E) { espTxt.textContent = "No disponible"; return; }
+      espTxt.textContent = E.linked() ? "Conectado" : E.available() ? "Puerto listo · sin datos" : "Sin conexión";
+    }
+    paintEsp();
+    window.addEventListener("radio:esplink", paintEsp);
+    var eacts = h("div", "set-actions");
+    eacts.appendChild(button("Probar enlace", function () {
+      var E = window.RadioESP, ok = E && E.send({ c: "hello" });
+      if (window.RadioToast) window.RadioToast.show({ title: ok ? "Mensaje enviado al ESP32" : "Aún no hay un ESP32 conectado", kind: ok ? "ok" : "bad", ms: 2400 });
+    }, "sys-esp-test"));
+    c.appendChild(eacts);
 
     /* ----- Sistema ----- */
     group(mount, "Sistema");

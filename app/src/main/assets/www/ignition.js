@@ -15,7 +15,9 @@
   var KEY = "radio-ignition";
   var MAXTRY = 5, LOCK_MS = 30000, MOVING_KMH = 3;
   var AB = window.AndroidBridge || null;
-  var hasHw = !!AB && typeof AB.relay !== "undefined";
+  var forced = null;      // setHardware() fuerza el estado (pruebas)
+  var ESP = function () { return window.RadioESP && window.RadioESP.available() ? window.RadioESP : null; };
+  function hw() { return forced !== null ? forced : (!!AB && typeof AB.relay !== "undefined") || !!ESP(); }
 
   var el = {
     chip: $("ign-chip"), txt: $("ign-txt"), main: $("ign-main"), mainT: $("ign-main-t"), chg: $("ign-chg"), hw: $("ign-hw"),
@@ -44,7 +46,10 @@
     armed = on;
     render();
     window.dispatchEvent(new CustomEvent("radio:relaychange", { detail: { name: "ignition", on: on } }));
-    if (hasHw) { try { AB.relay("ignition", on); } catch (e) {} }
+    try {
+      if (ESP()) ESP().send({ c: "relay", n: "ignition", v: on ? 1 : 0 });
+      else if (AB && typeof AB.relay !== "undefined") AB.relay("ignition", on);
+    } catch (e) {}
   }
   function render() {
     card.dataset.on = String(armed);
@@ -52,7 +57,7 @@
     el.txt.textContent = armed ? "Listo para arrancar: pisa el clutch y enciende como siempre." : "El auto no arranca hasta conectar el circuito con tu clave.";
     el.mainT.textContent = armed ? "Apagar" : "ON";
     el.chg.hidden = !hasSecret();
-    el.hw.textContent = hasHw ? "" : "Vista previa: aún no hay un módulo de relé conectado. Cuando lo haya, esta tarjeta lo controlará.";
+    el.hw.textContent = hw() ? "" : "Vista previa: aún no hay un módulo de relé conectado. Cuando lo haya, esta tarjeta lo controlará.";
   }
   function hasSecret() { return !!loadSec().hash; }
   function toast(o) { if (window.RadioToast) window.RadioToast.show(o); }
@@ -161,8 +166,9 @@
   el.chg.addEventListener("click", startChange);
 
   render();
+  window.addEventListener("radio:esplink", function () { render(); });
   window.RadioIgnition = {
     get: function () { return { on: armed, hasPin: hasSecret() }; },
-    setHardware: function (on) { hasHw = !!on; render(); }
+    setHardware: function (on) { forced = !!on; render(); }
   };
 })();

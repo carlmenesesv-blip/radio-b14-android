@@ -7,7 +7,8 @@
    · Navegador y accesos web propios se abren dentro del radio con la barra
      «Sistema» para volver; el resto abre la app oficial instalada.
    Sección: APPS
-   API: RadioApps.open(id|url) · close() · refresh() · list()
+   API: RadioApps.open(id|url) · close() · refresh() · list() · icon(app, size)
+   Evento: radio:applaunch {id,name,kind,pkg} cada vez que se abre una app
    ========================================================== */
 (function () {
   "use strict";
@@ -211,6 +212,8 @@
 
   /* ---------- Abrir ---------- */
   function launch(a) {
+    // Aviso para «Más usadas»: aprende qué apps abres y a qué hora
+    try { window.dispatchEvent(new CustomEvent("radio:applaunch", { detail: { id: a.id, name: a.name, kind: a.kind || "", pkg: a.pkg || "" } })); } catch (e) {}
     if (a.kind === "android") { try { if (!AB.launch(a.pkg)) toast({ title: a.name + " no se pudo abrir", kind: "bad" }); } catch (e) {} return; }
     if (a.mode === "ext" && a.url) { openExternal(a.url, a.name, a.scheme, a.pwa, a.pkg); return; }
     openInside(a);
@@ -379,7 +382,8 @@
   window.RadioApps = {
     openService: openService,
     open: open, close: close, refresh: render,
-    list: function () { return cache.slice(); }
+    list: function () { return cache.slice(); },
+    icon: function (a, size) { return iconEl(a, size); }
   };
   render();
 })();

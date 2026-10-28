@@ -159,7 +159,12 @@
 
   /* ---------- Acciones ---------- */
   function set(patch) {
+    var before = Object.assign({}, state);
     Object.assign(state, patch);
+    // Interruptores físicos: neblineras, ventilador forzado, faros y luz de cabina van al ESP32
+    ["fog", "fan", "head", "cabin"].forEach(function (k) {
+      if (patch && k in patch && before[k] !== state[k] && window.RadioESP) window.RadioESP.send({ c: "sw", n: k, v: state[k] ? 1 : 0 });
+    });
     save();
     renderControls();
     emit();

@@ -1,0 +1,52 @@
+/* ==========================================================
+   CLUSTER — tablero digital dentro del radio + sus ajustes
+   Sección: CLUSTER · oscuro y claro con tokens
+   ========================================================== */
+.view--cluster { container-type: inline-size; container-name: clview; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+.view--cluster::-webkit-scrollbar { display: none; }
+.cl { min-height: 100%; display: grid; gap: var(--gap); grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+.cl__preview { display: flex; flex-direction: column; gap: 0.7rem; min-height: 0; }
+.cl__head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap; }
+.cl__acts { display: flex; gap: 0.5rem; }
+.cl__acts .btn-pill { min-height: 2.75rem; display: inline-flex; align-items: center; gap: 0.45rem; white-space: nowrap; }
+.cl__acts svg.icon { width: 1.1rem; height: 1.1rem; }
+.cl__stage { position: relative; flex: 1; min-height: 16rem; border-radius: var(--radius-lg); overflow: hidden; background: #0f0f10; border: 1px solid var(--border); }
+.cl__stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #0f0f10; }
+.cl__close { position: absolute; top: 0.6rem; left: 50%; translate: -50% 0; z-index: 2; width: 3rem; height: 3rem; border-radius: 50%; display: grid; place-items: center; color: #fff; background: rgba(20,20,24,.75); border: 1px solid rgba(255,255,255,.25); }
+.cl__close[hidden] { display: none; }
+.cl.is-full .cl__preview { position: fixed; inset: 0; z-index: 350; border-radius: 0; padding: 0; background: #0f0f10; border: 0; }
+.cl.is-full .cl__head, .cl.is-full .cv__note { display: none; }
+.cl.is-full .cl__stage { border-radius: 0; border: 0; }
+
+.cl__ctl { display: flex; flex-direction: column; gap: 1rem; }
+.cl__sec { display: flex; flex-direction: column; gap: 0.55rem; }
+.cl__grp { display: flex; flex-direction: column; gap: 0.4rem; padding-top: 0.2rem; }
+.cl__grp + .cl__grp { margin-top: 0.4rem; }
+.cl__row { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; min-height: 3rem; }
+.cl__lbl { font-size: 0.9rem; min-width: 0; }
+.cl__lbl small { display: block; font-size: 0.72rem; color: var(--text-dim); margin-top: 0.1rem; }
+.cl__seg .seg__btn { min-height: 2.75rem; padding-inline: 0.9rem; white-space: nowrap; }
+.cl__seg { flex-wrap: wrap; }
+.cl__stp { display: inline-flex; align-items: center; gap: 0.4rem; flex: none; }
+.cl__stp button { width: 2.75rem; height: 2.75rem; border-radius: 50%; display: grid; place-items: center; background: var(--surface-inset); border: 1px solid var(--border-strong); touch-action: manipulation; transition: transform 160ms ease-out; }
+.cl__stp button:active { transform: scale(0.95); }
+.cl__stp button svg.icon { width: 1.1rem; height: 1.1rem; }
+.cl__stp output { min-width: 5.4rem; text-align: center; font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+.cl__stp output small { color: var(--text-dim); margin-left: 0.2rem; }
+.cl__btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.cl__btns .btn-pill { min-height: 2.75rem; }
+.cl__odo { min-width: 7rem; min-height: 2.75rem; padding: 0 1rem; border-radius: var(--radius-pill); background: var(--surface-inset); border: 1px solid var(--border-strong); color: var(--text); font: inherit; text-align: right; }
+.cl button:focus-visible, .cl input:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.cl__off { opacity: 0.5; pointer-events: none; }
+
+@container clview (max-width: 52rem) {
+  .cl { grid-template-columns: minmax(0, 1fr); }
+  .cl__stage { min-height: 0; aspect-ratio: 16 / 9; flex: none; }
+}
+
+/* ---------- Pantalla del cluster (segunda pantalla) ---------- */
+.cl__screen { gap: 0.6rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+.cl__dstat { display: flex; align-items: center; gap: 0.55rem; font-size: 0.85rem; }
+.cl__dstat::before { content: ""; flex: none; width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--text-faint); }
+.cl__dstat[data-on="1"]::before { background: var(--ok); }
+.cl__dstat[data-on="0"]::before { background: var(--warn); }

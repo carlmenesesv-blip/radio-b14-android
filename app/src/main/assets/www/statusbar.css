@@ -117,3 +117,17 @@
 
 /* Como app Android el brillo es real: no se usa el velo simulado */
 html[data-native="1"] .dim { display: none; }
+
+/* ---------- Accesos rápidos (botón en la barra superior; la barra de estado es la de Android) ---------- */
+.qsbtn {
+  display: inline-flex; align-items: center; gap: 0.7rem; min-height: 2.75rem; padding: 0 0.5rem 0 1rem;
+  border-radius: var(--radius-pill); background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  touch-action: manipulation; transition: transform 160ms ease-out, background 160ms ease-out;
+}
+.qsbtn:active { transform: scale(0.97); background: var(--surface-strong); }
+.qsbtn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.qsbtn__icons { display: inline-flex; align-items: center; gap: 0.55rem; }
+.qsbtn__icons svg.icon { width: 1rem; height: 1rem; stroke-width: 1.8; }
+.qsbtn__icons .is-off { display: none; }
+.qsbtn__time { font-size: 0.95rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.qsbtn__chev { width: 1rem; height: 1rem; padding: 0.4rem; border-radius: 50%; background: var(--surface-inset); box-sizing: content-box; }

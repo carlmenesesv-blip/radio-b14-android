@@ -11,7 +11,7 @@ cd "$SRC"
 find . -type f \
   ! -name 'server.js' ! -name 'package.json' ! -name 'radio-os.zip' ! -name 'LEEME-*.md' \
   ! -path './uploads/*' ! -path './.claude/*' ! -path './node_modules/*' ! -path './.git/*' \
-  ! -name 'sw.js' ! -name 'phone.*' \
+  ! -name 'sw.js' ! -name 'phone.*' ! -path './legacy/*' \
   -print0 | while IFS= read -r -d '' f; do
     mkdir -p "$OLDPWD/$DST/$(dirname "$f")"; cp "$f" "$OLDPWD/$DST/$f"
   done

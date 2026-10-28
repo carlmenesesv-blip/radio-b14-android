@@ -3,7 +3,7 @@
    - Temperatura por zona (conductor / pasajero) con sincronización
    - Ventilador (1–7), modo Auto, dirección del aire
    - A/C, recirculación, desempañadores, asientos y volante calefactados
-   - Conecta las tarjetas de Inicio y la temperatura exterior
+   - Conecta la barra de abajo (temperatura y encendido) y la temperatura exterior
    Datos: por ahora la temperatura de cabina y exterior se simulan.
    Para conectar sensores reales: RadioClimate.setCabin(°C),
    RadioClimate.setOutside(°C) y RadioClimate.simulate(false).
@@ -185,8 +185,8 @@
     fdn: $("clim-fan-dn"), fup: $("clim-fan-up"), modes: $("clim-modes"),
     ac: $("clim-ac"), recirc: $("clim-recirc"), dfront: $("clim-dfront"), drear: $("clim-drear"), wheel: $("clim-wheel"),
     seatD: $("clim-d-seat"), seatP: $("clim-p-seat"),
-    homeVal: $("climate-val"), homeUnit: $("climate-unit"), homeFan: $("fan-val"),
-    homeBar: document.querySelector(".fan__bar > i"), topOut: $("temp-out"), topUnit: $("temp-unit")
+    bars: { drv: $("sbar-l"), pax: $("sbar-r") }, cbBtn: { drv: $("cb-drv"), pax: $("cb-pax") }, cbVal: { drv: $("cb-drv-v"), pax: $("cb-pax-v") }, cbUnit: { drv: $("cb-drv-u"), pax: $("cb-pax-u") },
+    topOut: $("temp-out"), topUnit: $("temp-unit")
   };
 
   function tone(c) { return c <= 18 ? "cold" : c >= 26 ? "hot" : ""; }
@@ -251,10 +251,16 @@
     el.seatD.setAttribute("aria-label", seatLabel("conductor", state.seatD));
     el.seatP.setAttribute("aria-label", seatLabel("pasajero", state.seatP));
 
-    /* Inicio y barra superior */
-    if (el.homeVal) { el.homeVal.textContent = dz; if (el.homeUnit) el.homeUnit.textContent = /^\d/.test(dz) ? u : ""; }
-    if (el.homeFan) el.homeFan.textContent = String(state.power ? Math.round((state.fan / FAN_MAX) * 100) : 0);
-    if (el.homeBar) el.homeBar.style.width = (state.power ? (state.fan / FAN_MAX) * 100 : 0) + "%";
+    /* Barra de abajo (siempre visible) y barra superior */
+    if (el.cbVal.drv) {
+      var zt = { drv: dz, pax: pz }, zs = { drv: state.driver, pax: state.pass };
+      ["drv", "pax"].forEach(function (k) {
+        el.cbVal[k].textContent = zt[k];
+        el.cbUnit[k].textContent = /^\d/.test(zt[k]) ? u : "";
+        el.bars[k].dataset.power = state.power ? "on" : "off";
+        el.cbBtn[k].dataset.tone = tone(zs[k]);
+      });
+    }
     if (el.topOut) el.topOut.textContent = num(outside).replace(",", ".");
     if (el.topUnit) el.topUnit.textContent = u;
   }
@@ -303,21 +309,7 @@
   el.seatD.addEventListener("click", function () { cycleSeat("seatD"); });
   el.seatP.addEventListener("click", function () { cycleSeat("seatP"); });
 
-  /* Tarjetas de Inicio */
-  var homeBtns = document.querySelectorAll(".card--climate .btn-round");
-  if (homeBtns.length === 2) {
-    hold(homeBtns[0], function () { stepZone("driver", -1); });
-    hold(homeBtns[1], function () { stepZone("driver", 1); });
-  }
-  [".card--climate", ".card--fan"].forEach(function (sel) {
-    var c = document.querySelector(sel);
-    if (!c) return;
-    c.style.cursor = "pointer";
-    c.addEventListener("click", function (e) {
-      if (e.target.closest("button")) return;
-      if (window.RadioNav) window.RadioNav.show("climate");
-    });
-  });
+  /* Botón de encendido de la barra de abajo: hace lo mismo que el botón de la ventana */
 
   window.addEventListener("radio:systemchange", function (e) {
     var ch = (e.detail && e.detail.changed) || [];

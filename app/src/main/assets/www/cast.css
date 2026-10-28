@@ -43,11 +43,11 @@
 
 /* ---------- Avisos (toasts) ---------- */
 .toasts {
-  position: fixed; z-index: 380; left: 50%; bottom: 1.4rem; transform: translateX(-50%);
+  position: fixed; z-index: 380; left: 50%; bottom: 6.2rem; transform: translateX(-50%);
   width: min(30rem, calc(100vw - 2rem));
   display: flex; flex-direction: column-reverse; gap: 0.6rem; pointer-events: none;
 }
-@media (orientation: portrait) { .toasts { bottom: 7.5rem; } }
+@media (orientation: portrait) { .toasts { bottom: 11rem; } }
 .toast {
   pointer-events: auto;
   display: flex; align-items: center; gap: 0.9rem;

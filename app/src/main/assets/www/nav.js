@@ -9,6 +9,9 @@
   var title = document.getElementById("view-title");
 
   function show(name) {
+    // La climatización ya no es una pestaña: se abre como ventana desde cualquier lado
+    if (name === "climate") { if (window.RadioClimatePop) window.RadioClimatePop.open(); return; }
+    document.documentElement.setAttribute("data-view", name);
     views.forEach(function (v) {
       var active = v.dataset.view === name;
       v.classList.toggle("is-active", active);
@@ -27,5 +30,6 @@
   // La app Android avisa cuando se pulsa Inicio estando ya en el radio
   window.addEventListener("radio:homepress", function () { show("home"); });
 
+  document.documentElement.setAttribute("data-view", "home");
   window.RadioNav = { show: show };
 })();

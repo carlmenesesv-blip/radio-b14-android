@@ -297,7 +297,10 @@
     if (k === "reverse") onReverse(lights.reverse);
     render();
   }
-  function setLocked(v) { st.locked = !!v; dirty = true; render(); }
+  function setLocked(v) {
+    var was = st.locked; st.locked = !!v; dirty = true; render();
+    if (was !== st.locked && window.RadioESP) window.RadioESP.send({ c: "lock", v: st.locked ? 1 : 0 });
+  }
   function setTire(k, kpa) { if (k in tires) { tires[k] = kpa == null ? null : Math.max(0, Number(kpa) || 0); render(); } }
   function setOdo(km) { st.odo = Math.max(0, km); dirty = true; render(); }
 

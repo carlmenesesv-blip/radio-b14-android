@@ -35,7 +35,9 @@
     fx: $("amb-fx"), speed: $("amb-speed"), zones: $("amb-zones"), presets: $("amb-presets")
   };
   var AB = window.AndroidBridge || null;
-  var hasHw = !!AB && typeof AB.ambient !== "undefined";
+  var forced = null;
+  var ESP = function () { return window.RadioESP && window.RadioESP.available() ? window.RadioESP : null; };
+  function hw() { return forced !== null ? forced : (!!AB && typeof AB.ambient !== "undefined") || !!ESP(); }
 
   function load() {
     var d = null;
@@ -113,7 +115,10 @@
   function emit() {
     var p = payload();
     window.dispatchEvent(new CustomEvent("radio:ambientchange", { detail: p }));
-    if (hasHw) { try { AB.ambient(JSON.stringify(p)); } catch (e) {} }
+    try {
+      if (ESP()) ESP().send(Object.assign({ c: "amb" }, p));
+      else if (AB && typeof AB.ambient !== "undefined") AB.ambient(JSON.stringify(p));
+    } catch (e) {}
   }
 
   /* ---------- Render de controles ---------- */
@@ -129,7 +134,7 @@
       var i = +b.dataset.i, w = SWATCHES[i];
       b.setAttribute("aria-pressed", String(st.fx !== "rainbow" && Math.round(st.h) === w.h && Math.abs(st.s - w.s) < 0.01));
     });
-    el.hint.textContent = hasHw ? "" : "Vista previa: aún no hay un controlador de luces conectado.";
+    el.hint.textContent = hw() ? "" : "Vista previa: aún no hay un controlador de luces conectado.";
   }
 
   function buildSwatches() {
@@ -217,11 +222,12 @@
 
   buildSwatches(); buildPresets(); renderControls(); kick();
 
+  window.addEventListener("radio:esplink", function () { renderControls(); });
   window.RadioAmbient = {
     get: function () { return payload(); },
     setPower: setPower,
     set: function (p) { if (p && typeof p === "object") apply(p); },
     /** Un controlador externo (ESP32, etc.) puede avisar que está conectado. */
-    setHardware: function (on) { hasHw = !!on; renderControls(); }
+    setHardware: function (on) { forced = !!on; renderControls(); }
   };
 })();

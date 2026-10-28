@@ -10,7 +10,9 @@
   var root = document.getElementById("mir");
   if (!root) return;
   var AB = window.AndroidBridge || null;
-  var hasHw = !!AB && typeof AB.mirror !== "undefined";
+  var forced = null;
+  var ESP = function () { return window.RadioESP && window.RadioESP.available() ? window.RadioESP : null; };
+  function hw() { return forced !== null ? forced : (!!AB && typeof AB.mirror !== "undefined") || !!ESP(); }
   var side = "L", cur = null, wd = null;
   var segs = root.querySelectorAll("#mir-side .seg__btn");
   var center = document.getElementById("mir-c");
@@ -18,7 +20,10 @@
 
   function send(dir, on) {
     window.dispatchEvent(new CustomEvent("radio:mirror", { detail: { side: side, dir: dir, on: on } }));
-    if (hasHw) { try { AB.mirror(side, dir, on); } catch (e) {} }
+    try {
+      if (ESP()) ESP().send({ c: "mirror", side: side, dir: dir, v: on ? 1 : 0 });
+      else if (AB && typeof AB.mirror !== "undefined") AB.mirror(side, dir, on);
+    } catch (e) {}
   }
   function stop() {
     if (!cur) return;
@@ -48,7 +53,9 @@
   });
   document.addEventListener("visibilitychange", function () { if (document.hidden) stop(); });
   window.addEventListener("blur", stop);
-  if (!hasHw) note.textContent = "Vista previa: aún no hay un módulo de espejos conectado. Mantén pulsada la flecha para mover.";
+  function paintNote() { note.textContent = hw() ? "" : "Vista previa: aún no hay un módulo de espejos conectado. Mantén pulsada la flecha para mover."; }
+  paintNote();
+  window.addEventListener("radio:esplink", paintNote);
 
-  window.RadioMirrors = { setHardware: function (on) { hasHw = !!on; } };
+  window.RadioMirrors = { setHardware: function (on) { forced = !!on; paintNote(); } };
 })();

@@ -219,11 +219,9 @@ class MainActivity : Activity() {
 
     @Suppress("DEPRECATION")
     private fun applyImmersive() {
+        // La barra de estado de Android se queda visible; solo se oculta la de navegación (el radio tiene su propia barra inferior)
         window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
             or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-            or View.SYSTEM_UI_FLAG_FULLSCREEN
             or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
     }
 
