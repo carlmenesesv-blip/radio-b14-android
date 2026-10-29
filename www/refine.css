@@ -1,0 +1,93 @@
+/* ==========================================================
+   REFINE — menos bordes y más movimiento
+   Se carga al final para sobreescribir. Los bordes casi desaparecen (la separación la dan
+   las superficies y la sombra) y las pantallas, tarjetas y controles entran con animación.
+   Todo el movimiento respeta «Reducir animaciones».
+   Sección: DISEÑO
+   ========================================================== */
+
+/* ---------- Bordes: fuera de tarjetas, barras y controles ---------- */
+:root[data-theme="dark"]  { --border: transparent; --border-strong: rgba(255, 255, 255, 0.09); }
+:root[data-theme="light"] { --border: transparent; --border-strong: rgba(17, 17, 19, 0.08); }
+:root[data-theme="light"] { --shadow: 0 14px 40px rgba(30, 30, 40, 0.10), 0 1px 2px rgba(30, 30, 40, 0.05); }
+
+.card, .bar, .dock, .sbar__b, .topbar__status, .toast, .vpop, .cpop, .qs, .osk, .voice, .now,
+.media__cover, .wx__sun, .ctl, .tgl, .seg, .btn-pill, .btn-round { border-color: transparent; }
+.ctl { box-shadow: none; }
+.seg, .set-seg { border: 0; }
+
+/* Contornos de enfoque para teclado/volante: se conservan */
+:focus-visible { outline-width: 2px; }
+
+/* ---------- Movimiento ---------- */
+html:not([data-motion="reduce"]) {
+  /* Pantallas: entran con un ligero ascenso y se desvanecen */
+  --rise: 0.9rem;
+}
+html:not([data-motion="reduce"]) .view { transform: translateY(var(--rise)) scale(0.992); transition-duration: 380ms; }
+html:not([data-motion="reduce"]) .view.is-active { transform: none; }
+
+/* Tarjetas: entrada escalonada al abrir cada pantalla */
+@keyframes rf-card-in { from { opacity: 0; transform: translateY(1.1rem) scale(0.98); } to { opacity: 1; transform: none; } }
+html:not([data-motion="reduce"]) .view.is-active .card,
+html:not([data-motion="reduce"]) .view.is-active .home__cell {
+  animation: rf-card-in 560ms var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+.view .card:nth-child(1), .view .home__cell:nth-child(1) { --i: 0; } .view .card:nth-child(2), .view .home__cell:nth-child(2) { --i: 1; }
+.view .card:nth-child(3), .view .home__cell:nth-child(3) { --i: 2; } .view .card:nth-child(4), .view .home__cell:nth-child(4) { --i: 3; }
+.view .card:nth-child(5), .view .home__cell:nth-child(5) { --i: 4; } .view .card:nth-child(6), .view .home__cell:nth-child(6) { --i: 5; }
+.view .card:nth-child(n+7), .view .home__cell:nth-child(n+7) { --i: 6; }
+.home__col--r .card:nth-child(1) { --i: 2; } .home__col--r .card:nth-child(2) { --i: 3; } .home__col--r .home__mini .card { --i: 4; }
+
+/* Cuadrículas de apps y listas: cada elemento sube un poco después del anterior */
+@keyframes rf-item-in { from { opacity: 0; transform: translateY(0.7rem); } to { opacity: 1; transform: none; } }
+html:not([data-motion="reduce"]) .view.is-active .ap__grid > *,
+html:not([data-motion="reduce"]) .view.is-active .freq__grid > * { animation: rf-item-in 420ms var(--ease) both; }
+.ap__grid > *:nth-child(1), .freq__grid > *:nth-child(1) { animation-delay: 40ms; } .ap__grid > *:nth-child(2), .freq__grid > *:nth-child(2) { animation-delay: 80ms; }
+.ap__grid > *:nth-child(3), .freq__grid > *:nth-child(3) { animation-delay: 120ms; } .ap__grid > *:nth-child(4), .freq__grid > *:nth-child(4) { animation-delay: 160ms; }
+.ap__grid > *:nth-child(5) { animation-delay: 200ms; } .ap__grid > *:nth-child(6) { animation-delay: 240ms; } .ap__grid > *:nth-child(7) { animation-delay: 280ms; }
+.ap__grid > *:nth-child(8) { animation-delay: 320ms; } .ap__grid > *:nth-child(n+9) { animation-delay: 360ms; }
+
+/* Controles: respuesta al toque con rebote suave */
+html:not([data-motion="reduce"]) .btn-pill, html:not([data-motion="reduce"]) .btn-round,
+html:not([data-motion="reduce"]) .dock__btn, html:not([data-motion="reduce"]) .dock__act,
+html:not([data-motion="reduce"]) .sbar__b, html:not([data-motion="reduce"]) .ctl, html:not([data-motion="reduce"]) .now {
+  transition-property: transform, background, color, box-shadow, opacity;
+  transition-duration: 240ms; transition-timing-function: cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+html:not([data-motion="reduce"]) .btn-pill:active, html:not([data-motion="reduce"]) .btn-round:active,
+html:not([data-motion="reduce"]) .ctl:active, html:not([data-motion="reduce"]) .sbar__b:active { transform: scale(0.93); }
+
+/* Interruptores con resorte */
+html:not([data-motion="reduce"]) .tgl i { transition: transform 360ms cubic-bezier(0.3, 1.5, 0.5, 1), background 200ms ease; }
+html:not([data-motion="reduce"]) .tgl { transition: background 260ms ease; }
+
+/* Menú: el icono activo da un pequeño salto */
+@keyframes rf-pop { 0% { transform: scale(0.7); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
+html:not([data-motion="reduce"]) .dock__btn[aria-current="page"] .icon { animation: rf-pop 420ms var(--ease); }
+
+/* Ventanas emergentes: crecen desde su punto */
+@keyframes rf-pop-in { from { opacity: 0; transform: translateX(-50%) translateY(-0.8rem) scale(0.96); } to { opacity: 1; transform: translateX(-50%) none; } }
+html:not([data-motion="reduce"]) .voice { animation: rf-pop-in 320ms var(--ease); }
+@keyframes rf-toast-in { from { opacity: 0; transform: translateY(0.8rem) scale(0.97); } to { opacity: 1; transform: none; } }
+
+/* Música sonando: ecualizador en la carátula */
+.eq { position: absolute; right: 0.5rem; bottom: 0.5rem; display: none; align-items: flex-end; gap: 2px; width: 1.1rem; height: 1rem; pointer-events: none; }
+.eq i { flex: 1; background: currentColor; border-radius: 1px; height: 30%; }
+.card--media[data-state="playing"] .eq { display: flex; }
+@keyframes rf-eq { 0%, 100% { height: 25%; } 50% { height: 100%; } }
+html:not([data-motion="reduce"]) .card--media[data-state="playing"] .eq i { animation: rf-eq 900ms ease-in-out infinite; }
+.eq i:nth-child(2) { animation-delay: 150ms !important; } .eq i:nth-child(3) { animation-delay: 300ms !important; }
+
+/* Tarjeta del auto: respiración muy lenta de luz interior */
+@keyframes rf-breathe { 0%, 100% { box-shadow: var(--shadow), inset 0 0 3rem 0 transparent; } 50% { box-shadow: var(--shadow), inset 0 0 5rem 0 var(--surface-inset); } }
+html:not([data-motion="reduce"]) .card--car { animation: rf-card-in 560ms var(--ease) both, rf-breathe 7s ease-in-out 1s infinite; }
+
+/* Clima: el icono flota */
+@keyframes rf-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-0.18rem); } }
+html:not([data-motion="reduce"]) .wx__ico { animation: rf-float 5s ease-in-out infinite; }
+
+/* Pulso suave en alertas del auto */
+@keyframes rf-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+html:not([data-motion="reduce"]) #sb-alert:not(.is-off) { animation: rf-pulse 1.4s ease-in-out infinite; }

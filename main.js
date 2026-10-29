@@ -163,6 +163,17 @@ ipcMain.handle('host:embedFreeze', () => embed.freeze());
 ipcMain.on('host:embedCmd', (_e, c) => embed.cmd(c));
 ipcMain.on('host:embedNav', (_e, u) => embed.nav(u));
 ipcMain.on('host:embedClose', (_e, id) => embed.close(id));
+ipcMain.handle('host:haFetch', async (_e, url, o) => {
+  // Home Assistant desde el proceso principal: sin límites de CORS
+  try {
+    if (!/^https?:\/\//i.test(url)) return { ok: false, status: 0, data: null };
+    const r = await net.fetch(url, { method: o.method || 'GET', headers: o.headers || {}, body: o.body || undefined });
+    if (o.as === 'image') { const b = Buffer.from(await r.arrayBuffer()); return { ok: r.ok, status: r.status, data: 'data:' + (r.headers.get('content-type') || 'image/jpeg') + ';base64,' + b.toString('base64') }; }
+    if (o.as === 'text') return { ok: r.ok, status: r.status, data: await r.text() };
+    let j = null; try { j = await r.json(); } catch (e) {}
+    return { ok: r.ok, status: r.status, data: j };
+  } catch (e) { return { ok: false, status: 0, data: null }; }
+});
 ipcMain.on('host:embedPause', () => embed.pauseAll());
 ipcMain.on('host:embedToggle', () => embed.toggle());
 function logFile() { return path.join(app.getPath('userData'), 'radio.log'); }

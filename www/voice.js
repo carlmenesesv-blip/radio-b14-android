@@ -28,12 +28,12 @@
   }
 
   var VIEWS = [
-    ["home", /\b(inicio|casa|pantalla principal|home)\b/], ["map", /\b(mapa|navegacion|gps)\b/], ["calls", /\b(llamadas|telefono|marcador)\b/],
+    ["home", /\b(inicio|pantalla principal|home)\b/], ["casa", /\b(casa|hogar|domotica|mi casa)\b/], ["map", /\b(mapa|navegacion|gps)\b/], ["calls", /\b(llamadas|telefono|marcador)\b/],
     ["media", /\b(bluetooth|musica del celular|celular)\b/], ["radio", /\b(radio|emisoras|fm|am)\b/], ["vehicle", /\b(vehiculo|carro|auto|coche)\b/],
     ["cluster", /\b(cluster|tablero|instrumentos)\b/], ["ambient", /\b(ambiente|luces ambientales|ambiental)\b/], ["apps", /\b(aplicaciones|apps)\b/],
     ["settings", /\b(ajustes|configuracion|opciones)\b/]
   ];
-  var VIEW_NAME = { home: "Inicio", map: "Mapa", calls: "Llamadas", media: "Bluetooth", radio: "Radio", vehicle: "Vehículo", cluster: "Cluster", ambient: "Ambiente", apps: "Apps", settings: "Ajustes" };
+  var VIEW_NAME = { home: "Inicio", casa: "Casa", map: "Mapa", calls: "Llamadas", media: "Bluetooth", radio: "Radio", vehicle: "Vehículo", cluster: "Cluster", ambient: "Ambiente", apps: "Apps", settings: "Ajustes" };
 
   function bestApp(q) {
     var list = (window.RadioApps && window.RadioApps.list && window.RadioApps.list()) || [], best = null, bl = 0;
@@ -82,6 +82,13 @@
     if (/\b(enciende|prende|activa)\b.*\b(clima|aire|climatizacion)\b/.test(t)) return { say: "Clima encendido", run: function () { window.RadioClimate && window.RadioClimate.set({ power: true }); } };
     if (/\b(apaga|desactiva)\b.*\b(clima|aire|climatizacion)\b/.test(t)) return { say: "Clima apagado", run: function () { window.RadioClimate && window.RadioClimate.set({ power: false }); } };
 
+
+    // Casa (Home Assistant)
+    var H = window.RadioHA;
+    if (H && H.configured && (H.configured() || H.demo())) {
+      var hc = houseCmd(t, H); if (hc) return hc;
+    }
+
     // Tema
     if (/\bmodo oscuro|tema oscuro|\boscuro\b/.test(t)) return { say: "Modo oscuro", run: function () { window.RadioSystem && window.RadioSystem.set({ themeMode: "dark" }); } };
     if (/\bmodo claro|tema claro|\bclaro\b/.test(t)) return { say: "Modo claro", run: function () { window.RadioSystem && window.RadioSystem.set({ themeMode: "light" }); } };
@@ -126,8 +133,59 @@
     return null;
   }
 
+
+  /* ---------- Casa ---------- */
+  function confirmTap(title, fn) {
+    if (window.RadioToast) window.RadioToast.show({ title: title, text: "Toca para confirmar", kind: "info", ms: 8000, actions: [{ label: "Confirmar", fn: fn }] });
+  }
+  function houseCmd(t, H) {
+    var m, e;
+    var LIGHTS = ["light", "switch", "fan", "input_boolean"];
+    if (/\b(apaga|apagar)\b.*\btodo\b|\bapaga todas las luces\b|\bapaga las luces\b/.test(t)) return { say: "Apago las luces", run: function () { H.allLights(false); } };
+    if (/\b(enciende|prende)\b.*\btodas las luces\b/.test(t)) return { say: "Enciendo todas las luces", run: function () { H.allLights(true); } };
+    if ((m = t.match(/\b(escena|modo)\b\s*(de |del |la |el )?(.+)$/)) || (m = t.match(/\b(activa|ejecuta|lanza)\b\s*(la escena |el modo |la |el )?(.+)$/))) {
+      e = H.findByName(m[3], ["scene", "script"]);
+      if (e) return { say: H.name(e), run: function () { H.toggle(e.entity_id); } };
+    }
+    if ((m = t.match(/\b(abre|abrir|cierra|cerrar|sube|baja)\b\s*(el |la |los |las )?(.+)$/)) && /\b(porton|garaje|cochera|persiana|cortina|puerta del garaje)\b/.test(m[3])) {
+      e = H.findByName(m[3], ["cover"]);
+      if (e) {
+        var open = /abre|abrir|sube/.test(m[1]);
+        if (open) return { say: "¿Abrir " + H.name(e) + "?", run: function () { confirmTap("¿Abrir " + H.name(e) + "?", function () { H.call("cover", "open_cover", { entity_id: e.entity_id }); }); } };
+        return { say: "Cierro " + H.name(e), run: function () { H.call("cover", "close_cover", { entity_id: e.entity_id }); } };
+      }
+    }
+    if ((m = t.match(/\b(muestra|muestrame|ver|abre|enseña)\b\s*(la |el )?camara\s*(de |del |de la )?(.*)$/))) {
+      e = H.findByName(m[4] || "camara", ["camera"]) || H.domain("camera")[0];
+      if (e) return { say: H.name(e), run: function () { window.RadioNav && window.RadioNav.show("casa"); window.RadioCasa && window.RadioCasa.openCamera(e.entity_id); } };
+    }
+    if (/\b(cierra|bloquea|asegura)\b.*\b(llave|puerta|cerradura)\b/.test(t)) {
+      e = H.findByName(t.replace(/cierra|bloquea|asegura|con llave|la puerta/g, ""), ["lock"]) || H.domain("lock")[0];
+      if (e) return { say: "Cierro " + H.name(e), run: function () { H.call("lock", "lock", { entity_id: e.entity_id }); } };
+    }
+    if (/\b(abre|desbloquea|quita la llave)\b.*\b(puerta|cerradura|llave)\b/.test(t) && !/garaje|porton/.test(t)) {
+      e = H.domain("lock")[0];
+      if (e) return { say: "¿Abrir " + H.name(e) + "?", run: function () { confirmTap("¿Abrir " + H.name(e) + "?", function () { H.call("lock", "unlock", { entity_id: e.entity_id }); }); } };
+    }
+    if (/\balarma\b/.test(t)) {
+      e = H.domain("alarm_control_panel")[0];
+      if (e) {
+        if (/\b(arma|activa|pon|enciende)\b/.test(t)) { var mode = /\b(fuera|salgo|ausente)\b/.test(t) ? "away" : /\b(noche|dormir)\b/.test(t) ? "night" : "home"; return { say: "Armo la alarma", run: function () { H.alarm(e.entity_id, mode); } }; }
+        if (/\b(desarma|desactiva|apaga|quita)\b/.test(t)) return { say: "Para desarmar, usa el código", run: function () { window.RadioCasa && window.RadioCasa.open("resumen"); } };
+      }
+    }
+    if ((m = t.match(/\b(enciende|prende|apaga|activa|desactiva)\b\s*(el |la |los |las |un |una )?(luz |luces )?(de |del |de la |en )?(.+)$/))) {
+      var q = (m[5] || "").trim();
+      if (q && !/\b(radio|musica|clima|aire|pantalla|app|aplicacion)\b/.test(q)) {
+        e = H.findByName(q, LIGHTS);
+        if (e) { var on = /^(enciende|prende|activa)$/.test(m[1]); return { say: (on ? "Enciendo " : "Apago ") + H.name(e), run: function () { var d = e.entity_id.split(".")[0]; H.call(d === "input_boolean" || d === "switch" || d === "fan" || d === "light" ? d : "homeassistant", on ? "turn_on" : "turn_off", { entity_id: e.entity_id }); } }; }
+      }
+    }
+    return null;
+  }
+
   function help() {
-    show("Prueba: «ve al mapa», «abre Waze», «sube el volumen», «siguiente», «pon el clima en 22», «llama a mamá», «navega a San José», «modo oscuro».", "help");
+    show("Prueba: «ve al mapa», «abre Waze», «sube el volumen», «siguiente», «pon el clima en 22», «llama a mamá», «navega a San José», «modo oscuro», «enciende la luz de la sala», «apaga todo», «activa la escena cine», «muestra la cámara de la entrada».", "help");
     schedule(9000);
   }
 
@@ -160,13 +218,18 @@
     if (rec) { try { rec.onend = null; rec.abort(); } catch (e) {} rec = null; }
     if (panel) { panel.hidden = true; panel.dataset.state = "idle"; }
     open = false; root.removeAttribute("data-voice");
+    if (typeof wakeSync === "function") setTimeout(wakeSync, 400);
   }
 
+  function speak(text) {
+    if (sys().voiceSpeak !== true || !window.speechSynthesis || !text) return;
+    try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = "es-CR"; u.rate = 1.02; speechSynthesis.speak(u); } catch (e) {}
+  }
   function run(text) {
     var cmd = parse(text);
     if (!cmd) { show("No te entendí: «" + text + "»", "fail"); hint.textContent = "Di «ayuda» para ver ejemplos."; schedule(4000); return false; }
     if (cmd.fail) { show(cmd.say, "fail"); schedule(3500); return false; }
-    show(cmd.say, "ok");
+    show(cmd.say, "ok"); speak(cmd.say);
     try { cmd.run(); } catch (e) {}
     if (cmd.say !== "Ayuda") schedule(1600);
     return true;
@@ -176,6 +239,7 @@
     if (sys().voiceCmd === false) return;
     build();
     if (open && rec) { close(); return; }
+    wakeStop();
     show("", "idle"); hint.textContent = "";
     if (!SR || srBroken) { fallback(srBroken ? "El reconocimiento de voz no está disponible en esta app." : "Este navegador no trae reconocimiento de voz."); return; }
     try {
@@ -205,6 +269,33 @@
     hint.textContent = "Escribe la orden y pulsa Enviar. Di «ayuda» para ver ejemplos.";
     if (input) setTimeout(function () { try { input.focus(); } catch (e) {} }, 50);
   }
+
+
+  /* ---------- Palabra de activación: «Oye Nómada» ---------- */
+  var wakeRec = null, wakeOn = false, wakeRetry = 0;
+  function wakeStop() { wakeOn = false; if (wakeRec) { try { wakeRec.onend = null; wakeRec.abort(); } catch (e) {} wakeRec = null; } }
+  function wakeStart() {
+    if (wakeOn || !SR || srBroken || sys().voiceWake !== true || sys().voiceCmd === false) return;
+    wakeOn = true;
+    try {
+      wakeRec = new SR(); wakeRec.lang = "es-CR"; wakeRec.continuous = true; wakeRec.interimResults = false;
+      wakeRec.onresult = function (e) {
+        for (var i = e.resultIndex; i < e.results.length; i++) {
+          if (!e.results[i].isFinal) continue;
+          var tr = norm(e.results[i][0].transcript), mm = tr.match(/\b(oye|hey|ey|hola)\s+(nomada|nomadas|no mada)\b\s*(.*)$/);
+          if (!mm) continue;
+          var rest = (mm[3] || "").trim();
+          if (rest) { show("", "ok"); run(rest); } else { wakeStop(); listen(); }
+        }
+      };
+      wakeRec.onerror = function (e) { if (e && (e.error === "not-allowed" || e.error === "service-not-allowed" || e.error === "network")) { srBroken = true; wakeStop(); } };
+      wakeRec.onend = function () { wakeRec = null; wakeOn = false; if (!srBroken && sys().voiceWake === true && wakeRetry++ < 200) setTimeout(wakeStart, 600); };
+      wakeRec.start();
+    } catch (e) { wakeOn = false; }
+  }
+  function wakeSync() { if (sys().voiceWake === true) wakeStart(); else wakeStop(); }
+  window.addEventListener("radio:systemchange", wakeSync);
+  setTimeout(wakeSync, 1500);
 
   document.addEventListener("click", function (e) {
     var b = e.target.closest && e.target.closest("#voice-btn");

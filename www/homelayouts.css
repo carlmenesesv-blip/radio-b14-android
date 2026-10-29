@@ -1,0 +1,105 @@
+/* ==========================================================
+   HOME LAYOUTS — tres estilos para el inicio: Calma, Cockpit, Widgets
+   Se eligen en Ajustes o con el botón «Estilo» de la barra. Sin atributo data-layout
+   el inicio queda como el original. Sin bordes: la separación la dan el fondo y el espacio.
+   Sección: HOME
+   ========================================================== */
+
+/* piezas nuevas: ocultas salvo que haya un estilo */
+.home > .card--greet, .home > .hquick, .home > .card--hcasa { display: none; }
+#home-style { display: none; margin-inline: 0 0.6rem; }
+html[data-view="home"] #home-style { display: inline-flex; }
+html[data-view="home"] #now:not([hidden]) { margin-inline: auto 0.6rem; }
+html[data-view="home"] #now:not([hidden]) ~ #home-style { margin-inline: 0 0.6rem; }
+html[data-view="home"] #home-style:first-of-type { margin-inline: auto 0.6rem; }
+
+.home[data-layout] > .card--greet, .home[data-layout] > .card--hcasa { display: flex; }
+.home[data-layout] > .hquick { display: flex; }
+.home[data-layout] .home__col--r, .home[data-layout] .home__mini { display: contents; }
+.home[data-layout] .card--wx { grid-area: wx; }
+.home[data-layout] .card--car { grid-area: car; }
+.home[data-layout] #hm { grid-area: media; }
+.home[data-layout] #freq { grid-area: apps; }
+.home[data-layout] .card--map { grid-area: map; }
+.home[data-layout] .card--doors { grid-area: doors; }
+.home[data-layout] .card--greet { grid-area: greet; }
+.home[data-layout] .hquick { grid-area: quick; }
+.home[data-layout] .card--hcasa { grid-area: casa; }
+.home[data-layout] > * { min-width: 0; min-height: 0; }
+.home[data-layout] { animation: rf-card-in 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+/* ---------- Piezas ---------- */
+.card--greet { flex-direction: column; justify-content: center; gap: 0.15rem; padding: 1rem 1.3rem; overflow: hidden; }
+.greet__hi { font-size: 1.05rem; color: var(--text-dim); }
+.greet__clock { font-size: 4.6rem; font-weight: 200; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.greet__date { font-size: 0.95rem; color: var(--text-dim); }
+
+.hquick { gap: var(--gap); align-items: stretch; }
+.hq { flex: 1 1 0; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem; height: 3.4rem; border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: 0.95rem; touch-action: manipulation; transition: transform 200ms cubic-bezier(0.3, 1.4, 0.5, 1), background 160ms; }
+.hq:active { transform: scale(0.96); }
+.hq .icon { width: 1.35rem; height: 1.35rem; flex: none; }
+
+.card--hcasa { flex-direction: column; gap: 0.55rem; padding: 0.9rem 1rem; overflow: hidden; }
+.hcasa__head { display: flex; align-items: center; gap: 0.5rem; color: var(--text-dim); font-size: 0.9rem; text-align: left; }
+.hcasa__head .icon { width: 1.2rem; height: 1.2rem; }
+.hcasa__dot { margin-left: auto; width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--text-dim); opacity: 0.5; }
+.card--hcasa[data-on="true"] .hcasa__dot { background: #34c759; opacity: 1; animation: rf-pulse 2.4s ease-in-out infinite; }
+.hcasa__main { display: flex; align-items: baseline; gap: 0.5rem; min-width: 0; }
+.hcasa__main b { font-size: 2.4rem; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; }
+.hcasa__main small { font-size: 0.9rem; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hcasa__sc { display: flex; flex-wrap: wrap; overflow: hidden; max-height: 5.2rem; gap: 0.4rem; min-height: 0; }
+.hcasa__sc button { height: 2.3rem; padding: 0 0.9rem; border-radius: var(--radius-pill); background: var(--surface-inset); color: var(--text); font-size: 0.82rem; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; touch-action: manipulation; transition: transform 160ms; }
+.hcasa__sc button:active { transform: scale(0.95); }
+.hcasa__al { font-size: 0.8rem; color: var(--text-dim); }
+
+/* el tiempo, compacto cuando comparte espacio */
+.home[data-layout] .card--wx .wx__sun { display: none; }
+.home[data-layout="calma"] .card--wx .wx__days, .home[data-layout="widgets"] .card--wx .wx__days { display: none; }
+.home[data-layout="widgets"] .card--wx .wx__facts { display: none; }
+
+/* ---------- 1 · CALMA: poco y grande ---------- */
+.home[data-layout="calma"] {
+  grid-template-columns: minmax(0, 4.2fr) minmax(0, 3.6fr) minmax(0, 3.4fr);
+  grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr) auto;
+  grid-template-areas: "greet media media" "wx apps casa" "quick quick quick";
+}
+.home[data-layout="calma"] .card--car, .home[data-layout="calma"] .card--map, .home[data-layout="calma"] .card--doors { display: none; }
+.home[data-layout="calma"] .greet__clock { font-size: 5.4rem; }
+
+/* ---------- 2 · COCKPIT: el auto al centro ---------- */
+.home[data-layout="cockpit"] {
+  grid-template-columns: minmax(0, 3.6fr) minmax(0, 3.6fr) minmax(0, 3.8fr);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto;
+  grid-template-areas: "wx car media" "casa car apps" "quick quick quick";
+}
+.home[data-layout="cockpit"] .card--greet, .home[data-layout="cockpit"] .card--map, .home[data-layout="cockpit"] .card--doors { display: none; }
+
+/* ---------- 3 · WIDGETS: mosaico ---------- */
+.home[data-layout="widgets"] {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr);
+  grid-template-areas: "greet greet media media" "wx casa media media" "map doors apps apps";
+}
+.home[data-layout="widgets"] .card--car, .home[data-layout="widgets"] .hquick { display: none; }
+.home[data-layout="widgets"] .card--doors { padding: 0.5rem 0.8rem; }
+.home[data-layout="widgets"] .greet__clock { font-size: 4.2rem; }
+
+@media (prefers-reduced-motion: reduce) { .home[data-layout] { animation: none; } }
+html[data-motion="reduce"] .home[data-layout] { animation: none; }
+
+/* casa compacta en Calma y Widgets: solo dos escenas, sin línea de alarma en el mosaico */
+.home[data-layout="calma"] .hcasa__sc, .home[data-layout="widgets"] .hcasa__sc { flex-wrap: nowrap; }
+.home[data-layout="calma"] .hcasa__sc button:nth-child(n+3), .home[data-layout="widgets"] .hcasa__sc button:nth-child(n+2) { display: none; }
+.home[data-layout="widgets"] .hcasa__al { display: none; }
+.hcasa__al { margin-top: auto; }
+
+/* música grande en Calma y Widgets: portada amplia, texto grande, controles a la vista */
+.home[data-layout="calma"] #hm, .home[data-layout="widgets"] #hm { grid-template-columns: auto minmax(0, 1fr); grid-template-rows: 1fr auto; padding: 1.2rem 1.4rem; column-gap: 1.2rem; align-content: center; }
+.home[data-layout="calma"] #hm .media__cover, .home[data-layout="widgets"] #hm .media__cover { width: 6.5rem; height: 6.5rem; border-radius: 1.5rem; grid-row: 1; }
+.home[data-layout="calma"] #hm .media__title, .home[data-layout="widgets"] #hm .media__title { font-size: 1.6rem; font-weight: 300; }
+.home[data-layout="calma"] #hm .media__artist, .home[data-layout="widgets"] #hm .media__artist { font-size: 0.95rem; }
+.home[data-layout="calma"] #hm .media__src, .home[data-layout="widgets"] #hm .media__src { font-size: 0.75rem; }
+.home[data-layout="calma"] #hm .media__ctrl, .home[data-layout="widgets"] #hm .media__ctrl { grid-column: 1 / -1; justify-content: center; gap: 1.4rem; }
+.home[data-layout="calma"] #hm[data-state="idle"] .media__ctrl, .home[data-layout="widgets"] #hm[data-state="idle"] .media__ctrl .btn-round:not(.btn-round--main) { display: inline-grid; }
+.home[data-layout="calma"] #hm .media__ctrl .btn-round, .home[data-layout="widgets"] #hm .media__ctrl .btn-round { width: 3.2rem; height: 3.2rem; }
+.home[data-layout="calma"] #hm .media__ctrl .btn-round--main, .home[data-layout="widgets"] #hm .media__ctrl .btn-round--main { width: 4rem; height: 4rem; }

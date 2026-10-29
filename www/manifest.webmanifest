@@ -1,6 +1,6 @@
 {
-  "name": "RADIO B14 · Teléfono",
-  "short_name": "Radio B14",
+  "name": "NÓMADA · Teléfono",
+  "short_name": "NÓMADA",
   "description": "Envía música y destinos al sistema de tu auto.",
   "lang": "es",
   "start_url": "phone.html",

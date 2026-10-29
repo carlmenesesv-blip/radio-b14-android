@@ -1,0 +1,87 @@
+/* ==========================================================
+   CASA — vista de la casa inteligente
+   Sin bordes: fichas con superficie propia; el estado se ve por contraste.
+   Sección: CASA
+   ========================================================== */
+
+.casa { height: 100%; display: flex; flex-direction: column; gap: var(--gap, 0.8rem); min-height: 0; }
+.casa__head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.casa__tabs { flex: none; }
+.casa__status { display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; color: var(--text-dim); }
+.casa__dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--text-faint); }
+.casa__dot.is-ok { background: var(--ok); box-shadow: 0 0 0.6rem var(--ok); }
+.casa__dot.is-bad { background: var(--bad); }
+.casa__cfg { height: 2.2rem; padding-inline: 1rem; font-size: 0.8rem; }
+.casa__body { flex: 1; min-height: 0; overflow: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: var(--gap, 0.8rem); }
+.casa__body::-webkit-scrollbar { display: none; }
+
+.casa__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: var(--gap, 0.8rem); align-items: start; }
+.casa__col { display: flex; flex-direction: column; gap: var(--gap, 0.8rem); min-width: 0; }
+.casa__card { display: flex; flex-direction: column; gap: 0.8rem; padding: 1rem 1.1rem; }
+.casa__empty { margin: 0; color: var(--text-dim); font-size: 0.9rem; }
+.casa__hint { margin: 0; color: var(--text-dim); font-size: 0.8rem; text-align: center; }
+
+/* Alarma */
+.casa__alarm { align-items: flex-start; }
+.casa__alarm > .icon { width: 2rem; height: 2rem; color: var(--text-dim); }
+.casa__alarm[data-state^="armed"] > .icon { color: var(--ok); }
+.casa__alarm[data-state="triggered"] > .icon { color: var(--bad); }
+.casa__alarm-s { font-size: 1.5rem; font-weight: 300; }
+.casa__btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+/* Escenas */
+.casa__scenes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+.casa__scene { display: flex; align-items: center; gap: 0.6rem; min-height: 3.2rem; padding: 0 1rem; border-radius: 1.1rem; background: var(--surface-inset); color: var(--text); text-align: left; font-size: 0.92rem; transition: transform 220ms cubic-bezier(0.3, 1.4, 0.5, 1), background 200ms; }
+.casa__scene:active { transform: scale(0.95); background: var(--dock-active-bg); color: var(--dock-active-fg); }
+.casa__scene .icon { flex: none; width: 1.2rem; height: 1.2rem; color: var(--text-dim); }
+
+/* Fichas de luces y apagadores */
+.casa__tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+.casa__tiles--big { grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); }
+.casa__cell { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+.casa__tile { display: flex; align-items: center; gap: 0.7rem; min-height: 3.6rem; padding: 0.5rem 0.9rem; border-radius: 1.2rem; background: var(--surface-inset); color: var(--text); text-align: left; min-width: 0; transition: background 220ms, color 220ms, transform 240ms cubic-bezier(0.3, 1.4, 0.5, 1); }
+.casa__tile:active { transform: scale(0.95); }
+.casa__tile .icon { flex: none; width: 1.5rem; height: 1.5rem; color: var(--text-dim); transition: color 220ms, transform 360ms cubic-bezier(0.3, 1.5, 0.5, 1); }
+.casa__tile-t { display: flex; flex-direction: column; min-width: 0; }
+.casa__tile-t b { font-weight: 400; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.casa__tile-s { font-size: 0.72rem; color: var(--text-dim); }
+.casa__tile[aria-pressed="true"] { background: var(--dock-active-bg); color: var(--dock-active-fg); }
+.casa__tile[aria-pressed="true"] .icon { color: inherit; transform: scale(1.1); }
+.casa__tile[aria-pressed="true"] .casa__tile-s { color: inherit; opacity: 0.7; }
+.casa__bri { width: 100%; height: 1.4rem; accent-color: var(--text); }
+.casa__cell.is-off .casa__bri { display: none; }
+.casa__cell.is-hidden { opacity: 0.4; }
+
+/* Habitaciones */
+.casa__rooms { flex: none; display: flex; align-items: center; gap: 0.5rem; overflow-x: auto; scrollbar-width: none; }
+.casa__rooms::-webkit-scrollbar { display: none; }
+.casa__chip { flex: none; height: 2.6rem; padding: 0 1.2rem; border-radius: var(--radius-pill); background: var(--surface-inset); color: var(--text-dim); font-size: 0.9rem; transition: background 200ms, color 200ms; }
+.casa__chip[aria-pressed="true"] { background: var(--dock-active-bg); color: var(--dock-active-fg); }
+.casa__edit { margin-left: auto; flex: none; }
+
+/* Cámaras */
+.casa__cams { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap, 0.8rem); }
+.casa__cam { position: relative; aspect-ratio: 16 / 9; border-radius: 1.4rem; overflow: hidden; background: #000; padding: 0; transition: transform 260ms cubic-bezier(0.3, 1.4, 0.5, 1); }
+.casa__cam:active { transform: scale(0.97); }
+.casa__cam img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 400ms; }
+.casa__cam img[src] { opacity: 1; }
+.casa__cam-t { position: absolute; left: 0.8rem; bottom: 0.6rem; padding: 0.25rem 0.7rem; border-radius: 999px; background: rgba(0, 0, 0, 0.55); color: #fff; font-size: 0.8rem; }
+.casa__big { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(0, 0, 0, 0.88); animation: casa-fade 240ms ease-out; }
+.casa__big img { max-width: 94vw; max-height: 86vh; border-radius: 1.4rem; background: #000; }
+.casa__big-t { position: absolute; left: 2rem; top: 1.5rem; color: #fff; font-size: 1.2rem; }
+.casa__big-x { position: absolute; right: 1.5rem; top: 1.2rem; }
+@keyframes casa-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* Código */
+.casa__pin { position: fixed; inset: 0; z-index: 85; display: grid; place-items: center; background: rgba(0, 0, 0, 0.6); animation: casa-fade 200ms ease-out; }
+.casa__pin-box { display: flex; flex-direction: column; align-items: center; gap: 0.9rem; padding: 1.3rem 1.6rem; border-radius: 1.8rem; background: var(--solid); color: var(--text); box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.45); }
+.casa__pin-d { min-width: 12rem; text-align: center; font-size: 1.6rem; letter-spacing: 0.4em; min-height: 2.2rem; }
+.casa__pin-pad { display: grid; grid-template-columns: repeat(3, 4.2rem); gap: 0.5rem; }
+.casa__pin-k { height: 3.6rem; border-radius: 1.2rem; background: var(--surface-inset); color: var(--text); font-size: 1.3rem; transition: transform 200ms cubic-bezier(0.3, 1.4, 0.5, 1), background 160ms; }
+.casa__pin-k:active { transform: scale(0.92); background: var(--dock-active-bg); color: var(--dock-active-fg); }
+
+html[data-driving] .casa__tile { min-height: 4.4rem; }
+@media (max-width: 62rem) { .casa__grid { grid-template-columns: 1fr; } .casa__tiles--big { grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); } }
+
+/* tabs: el texto nunca se recorta */
+.casa__tabs .seg__btn { white-space: nowrap; flex: none; }

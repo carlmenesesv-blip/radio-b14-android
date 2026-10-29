@@ -21,6 +21,9 @@
     driveBig: true,             // agrandar los controles al conducir
     driveBlockVideo: true,      // bloquear videos y navegación libre al conducir
     exclusiveAudio: true,       // una sola fuente de audio: la nueva pausa a la anterior
+    homeLayout: "calma",       // calma | cockpit | widgets
+    voiceWake: false,           // «Oye Nómada» (solo navegadores con reconocimiento continuo)
+    voiceSpeak: false,          // respuestas habladas
     voiceCmd: true,             // botón de micrófono y órdenes de voz
     keyHints: true,             // aviso breve de lo que hace cada botón del volante
     homeWx: true, homeCar: true, homeMedia: true, homeApps: true, homeMap: true,   // tarjetas del Inicio
@@ -155,6 +158,7 @@
       vis(document.getElementById("hm"), state.homeMedia); vis(document.getElementById("freq"), state.homeApps); vis(col.querySelector(".home__mini"), state.homeMap);
       col.hidden = !(state.homeMedia || state.homeApps || state.homeMap);
     }
+    if (home.getAttribute("data-layout")) { home.style.gridTemplateColumns = ""; return; }
     var w = [], t = [];
     if (state.homeWx) t.push("minmax(0, 4fr)");
     if (state.homeCar) t.push("minmax(0, 3.5fr)");
@@ -317,10 +321,10 @@
         if (/^radio-/.test(k) && k !== "radio-wallpaper" && k !== "radio-music-ytkey") out[k] = localStorage.getItem(k);
       }
     } catch (e) {}
-    var blob = new Blob([JSON.stringify({ app: "RADIO B14", version: VERSION, data: out }, null, 2)], { type: "application/json" });
+    var blob = new Blob([JSON.stringify({ app: "NÓMADA", version: VERSION, data: out }, null, 2)], { type: "application/json" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "radio-b14-ajustes.json";
+    a.download = "nomada-ajustes.json";
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
   }
@@ -329,7 +333,7 @@
     r.onload = function () {
       try {
         var j = JSON.parse(r.result);
-        if (!j || j.app !== "RADIO B14" || !j.data) throw new Error("x");
+        if (!j || (j.app !== "RADIO B14" && j.app !== "NÓMADA") || !j.data) throw new Error("x");
         Object.keys(j.data).forEach(function (k) { if (/^radio-/.test(k) && k !== "radio-wallpaper" && typeof j.data[k] === "string") localStorage.setItem(k, j.data[k]); });
         done(true);
         setTimeout(function () { location.reload(); }, 600);
@@ -504,6 +508,7 @@
     /* ----- Entrada ----- */
     group(mount, "Tarjetas del inicio");
     c = card(mount, "");
+    row(c, "Estilo del inicio", "Calma, Cockpit o Widgets. También se cambia con el botón Estilo en Inicio", function (id) { return seg("homeLayout", [["Calma", "calma"], ["Cockpit", "cockpit"], ["Widgets", "widgets"]], id); });
     row(c, "El tiempo", "", function (id) { return toggle("homeWx", id); });
     row(c, "El auto", "", function (id) { return toggle("homeCar", id); });
     row(c, "Música", "", function (id) { return toggle("homeMedia", id); });
@@ -513,6 +518,8 @@
     group(mount, "Entrada");
     c = card(mount, "");
     row(c, "Órdenes de voz", "Botón de micrófono en la barra y botón «voz» del volante", function (id) { return toggle("voiceCmd", id); });
+    row(c, "Decir «Oye Nómada»", "Escucha siempre con el micrófono, sin tocar el botón. Solo funciona en navegadores con reconocimiento de voz (no en la app de Windows)", function (id) { return toggle("voiceWake", id); });
+    row(c, "Respuestas habladas", "Nómada confirma en voz alta lo que hizo", function (id) { return toggle("voiceSpeak", id); });
     row(c, "Avisos de los botones del volante", "Muestra un aviso corto de lo que hizo cada botón", function (id) { return toggle("keyHints", id); });
     row(c, "Teclado en pantalla", "Auto lo muestra en pantallas sin teclado físico; en celulares usa el del teléfono", function (id) {
       return seg("oskMode", [["Auto", "auto"], ["Siempre", "on"], ["Nunca", "off"]], id);
@@ -536,7 +543,7 @@
       c = card(mount, "");
       var homeHint = null, ovHint = null, wrHint = null, ovTgl = null;
       var homeRow = row(c, "Pantalla de inicio", "", function (id) {
-        return button("Elegir Radio B14 como inicio", function () { window.RadioAndroid && window.RadioAndroid.open("home"); }, id);
+        return button("Elegir NÓMADA como inicio", function () { window.RadioAndroid && window.RadioAndroid.open("home"); }, id);
       });
       homeHint = homeRow.querySelector(".set-item__hint") || (function () { var s = h("span", "set-item__hint", ""); homeRow.querySelector(".set-item__txt").appendChild(s); return s; })();
       var ovRow = row(c, "Botón «Volver al radio»", "", function (id) {
@@ -551,7 +558,7 @@
       wrHint = (function () { var s = h("span", "set-item__hint", ""); wrRow.querySelector(".set-item__txt").appendChild(s); return s; })();
       function paintAndroid(i) {
         i = i || {};
-        homeHint.textContent = i.home ? "Radio B14 ya es la pantalla de inicio." : "Para que al pulsar Inicio vuelva aquí, elígelo como inicio y marca «Siempre».";
+        homeHint.textContent = i.home ? "NÓMADA ya es la pantalla de inicio." : "Para que al pulsar Inicio vuelva aquí, elígelo como inicio y marca «Siempre».";
         ovTgl.setAttribute("aria-checked", String(i.floating !== false && i.overlay !== false));
         ovHint.textContent = i.overlay === false ? "Falta el permiso «Mostrar sobre otras apps». Al activarlo se abre su pantalla." : "Aparece sobre otras apps para volver al radio con un toque.";
         wrRow.hidden = i.writeSettings !== false;
@@ -599,7 +606,7 @@
       var dispHint = dispRow.querySelector(".set-item__hint");
       var espRow = row(c, "Puerto del ESP32", "Automático detecta el USB; si falla, escribe el COM en config.json", function () { return h("span", "set-item__hint", ""); });
       var espHint = espRow.querySelector(".set-item__hint");
-      var note = h("div", "set-item"); note.appendChild(h("span", "set-item__hint", "Las demás opciones están en %APPDATA%\\Radio B14\\config.json y se aplican al reiniciar la app."));
+      var note = h("div", "set-item"); note.appendChild(h("span", "set-item__hint", "Las demás opciones están en %APPDATA%\\NÓMADA\\config.json y se aplican al reiniciar la app."));
       c.appendChild(note);
       function paintHost() {
         hostRows.forEach(function (f) { f(); });
@@ -721,6 +728,37 @@
     refreshers.push(function () { tileRow.hidden = state.mapProvider !== "custom"; });
 
     /* ----- Bluetooth y ESP32 ----- */
+    /* ----- Casa (Home Assistant) ----- */
+    group(mount, "Casa (Home Assistant)");
+    c = card(mount, "");
+    var haUrl = h("input", "set-input"), haTok = h("input", "set-input"), haMsg = null;
+    haUrl.type = "text"; haUrl.placeholder = "http://homeassistant.local:8123"; haUrl.setAttribute("aria-label", "Dirección de Home Assistant"); haUrl.autocomplete = "off"; haUrl.spellcheck = false;
+    haTok.type = "password"; haTok.placeholder = "Token de acceso de larga duración"; haTok.setAttribute("aria-label", "Token de acceso"); haTok.autocomplete = "off";
+    var HAx = window.RadioHA;
+    if (HAx) {
+      var c0 = HAx.config(); haUrl.value = c0.url || ""; if (c0.hasToken) haTok.placeholder = "•••••••• (guardado; escribe otro para cambiarlo)";
+      row(c, "Dirección", "La de tu Home Assistant en la red de la casa o por Nabu Casa / VPN", function () { return haUrl; }).classList.add("set-item--stack");
+      row(c, "Token", "En Home Assistant: tu perfil → Seguridad → Tokens de acceso de larga duración", function () { return haTok; }).classList.add("set-item--stack");
+      var haRow = row(c, "Conexión", "", function () {
+        var w = h("div", "set-item__btns"); w.style.display = "flex"; w.style.gap = "0.5rem"; w.style.flexWrap = "wrap";
+        w.appendChild(button("Probar y guardar", function () {
+          var u = haUrl.value.trim(), t = haTok.value.trim() || (HAx.config().hasToken ? "__keep__" : "");
+          if (!u) { haMsg.textContent = "Escribe la dirección."; return; }
+          haMsg.textContent = "Probando…";
+          var tk = t === "__keep__" ? null : t;
+          if (tk === null) { HAx.setConfig({ url: u }); haMsg.textContent = "Dirección guardada."; return; }
+          HAx.test(u, tk).then(function (r) {
+            haMsg.textContent = (r.ok ? "✓ " : "✗ ") + r.msg;
+            if (r.ok) { HAx.setConfig({ url: u, token: tk }); haTok.value = ""; haTok.placeholder = "•••••••• (guardado)"; if (window.RadioToast) window.RadioToast.show({ title: "Casa conectada", kind: "ok", ms: 2200 }); }
+          });
+        }));
+        w.appendChild(button("Desconectar", function () { HAx.setConfig({ url: "", token: "" }); haUrl.value = ""; haTok.value = ""; haTok.placeholder = "Token de acceso de larga duración"; haMsg.textContent = "Desconectado. Se muestran datos de ejemplo."; }));
+        w.appendChild(button("Mostrar todo lo oculto", function () { HAx.clearHidden(); haMsg.textContent = "Se muestran todas las fichas."; }));
+        return w;
+      });
+      haMsg = (function () { var sp = h("span", "set-item__hint", HAx.demo() ? "Sin conectar: se muestran datos de ejemplo." : "Conectado."); haRow.querySelector(".set-item__txt").appendChild(sp); return sp; })();
+    }
+
     group(mount, "Bluetooth y ESP32");
     c = card(mount, "");
     row(c, "Nombre del receptor Bluetooth", "Se muestra en las instrucciones para vincular el celular", function (id) {
@@ -802,7 +840,7 @@
     function sysMsg(t) { msg.textContent = t || ""; }
 
     c = card(mount, "Acerca de");
-    c.appendChild(h("p", "set-about", "RADIO B14 · versión " + VERSION));
+    c.appendChild(h("p", "set-about", "NÓMADA · versión " + VERSION));
     c.appendChild(h("p", "set-hint", "Mapas: según el proveedor elegido (datos de OpenStreetMap). Rutas: OSRM. Búsqueda de lugares: Photon. Enlace con el teléfono: servidor propio (server.js) o ntfy."));
 
     organize(mount);
@@ -818,7 +856,7 @@
     ["Apps", ["Apps", "Sistema Android"]],
     ["Vehículo", ["Conducción", "Vehículo", "Climatización", "Seguridad", "Llave y volante"]],
     ["Navegación", ["Navegación"]],
-    ["Conexiones", ["Bluetooth y ESP32"]],
+    ["Conexiones", ["Casa (Home Assistant)", "Bluetooth y ESP32"]],
     ["Sistema", ["Sistema", "Windows"]]
   ];
   var CAT_KEY = "radio-settings-cat";

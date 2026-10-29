@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <title>Radio OS</title>
+  <title>NÓMADA</title>
 
   <!-- Tema aplicado antes de pintar para evitar parpadeo -->
   <script>
@@ -56,6 +56,9 @@
   <link rel="stylesheet" href="osk.css">
   <link rel="stylesheet" href="voice.css">
   <link rel="stylesheet" href="drive.css">
+  <link rel="stylesheet" href="casa.css">
+  <link rel="stylesheet" href="homelayouts.css">
+  <link rel="stylesheet" href="refine.css">
 
   <!-- Aplica los ajustes guardados antes de pintar -->
   <script src="errlog.js"></script>
@@ -66,16 +69,34 @@
   <!-- ===== Animación de inicio ===== -->
   <div class="boot" id="boot" aria-hidden="true">
     <div class="boot__glow"></div>
+    <div class="boot__horizon"></div>
     <span class="boot__skip">Toca para omitir</span>
     <div class="boot__stage">
-      <div class="boot__lamps"><i class="boot__lamp boot__lamp--l"></i><i class="boot__lamp boot__lamp--r"></i></div>
-      <div class="boot__brand"><span class="boot__word">RADIO</span><span class="boot__num">B14</span></div>
+      <svg class="boot__logo" viewBox="0 0 200 200" role="img" aria-label="NÓMADA">
+        <defs>
+          <linearGradient id="bg-metal" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#ffffff"/><stop offset="0.32" stop-color="#9aa3ad"/><stop offset="0.55" stop-color="#e9edf1"/><stop offset="0.8" stop-color="#6d7681"/><stop offset="1" stop-color="#dfe4e9"/>
+          </linearGradient>
+        </defs>
+        <path class="boot__ring" pathLength="100" d="M128.730 21.060 A84 84 0 1 1 71.270 21.060" fill="none" stroke="url(#bg-metal)" stroke-width="6" stroke-linecap="round"/>
+        <path class="boot__n" pathLength="100" d="M72 142 V62 L128 142 V62" fill="none" stroke="url(#bg-metal)" stroke-width="10" stroke-linejoin="miter" stroke-linecap="butt"/>
+        <path class="boot__star" d="M100 3 C101.600 13 104.800 17 115 20 C104.800 23 101.600 27 100 37 C98.400 27 95.200 23 85 20 C95.200 17 98.400 13 100 3Z" fill="#fff"/>
+      </svg>
+      <div class="boot__word" aria-hidden="true"><span>N</span><span>Ó</span><span>M</span><span>A</span><span>D</span><span>A</span></div>
     </div>
     <div class="boot__foot"><div class="boot__bar"><i></i></div><div class="boot__msg" id="boot-msg">Iniciando sistema</div></div>
   </div>
 
   <!-- ===== Sprite de iconos ===== -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-logo" viewBox="0 0 200 200"><path d="M128.730 21.060 A84 84 0 1 1 71.270 21.060" fill="none" stroke-width="7" stroke-linecap="round"/><path d="M72 142 V62 L128 142 V62" fill="none" stroke-width="11" stroke-linejoin="miter"/><path d="M100 3 C101.600 13 104.800 17 115 20 C104.800 23 101.600 27 100 37 C98.400 27 95.200 23 85 20 C95.200 17 98.400 13 100 3Z" stroke="none" fill="currentColor"/></symbol>
+    <symbol id="i-casa" viewBox="0 0 24 24"><path d="M3 12l9-8 9 8"/><path d="M6 10.500V20h12v-9.500"/><path d="M9 15a4.500 4.500 0 0 1 6 0"/><path d="M10.500 17.300a2.200 2.200 0 0 1 3 0"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.500 10.900c.6.500 1 1.200 1 2.100h5c0-.9.4-1.600 1-2.100A6 6 0 0 0 12 3z"/></symbol>
+    <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 3v5M15 3v5"/><path d="M7 8h10v4a5 5 0 0 1-10 0V8z"/><path d="M12 17v4"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.500-3.200 8-8 9-4.800-1-8-4.500-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-garage" viewBox="0 0 24 24"><path d="M3 21V9l9-5 9 5v12"/><path d="M7 21v-7h10v7"/><path d="M7 16.500h10M7 19h10"/></symbol>
+    <symbol id="i-cctv" viewBox="0 0 24 24"><path d="M3 7h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H3z"/><path d="M17 11l4-2.500v7L17 13"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.800 5.200L19 10l-5.200 1.800L12 17l-1.800-5.200L5 10l5.200-1.800z"/><path d="M18 16l.8 2.200L21 19l-2.200.8L18 22l-.8-2.200L15 19l2.200-.8z"/></symbol>
     <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
     <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
     <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></symbol>
@@ -196,6 +217,7 @@
         <button class="dock__btn" data-target="media" aria-label="Bluetooth"><svg class="icon"><use href="#i-bluetooth"/></svg></button>
         <button class="dock__btn" data-target="radio" aria-label="Radio"><svg class="icon"><use href="#i-radio"/></svg></button>
         <button class="dock__btn" data-target="vehicle" aria-label="Vehículo"><svg class="icon"><use href="#i-car"/></svg></button>
+        <button class="dock__btn" data-target="casa" aria-label="Casa"><svg class="icon"><use href="#i-casa"/></svg></button>
         <button class="dock__btn" data-target="cluster" aria-label="Cluster"><svg class="icon"><use href="#i-gauge"/></svg></button>
         <button class="dock__btn" data-target="ambient" aria-label="Ambiente"><svg class="icon"><use href="#i-ambient"/></svg></button>
         <button class="dock__btn" data-target="apps" aria-label="Apps"><svg class="icon"><use href="#i-grid"/></svg></button>
@@ -230,6 +252,9 @@
           <svg class="icon"><use href="#i-music"/></svg>
           <span class="sbar__nt"></span>
         </button>
+        <button type="button" class="now" id="home-style" aria-label="Cambiar el estilo del inicio">
+          <svg class="icon"><use href="#i-sliders"/></svg><span id="home-style-n">Estilo</span>
+        </button>
         <div class="topbar__status">
           <span><strong id="temp-out">25</strong><span id="temp-unit">°C</span></span>
           <!-- Accesos rápidos (la barra de estado es la de Android) -->
@@ -254,6 +279,26 @@
         <!-- ================= HOME ================= -->
         <section class="view is-active" data-view="home" data-title="Inicio">
           <div class="home" id="home" data-media="idle">
+
+            <!-- Nuevas piezas del inicio (se muestran según el estilo elegido) -->
+            <article class="card card--greet" id="hgreet" aria-label="Saludo">
+              <div class="greet__hi" id="hg-hi">Hola</div>
+              <div class="greet__clock" id="hg-clock">--:--</div>
+              <div class="greet__date" id="hg-date"></div>
+            </article>
+            <nav class="hquick" id="hquick" aria-label="Accesos rápidos">
+              <button type="button" class="hq" data-go="map"><svg class="icon"><use href="#i-map"/></svg><span>Navegar</span></button>
+              <button type="button" class="hq" data-go="calls"><svg class="icon"><use href="#i-call"/></svg><span>Llamar</span></button>
+              <button type="button" class="hq" data-go="radio"><svg class="icon"><use href="#i-radio"/></svg><span>Radio</span></button>
+              <button type="button" class="hq" data-go="casa"><svg class="icon"><use href="#i-casa"/></svg><span>Casa</span></button>
+              <button type="button" class="hq" data-go="apps"><svg class="icon"><use href="#i-grid"/></svg><span>Apps</span></button>
+            </nav>
+            <article class="card card--hcasa" id="hcasa" aria-label="Casa">
+              <button type="button" class="hcasa__head" data-go="casa"><svg class="icon"><use href="#i-casa"/></svg><span>Casa</span><i class="hcasa__dot" aria-hidden="true"></i></button>
+              <div class="hcasa__main"><b id="hc-n">—</b><small id="hc-t">Sin conectar</small></div>
+              <div class="hcasa__sc" id="hc-sc"></div>
+              <div class="hcasa__al" id="hc-al" hidden></div>
+            </article>
 
             <!-- Izquierda: el tiempo -->
             <article class="card card--wx" id="wx" data-state="idle" aria-label="El tiempo">
@@ -419,7 +464,7 @@
             <div class="home__col home__col--r">
               <article class="card card--media" id="hm" data-state="idle">
                 <div class="media__cover" id="hm-cover" aria-hidden="true">
-                  <svg class="icon media__note"><use href="#i-music"/></svg>
+                  <svg class="icon media__note"><use href="#i-music"/></svg><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
                   <span class="media__eq"><i></i><i></i><i></i><i></i><i></i></span>
                 </div>
                 <div class="media__txt">
@@ -471,6 +516,11 @@
             </div>
 
           </div>
+        </section>
+
+        <!-- ================= CASA ================= -->
+        <section class="view view--casa" data-view="casa" data-title="Casa">
+          <div class="casa" id="casa"></div>
         </section>
 
         <!-- ================= LLAMADAS ================= -->
@@ -1345,6 +1395,9 @@
   <script src="calls.js"></script>
   <script src="power.js"></script>
   <script src="source.js"></script>
+  <script src="ha.js"></script>
+  <script src="casa.js"></script>
+  <script src="homelayouts.js"></script>
   <script src="drive.js"></script>
   <script src="voice.js"></script>
   <script src="android.js"></script>

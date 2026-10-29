@@ -29,6 +29,7 @@ const host = {
   embedFreeze: () => ipcRenderer.invoke('host:embedFreeze'),
   embedCmd: (c) => ipcRenderer.send('host:embedCmd', String(c)),
   embedNav: (u) => ipcRenderer.send('host:embedNav', String(u)),
+  haFetch: (url, o) => ipcRenderer.invoke('host:haFetch', String(url), o || {}),
   embedPause: () => ipcRenderer.send('host:embedPause'),
   embedToggle: () => ipcRenderer.send('host:embedToggle'),
   log: (line) => ipcRenderer.send('host:log', String(line)),
