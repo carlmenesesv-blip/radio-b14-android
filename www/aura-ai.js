@@ -14,7 +14,9 @@
 (function () {
   "use strict";
   var KEYS = "aura-keys";
-  var DEFAULT_MODEL = "gemini-2.5-flash";
+  var DEFAULT_MODEL = "gemini-3.8-flash";
+  // Orden de respaldo: si el modelo no existe para esta clave se prueba el siguiente y se recuerda el que funcionó
+  var CHAIN = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3-flash-preview", "gemini-2.5-flash-lite", "gemini-2.5-flash"];
   var API = "https://generativelanguage.googleapis.com/v1beta/models/";
 
   function sys() { return (window.RadioSystem && window.RadioSystem.get && window.RadioSystem.get()) || {}; }
@@ -23,8 +25,11 @@
   /* ---------- Claves ---------- */
   function loadKeys() { try { return JSON.parse(localStorage.getItem(KEYS) || "{}") || {}; } catch (e) { return {}; } }
   var keys = loadKeys();
+  if (keys.model === "gemini-2.5-flash") keys.model = "";   // ese modelo ya no se ofrece a claves nuevas
   function setKeys(o) {
     keys = Object.assign({}, keys, o || {});
+    if (keys.model === "gemini-2.5-flash") keys.model = "";
+    if (o && (o.gemini || o.model != null)) keys.working = "";
     try { localStorage.setItem(KEYS, JSON.stringify(keys)); } catch (e) {}
     window.dispatchEvent(new CustomEvent("radio:keys", { detail: { gemini: !!keys.gemini, maps: !!keys.maps } }));
   }
@@ -65,8 +70,10 @@
 
   function rms(buf) { var s = 0; for (var i = 0; i < buf.length; i++) s += buf[i] * buf[i]; return Math.sqrt(s / buf.length); }
 
+  var probe = null;
   function onAudio(buf, sr) {
     var dur = buf.length / sr, level = rms(buf);
+    if (probe) probe.push(level);
     if (tts) { hot = 0; quiet = 0; return; }                  // no se oye a sí misma
     // adaptación: el piso sube lento con el ruido/música y baja rápido
     if (!cap) floor = level < floor ? floor * 0.9 + level * 0.1 : floor * 0.995 + level * 0.005;
@@ -144,8 +151,14 @@
   var inflight = 0, stamps = [];
   function allowed() { var n = Date.now(); stamps = stamps.filter(function (t) { return n - t < 60000; }); if (stamps.length >= 8) return false; stamps.push(n); return true; }
 
+  function candidates() {
+    var l = [keys.working, keys.model].concat(CHAIN).filter(Boolean), seen = {};
+    return l.filter(function (m) { if (seen[m]) return false; seen[m] = 1; return true; });
+  }
+  function remember(m) { if (keys.working !== m) { keys.working = m; try { localStorage.setItem(KEYS, JSON.stringify(keys)); } catch (e) {} } }
+  function modelGone(e) { return e && (e.status === 404 || /not found|no longer|not supported|is not available|limited to|deprecated/i.test(e.message || "")); }
+
   function gemini(parts, wake) {
-    var model = keys.model || DEFAULT_MODEL;
     var body = {
       systemInstruction: { parts: [{ text: SYS }] },
       contents: [{ role: "user", parts: parts.concat([{ text: "wake=" + (wake ? "true" : "false") + "\ncontexto=" + JSON.stringify(context()) }]) }],
@@ -154,22 +167,35 @@
         responseSchema: { type: "OBJECT", properties: { heard: { type: "STRING" }, addressed: { type: "BOOLEAN" }, commands: { type: "ARRAY", items: { type: "STRING" } }, say: { type: "STRING" } }, required: ["heard", "addressed", "commands", "say"] }
       }
     };
-    return fetch(API + encodeURIComponent(model) + ":generateContent", { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": keys.gemini }, body: JSON.stringify(body) })
-      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j, status: r.status }; }); })
-      .then(function (o) {
-        if (!o.ok) { var m = (o.j && o.j.error && o.j.error.message) || ("HTTP " + o.status); var e = new Error(m); e.status = o.status; throw e; }
-        var t = o.j && o.j.candidates && o.j.candidates[0] && o.j.candidates[0].content && o.j.candidates[0].content.parts;
-        var txt = t && t.map(function (p) { return p.text || ""; }).join("");
-        var r = JSON.parse(txt || "{}");
-        return { heard: String(r.heard || ""), addressed: r.addressed !== false, commands: Array.isArray(r.commands) ? r.commands.map(String) : [], say: String(r.say || "") };
-      });
+    var list = candidates(), last = null;
+    function one(i) {
+      var model = list[i];
+      return fetch(API + encodeURIComponent(model) + ":generateContent", { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": keys.gemini }, body: JSON.stringify(body) })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, j: j, status: r.status }; }); })
+        .then(function (o) {
+          if (!o.ok) { var m = (o.j && o.j.error && o.j.error.message) || ("HTTP " + o.status); var e = new Error(m); e.status = o.status; e.model = model; throw e; }
+          var t = o.j && o.j.candidates && o.j.candidates[0] && o.j.candidates[0].content && o.j.candidates[0].content.parts;
+          var txt = t && t.map(function (p) { return p.text || ""; }).join("");
+          if (!txt) { var e2 = new Error("Gemini no devolvió texto" + (o.j && o.j.promptFeedback && o.j.promptFeedback.blockReason ? " (" + o.j.promptFeedback.blockReason + ")" : "")); e2.model = model; throw e2; }
+          var r2; try { r2 = JSON.parse(txt.replace(/^```json\s*|```$/g, "")); } catch (pe) { r2 = { heard: "", addressed: true, commands: [], say: txt.slice(0, 200) }; }
+          remember(model);
+          return { heard: String(r2.heard || ""), addressed: r2.addressed !== false, commands: Array.isArray(r2.commands) ? r2.commands.map(String) : [], say: String(r2.say || ""), model: model };
+        }).catch(function (e) {
+          last = e;
+          if (modelGone(e) && i + 1 < list.length) return one(i + 1);
+          throw last;
+        });
+    }
+    return one(0);
   }
 
   /* ---------- Ejecutar el resultado ---------- */
   function apply(r) {
-    var ok = 0;
-    r.commands.forEach(function (c) { try { if (V() && V().exec(c)) ok++; } catch (e) {} });
+    var ok = 0, bad = [];
+    r.commands.forEach(function (c) { var d = false; try { d = V() && V().exec(c); } catch (e) {} if (d) ok++; else bad.push(c); });
+    if (bad.length && window.RadioErr) window.RadioErr.add("AURA no pudo ejecutar: " + bad.join(" | "));
     var say = r.say || (r.commands.length && ok ? "Listo" : "");
+    if (bad.length && !ok) say = (r.say ? r.say + " " : "") + "Pero no pude hacerlo: " + bad[0] + ".";
     if (V() && V().ui) V().ui.show(say || r.heard || "…", ok || say ? "ok" : "fail", r.heard && say ? "«" + r.heard + "»" : "");
     if (say) speak(say);
     if (V() && V().ui) V().ui.schedule(Math.max(3500, say.length * 70));
@@ -177,7 +203,8 @@
   }
   function fail(e) {
     var m = e && e.message ? e.message : "";
-    var t = /API key|API_KEY|permission|403|401/i.test(m) ? "La clave de Gemini no funciona. Revísala en Ajustes." : /quota|429|RESOURCE/i.test(m) ? "Se acabó la cuota de Gemini por ahora." : "No pude hablar con Gemini (revisa internet).";
+    if (window.RadioErr) window.RadioErr.add("Gemini: " + (e && e.model ? "[" + e.model + "] " : "") + m);
+    var t = /API key|API_KEY|permission|PERMISSION|403|401/i.test(m) ? "La clave de Gemini no funciona. Revísala en Ajustes." : /quota|429|RESOURCE/i.test(m) ? "Se acabó la cuota de Gemini por ahora." : /Failed to fetch|NetworkError|Load failed/i.test(m) ? "No hay conexión con Gemini (revisa internet)." : "Gemini respondió con un error: " + m.slice(0, 90);
     if (V() && V().ui) { V().ui.show(t, "fail", ""); V().ui.schedule(4500); }
     return null;
   }
@@ -251,7 +278,14 @@
     if (V() && V().ui) V().ui.show("Pensando…", "think", "");
     return gemini([{ text: "Frase escrita: " + text }], false).then(function (r) { return apply(r); }, fail);
   }
-  function test() { return gemini([{ text: "Frase escrita: di hola" }], false).then(function () { return { ok: true }; }, function (e) { return { ok: false, error: e && e.message }; }); }
+  // Diagnóstico: escucha 3 s y dice si el micrófono recibe señal y si superaría el umbral de voz
+  function diag() {
+    return mic().then(function () {
+      probe = [];
+      return new Promise(function (res) { setTimeout(function () { var a = probe; probe = null; var peak = a.reduce(function (m, x) { return Math.max(m, x); }, 0), avg = a.length ? a.reduce(function (s2, x) { return s2 + x; }, 0) / a.length : 0; res({ ok: true, peak: peak, avg: avg, thr: Math.max(0.015, floor * 3.2), floor: floor, track: stream && stream.getAudioTracks()[0] && stream.getAudioTracks()[0].label }); }, 3000); });
+    }, function (e) { return { ok: false, error: e && e.name === "NotAllowedError" ? "Permiso denegado" : (e && e.message) || "Sin micrófono" }; });
+  }
+  function test() { return gemini([{ text: "Frase escrita: di hola" }], false).then(function (r) { return { ok: true, model: r.model }; }, function (e) { return { ok: false, error: e && e.message }; }); }
 
   function sync() { wake(sys().voiceWake === true); }
   window.addEventListener("radio:systemchange", sync);
@@ -260,9 +294,9 @@
   setTimeout(sync, 1800);
 
   window.RadioAI = {
-    ready: ready, listen: listen, wake: wake, ask: ask, test: test, speak: speak,
+    ready: ready, diag: diag, listen: listen, wake: wake, ask: ask, test: test, speak: speak,
     speaking: function () { return tts; }, wakeActive: function () { return wakeOn; },
-    keys: function () { return { hasGemini: !!keys.gemini, hasMaps: !!keys.maps, model: keys.model || DEFAULT_MODEL }; },
+    keys: function () { return { hasGemini: !!keys.gemini, hasMaps: !!keys.maps, model: keys.model || DEFAULT_MODEL, working: keys.working || "" }; },
     mapsKey: function () { return keys.maps || ""; },
     setKeys: setKeys, onState: function (f) { listeners.push(f); }
   };

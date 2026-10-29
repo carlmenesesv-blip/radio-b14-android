@@ -776,9 +776,17 @@
       var aiRow = row(c, "Probar", "", function () {
         var w = h("div", "set-item__btns"); w.style.display = "flex"; w.style.gap = "0.5rem"; w.style.flexWrap = "wrap";
         w.appendChild(button("Guardar y probar", function () {
-          var o = { model: gModel.value.trim() || "gemini-2.5-flash" }; if (gKey.value.trim()) o.gemini = gKey.value.trim();
+          var o = { model: gModel.value.trim() === "gemini-2.5-flash" ? "" : gModel.value.trim() }; if (gKey.value.trim()) o.gemini = gKey.value.trim();
           AIx.setKeys(o); aiMsg.textContent = "Probando…";
-          AIx.test().then(function (r) { aiMsg.textContent = r.ok ? "✓ Gemini responde." : "✗ " + (r.error || "No respondió."); if (r.ok) { gKey.value = ""; gKey.placeholder = "•••••••• (guardada)"; } });
+          AIx.test().then(function (r) { aiMsg.textContent = r.ok ? "✓ Gemini responde (" + r.model + ")." : "✗ " + (r.error || "No respondió."); if (r.ok) { gKey.value = ""; gKey.placeholder = "•••••••• (guardada)"; } });
+        }));
+        w.appendChild(button("Probar micrófono", function () {
+          aiMsg.textContent = "Habla durante 3 segundos…";
+          AIx.diag().then(function (d) {
+            if (!d.ok) { aiMsg.textContent = "✗ " + d.error; return; }
+            var pct = Math.round(Math.min(1, d.peak / 0.2) * 100);
+            aiMsg.textContent = (d.peak > d.thr ? "✓ Te oigo bien" : d.peak > 0.004 ? "⚠ Se oye muy bajo: acércate o sube el micrófono en Windows" : "✗ No llega señal: revisa el micrófono predeterminado de Windows") + " · nivel " + pct + "%" + (d.track ? " · " + d.track : "");
+          });
         }));
         w.appendChild(button("Quitar clave", function () { AIx.setKeys({ gemini: "" }); gKey.value = ""; gKey.placeholder = "Clave de la API de Gemini (aistudio.google.com/apikey)"; aiMsg.textContent = "Clave eliminada."; }));
         return w;

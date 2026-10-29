@@ -85,3 +85,4 @@ html[data-driving] .casa__tile { min-height: 4.4rem; }
 
 /* tabs: el texto nunca se recorta */
 .casa__tabs .seg__btn { white-space: nowrap; flex: none; }
+.casa__tabs .seg__btn { padding-inline: 1rem; }
