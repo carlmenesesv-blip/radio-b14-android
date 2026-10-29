@@ -32,7 +32,7 @@ function serve() {
     let rel = decodeURIComponent(u.pathname);
     if (rel === '/' || rel === '') rel = '/index.html';
     const file = path.normalize(path.join(WWW, rel));
-    if (!file.startsWith(WWW)) return new Response('No permitido', { status: 403 });
+    if (file !== WWW && !file.startsWith(WWW + path.sep)) return new Response('No permitido', { status: 403 });
     if (!fs.existsSync(file)) return new Response('No encontrado', { status: 404 });
     return net.fetch(pathToFileURL(file).toString());
   });
