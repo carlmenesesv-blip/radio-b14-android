@@ -1,0 +1,27 @@
+/* ==========================================================
+   DRIVE — controles grandes y menos distracciones en marcha
+   Solo actúa con html[data-driving][data-drive-big]; en reposo no cambia nada.
+   Sección: SEGURIDAD
+   ========================================================== */
+
+/* Barra y menú: objetivos de toque más grandes */
+html[data-driving][data-drive-big] .dock__btn { width: 3.5rem; height: 3.5rem; }
+html[data-driving][data-drive-big] .dock__btn .icon, html[data-driving][data-drive-big] .dock__act .icon { width: 1.6rem; height: 1.6rem; }
+html[data-driving][data-drive-big] .dock__act { width: 3.5rem; height: 3.5rem; }
+html[data-driving][data-drive-big] .theme-switch { display: none; }
+html[data-driving][data-drive-big] .sbar__b { min-height: 3.5rem; min-width: 3.5rem; }
+html[data-driving][data-drive-big] .sbar__v, html[data-driving][data-drive-big] .sbar__t b { font-size: 1.25rem; }
+
+/* Controles de las vistas */
+html[data-driving][data-drive-big] .btn-pill { min-height: 3.2rem; padding-inline: 1.3rem; font-size: 1rem; }
+html[data-driving][data-drive-big] .btn-round { min-width: 3.4rem; min-height: 3.4rem; }
+html[data-driving][data-drive-big] .ctl { min-height: 4rem; }
+html[data-driving][data-drive-big] .seg__btn { min-height: 3rem; }
+html[data-driving][data-drive-big] .card--media button { min-width: 3.4rem; min-height: 3.4rem; }
+
+/* Distintivo discreto */
+html[data-driving] .bar::before {
+  content: ""; position: absolute; left: 50%; top: 0; width: 2.2rem; height: 0.18rem; border-radius: 0.2rem;
+  transform: translateX(-50%); background: var(--dock-active-bg); opacity: 0.9; pointer-events: none;
+}
+.bar { position: relative; }

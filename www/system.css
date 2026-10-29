@@ -113,3 +113,10 @@
 .set-side__btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 .set-panes { min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding-bottom: var(--gap); }
 .set-panes::-webkit-scrollbar { display: none; }
+
+/* Leyenda del volante y registro de errores */
+.set-legend { flex-direction: column; align-items: stretch; gap: 0.3rem; }
+.set-legend__row { display: flex; gap: 0.8rem; font-size: 0.85rem; }
+.set-legend__row b { flex: none; min-width: 8.5rem; font-weight: 500; }
+.set-legend__row span { color: var(--text-dim); }
+.set-log { margin: 0.5rem 0 0; padding: 0.7rem 0.9rem; max-height: 11rem; overflow: auto; border-radius: 1rem; background: var(--surface-inset); color: var(--text-dim); font: 0.72rem/1.4 ui-monospace, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }

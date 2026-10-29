@@ -1,0 +1,39 @@
+/* ==========================================================
+   VOICE — botón del micrófono y panel de órdenes
+   Sección: ENTRADA
+   ========================================================== */
+.dock__act {
+  flex: none; width: 2.8rem; height: 2.8rem; border-radius: 50%; position: relative;
+  display: grid; place-items: center; color: var(--text-dim);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.dock__act:active { transform: scale(0.92); }
+.dock__act::after { content: ""; position: absolute; inset: calc((100% - max(100%, 44px)) / 2); }
+html[data-voice] .dock__act { background: var(--dock-active-bg); color: var(--dock-active-fg); }
+@media (max-width: 62rem) { .dock__act { width: 2.6rem; height: 2.6rem; } }
+
+.voice {
+  position: fixed; left: 50%; top: 4.3rem; transform: translateX(-50%); z-index: 70;
+  width: min(44rem, calc(100vw - 2rem));
+  display: flex; align-items: center; gap: 1rem; padding: 0.9rem 1rem;
+  background: var(--solid); color: var(--text);
+  border: 1px solid var(--border-strong); border-radius: var(--radius-card, 1.5rem);
+  box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.35);
+}
+.voice[hidden] { display: none; }
+.voice__orb { flex: none; width: 3.4rem; height: 3.4rem; border-radius: 50%; display: grid; place-items: center; background: var(--surface-inset); color: var(--text-dim); }
+.voice__orb .icon { width: 1.6rem; height: 1.6rem; }
+.voice[data-state="listen"] .voice__orb { background: var(--dock-active-bg); color: var(--dock-active-fg); animation: voice-pulse 1.2s ease-in-out infinite; }
+.voice[data-state="ok"] .voice__orb { background: var(--dock-active-bg); color: var(--dock-active-fg); }
+.voice[data-state="fail"] .voice__orb { color: var(--text); box-shadow: inset 0 0 0 2px var(--text-dim); }
+@keyframes voice-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+html[data-motion="reduce"] .voice__orb { animation: none !important; }
+.voice__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+.voice__txt { font-size: 1.15rem; line-height: 1.25; overflow-wrap: anywhere; }
+.voice__hint { font-size: 0.8rem; color: var(--text-dim); }
+.voice__hint:empty { display: none; }
+.voice__form { display: none; gap: 0.5rem; align-items: center; }
+.voice[data-state="type"] .voice__form, .voice[data-state="fail"] .voice__form, .voice[data-state="help"] .voice__form { display: flex; }
+.voice__in { flex: 1; min-width: 0; height: 2.8rem; padding: 0 1rem; border-radius: var(--radius-pill); border: 1px solid var(--border-strong); background: var(--surface-inset); color: var(--text); font: inherit; }
+.voice__x { flex: none; }
+html[data-driving] .voice[data-state="type"] .voice__form { display: none; }

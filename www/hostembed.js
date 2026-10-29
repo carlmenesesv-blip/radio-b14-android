@@ -22,6 +22,17 @@
   function overlayOpen() {
     return !!document.querySelector("#vpop.is-open, #cpop.is-open, .toasts .toast, #osk:not([hidden]), .ap__menu:not([hidden]), .ap__add:not([hidden])");
   }
+  var skel = null, ready = true, appName = "";
+  function skeleton(on) {
+    var p = el() && el().parentNode; if (!p) return;
+    if (!skel) {
+      skel = document.createElement("div"); skel.className = "ap__skel"; skel.setAttribute("role", "status");
+      skel.innerHTML = '<span class="ap__skel-dot"></span><b class="ap__skel-name"></b><small>Cargando…</small>';
+      p.appendChild(skel);
+    }
+    skel.querySelector(".ap__skel-name").textContent = appName || "";
+    skel.hidden = !on;
+  }
   function paintSnap(src) {
     var p = el() && el().parentNode; if (!p) return;
     p.style.backgroundImage = src ? "url(" + src + ")" : "";
@@ -51,18 +62,19 @@
 
   window.__b14Embed = function (s) {
     if (!s) return;
+    if (!s.audio) { if (s.id === openId) { ready = s.ready !== false; skeleton(!ready); } }
     curUrl = s.url || curUrl;
     window.dispatchEvent(new CustomEvent("radio:embed", { detail: s }));
   };
 
   window.RadioEmbed = {
     available: true,
-    open: function (id, url) { openId = id; wanted = true; curUrl = url || ""; lastRect = ""; var r0 = rect(); H.embedOpen(id, url, r0 && r0.width > 20 ? r0 : null); schedule(); },
+    open: function (id, url, name) { openId = id; appName = name || ""; ready = false; skeleton(true); wanted = true; curUrl = url || ""; lastRect = ""; var r0 = rect(); H.embedOpen(id, url, r0 && r0.width > 20 ? r0 : null); schedule(); },
     show: function (on) { wanted = !!on; if (on && openId) lastRect = ""; schedule(); },
     reload: function () { if (openId) H.embedCmd("reload"); },
     back: function () { if (openId) H.embedCmd("back"); },
     go: function (url) { if (openId) { curUrl = url; H.embedNav(url); } },
-    close: function () { if (!openId) return; var id = openId; openId = null; wanted = false; frozen = false; paintSnap(null); H.embedClose(id); },
+    close: function () { if (!openId) return; var id = openId; openId = null; wanted = false; frozen = false; paintSnap(null); skeleton(false); H.embedClose(id); },
     url: function () { return curUrl; },
     id: function () { return openId; }
   };

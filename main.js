@@ -163,6 +163,20 @@ ipcMain.handle('host:embedFreeze', () => embed.freeze());
 ipcMain.on('host:embedCmd', (_e, c) => embed.cmd(c));
 ipcMain.on('host:embedNav', (_e, u) => embed.nav(u));
 ipcMain.on('host:embedClose', (_e, id) => embed.close(id));
+ipcMain.on('host:embedPause', () => embed.pauseAll());
+ipcMain.on('host:embedToggle', () => embed.toggle());
+function logFile() { return path.join(app.getPath('userData'), 'radio.log'); }
+function writeLog(line) {
+  try {
+    const f = logFile();
+    try { if (fs.statSync(f).size > 512 * 1024) fs.renameSync(f, f + '.old'); } catch (e) {}
+    fs.appendFileSync(f, String(line).slice(0, 600) + '\n');
+  } catch (e) {}
+}
+ipcMain.on('host:log', (_e, line) => writeLog(line));
+ipcMain.on('host:openLogs', () => { try { if (!fs.existsSync(logFile())) writeLog(new Date().toISOString() + ' (registro creado)'); shell.showItemInFolder(logFile()); } catch (e) {} });
+process.on('uncaughtException', (err) => writeLog(new Date().toISOString() + ' [main] ' + (err && err.stack || err)));
+process.on('unhandledRejection', (err) => writeLog(new Date().toISOString() + ' [main] ' + (err && err.stack || err)));
 ipcMain.on('host:sysVol', (_e, v) => helper.setVolume(+v));
 ipcMain.on('host:sysMute', (_e, m) => helper.setMute(!!m));
 ipcMain.on('host:sysBright', (_e, b) => helper.setBrightness(+b));

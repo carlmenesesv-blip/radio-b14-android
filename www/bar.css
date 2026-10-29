@@ -114,3 +114,11 @@
 .vpop__note[hidden] { display: none; }
 .vpop[data-side="drv"] .vpop__panel { right: auto; left: var(--gap); }
 @media (orientation: portrait) { .vpop[data-side="drv"] .vpop__panel, .vpop__panel { left: var(--gap); right: var(--gap); width: auto; } }
+
+/* ---------- Indicador «suena ahora» (arriba, entre el título y el estado) ---------- */
+.now { display: inline-flex; align-items: center; gap: 0.5rem; max-width: 18rem; min-width: 0; height: 2.4rem; padding: 0 1rem; margin-inline: auto 1.2rem; border-radius: var(--radius-pill); background: var(--surface-inset); color: var(--text); touch-action: manipulation; }
+.now[hidden] { display: none; }
+.now:active { transform: scale(0.97); }
+.now .icon { flex: none; width: 1.15rem; height: 1.15rem; }
+.sbar__nt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85rem; }
+html[data-driving] .now { height: 3rem; font-size: 1rem; }

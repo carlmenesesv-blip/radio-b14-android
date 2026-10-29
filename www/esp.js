@@ -65,6 +65,7 @@
     if (typeof d.key === "string") emit("radio:key", { key: d.key });
     if (num(d.knob) && d.knob) emit("radio:key", { key: d.knob > 0 ? "vol+" : "vol-", steps: Math.min(5, Math.abs(Math.round(d.knob))) });
     if ("luz" in d) emit("radio:lights", { on: !!d.luz });
+    if ("ack" in d) emit("radio:ack", { n: String(d.ack) });
     for (var k in d) if (Object.prototype.hasOwnProperty.call(d, k)) last[k] = d[k];
     lastAt = Date.now();
     feedRadio(d);

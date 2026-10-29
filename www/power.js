@@ -40,8 +40,14 @@
     // Aquí ya se guardó todo (cada módulo guarda al cambiar): se avisa que puede cortarse la energía
     setTimeout(function () {
       esp("ready");
-      var a = window.AndroidBridge, h = window.RadioHost;
-      try { if (h && h.suspend) h.suspend(); else if (a && typeof a.sleep === "function") a.sleep(); } catch (e) {}
+      var a = window.AndroidBridge, h = window.RadioHost, fin = false;
+      function suspend() {
+        if (fin) return; fin = true; window.removeEventListener("radio:ack", suspend);
+        try { if (h && h.suspend) h.suspend(); else if (a && typeof a.sleep === "function") a.sleep(); } catch (e) {}
+      }
+      // Si el ESP32 confirma con {"ack":"power"}, se suspende en ese momento; si no responde, tras 3 s
+      var esp32 = window.RadioESP && window.RadioESP.available && window.RadioESP.available();
+      if (esp32) { window.addEventListener("radio:ack", suspend); setTimeout(suspend, 3000); } else suspend();
     }, 600);
   }
   function powerOn() {
@@ -90,7 +96,8 @@
       case "mute": if (Q) Q.set({ mute: !Q.get().mute }); break;
       case "next": if (M) M.next(); break;
       case "prev": if (M) M.prev(); break;
-      case "play": if (M) M.toggle(); break;
+      case "play": if (window.RadioSource && window.RadioSource.toggle()) break; if (M) M.toggle(); break;
+      case "voice": break;
       case "home": if (N) N.show("home"); break;
       case "src": {
         var cur = document.documentElement.getAttribute("data-view"), i = SRC.indexOf(cur);
@@ -100,6 +107,18 @@
       case "answer": if (N) N.show("calls"); break;
       case "hangup": if (N) N.show("home"); break;
     }
+    hint(k);
+  }
+  // Aviso corto de lo que hizo el botón (no se muestra con una app web encima ni en vol±, que ya abre su ventana)
+  var hintClose = null, HINT = { next: "Siguiente", prev: "Anterior", play: "Reproducir / pausa", mute: "Silencio", home: "Inicio", answer: "Llamadas", hangup: "Inicio", voice: "Órdenes de voz" };
+  function hint(k) {
+    if (opt("keyHints", true) === false || !window.RadioToast) return;
+    var txt = HINT[k];
+    if (k === "src") { var v = document.documentElement.getAttribute("data-view"); txt = "Fuente: " + ({ home: "Inicio", radio: "Radio", media: "Bluetooth" }[v] || v); }
+    if (!txt) return;
+    if (document.documentElement.getAttribute("data-view") === "apps" && window.RadioEmbed && window.RadioEmbed.id && window.RadioEmbed.id()) return;
+    if (hintClose) { try { hintClose(); } catch (e) {} }
+    hintClose = window.RadioToast.show({ title: txt, ms: 1100 });
   }
   window.addEventListener("radio:key", function (e) { if (e.detail) { if (e.detail.steps && /^vol/.test(e.detail.key)) vol(e.detail.key === "vol+" ? 1 : -1, e.detail.steps); else key(e.detail.key); } });
   window.addEventListener("radio:acc", function (e) { setAcc(e.detail && e.detail.on); });

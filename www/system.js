@@ -15,6 +15,15 @@
 
   var DEFAULTS = {
     themeMode: null,            // "light" | "dark" | "auto"
+    themeLights: true,          // en Automático: oscuro cuando el auto enciende las luces
+    driveMode: true,            // modo conducción: controles grandes y bloqueos al ir en marcha
+    driveSpeed: 15,             // km/h a partir de los cuales se activa
+    driveBig: true,             // agrandar los controles al conducir
+    driveBlockVideo: true,      // bloquear videos y navegación libre al conducir
+    exclusiveAudio: true,       // una sola fuente de audio: la nueva pausa a la anterior
+    voiceCmd: true,             // botón de micrófono y órdenes de voz
+    keyHints: true,             // aviso breve de lo que hace cada botón del volante
+    homeWx: true, homeCar: true, homeMedia: true, homeApps: true, homeMap: true,   // tarjetas del Inicio
     keepAwake: true,
     reduceMotion: false,
     highContrast: false,
@@ -136,8 +145,28 @@
   }
   applyFlags();
 
+  /* Tarjetas del Inicio: se ocultan las que no se quieran y las columnas se reparten solas */
+  function applyHome() {
+    var home = document.getElementById("home"); if (!home) return;
+    var wx = document.getElementById("wx"), car = document.getElementById("car"), col = home.querySelector(".home__col--r");
+    function vis(el, on) { if (el) el.hidden = !on; }
+    vis(wx, state.homeWx); vis(car, state.homeCar);
+    if (col) {
+      vis(document.getElementById("hm"), state.homeMedia); vis(document.getElementById("freq"), state.homeApps); vis(col.querySelector(".home__mini"), state.homeMap);
+      col.hidden = !(state.homeMedia || state.homeApps || state.homeMap);
+    }
+    var w = [], t = [];
+    if (state.homeWx) t.push("minmax(0, 4fr)");
+    if (state.homeCar) t.push("minmax(0, 3.5fr)");
+    if (col && !col.hidden) t.push("minmax(0, 3.5fr)");
+    home.style.gridTemplateColumns = t.length ? t.join(" ") : "minmax(0, 1fr)";
+  }
+  applyHome();
+
   function themeButton(name) { return document.querySelector('[data-theme-set="' + name + '"]'); }
-  function autoIsDark() { var h = new Date().getHours(); return h >= 18 || h < 6; }
+  var lightsOn = false;
+  function autoIsDark() { if (state.themeLights && lightsOn) return true; var h = new Date().getHours(); return h >= 18 || h < 6; }
+  window.addEventListener("radio:lights", function (e) { lightsOn = !!(e.detail && e.detail.on); if (state.themeMode === "auto") applyTheme(); });
   function applyTheme() {
     var want = state.themeMode === "auto" ? (autoIsDark() ? "dark" : "light") : state.themeMode;
     if (root.getAttribute("data-theme") !== want) {
@@ -176,7 +205,8 @@
 
   function onChanged(changed) {
     if (changed.indexOf("reduceMotion") >= 0 || changed.indexOf("highContrast") >= 0) applyFlags();
-    if (changed.indexOf("themeMode") >= 0) applyTheme();
+    if (changed.indexOf("themeMode") >= 0 || changed.indexOf("themeLights") >= 0) applyTheme();
+    if (changed.some(function (k) { return k.indexOf("home") === 0; })) applyHome();
     if (changed.indexOf("keepAwake") >= 0) wake();
     if (changed.indexOf("maxVolume") >= 0) clampVolume();
     if (changed.indexOf("lockMoving") >= 0 || changed.indexOf("lockSpeed") >= 0) updateLock();
@@ -422,6 +452,7 @@
     row(c, "Tema", "Automático: oscuro de 18:00 a 6:00", function (id) {
       return seg("themeMode", [["Claro", "light"], ["Oscuro", "dark"], ["Automático", "auto"]], id);
     });
+    row(c, "Oscuro con las luces del auto", "En Automático, el tema pasa a oscuro cuando enciendes las luces (túneles, lluvia)", function (id) { return toggle("themeLights", id); });
     row(c, "Mantener la pantalla encendida", "Evita que se apague mientras el sistema está abierto", function (id) { return toggle("keepAwake", id); });
     row(c, "Reducir animaciones", "Transiciones más simples", function (id) { return toggle("reduceMotion", id); });
     row(c, "Alto contraste", "Textos y bordes más marcados", function (id) { return toggle("highContrast", id); });
@@ -448,6 +479,7 @@
     row(c, "Volumen máximo", "Limita hasta dónde puede subir el volumen", function (id) {
       return range("maxVolume", 30, 100, 5, function (v) { return v + "%"; }, id);
     });
+    row(c, "Una sola fuente de audio", "Al empezar la radio, el Bluetooth o una app, se pausa lo que sonaba antes", function (id) { return toggle("exclusiveAudio", id); });
     row(c, "Volumen fijo al encender", "Si está apagado, recuerda el último volumen", function (id) { return toggle("startVolumeOn", id); });
     var startRow = row(c, "Volumen al encender", "", function (id) {
       return range("startVolume", 0, 100, 5, function (v) { return v + "%"; }, id);
@@ -470,8 +502,18 @@
     c.appendChild(button("Ver animación", function () { var u = new URL(location.href); u.search = "?boot=1"; u.hash = ""; location.href = u.href; }));
 
     /* ----- Entrada ----- */
+    group(mount, "Tarjetas del inicio");
+    c = card(mount, "");
+    row(c, "El tiempo", "", function (id) { return toggle("homeWx", id); });
+    row(c, "El auto", "", function (id) { return toggle("homeCar", id); });
+    row(c, "Música", "", function (id) { return toggle("homeMedia", id); });
+    row(c, "Apps más usadas", "", function (id) { return toggle("homeApps", id); });
+    row(c, "Mapa y puertas", "", function (id) { return toggle("homeMap", id); });
+
     group(mount, "Entrada");
     c = card(mount, "");
+    row(c, "Órdenes de voz", "Botón de micrófono en la barra y botón «voz» del volante", function (id) { return toggle("voiceCmd", id); });
+    row(c, "Avisos de los botones del volante", "Muestra un aviso corto de lo que hizo cada botón", function (id) { return toggle("keyHints", id); });
     row(c, "Teclado en pantalla", "Auto lo muestra en pantallas sin teclado físico; en celulares usa el del teléfono", function (id) {
       return seg("oskMode", [["Auto", "auto"], ["Siempre", "on"], ["Nunca", "off"]], id);
     });
@@ -579,6 +621,14 @@
     }
 
     /* ----- Vehículo ----- */
+    group(mount, "Conducción");
+    c = card(mount, "");
+    row(c, "Modo conducción", "Con el auto en marcha agranda los controles y bloquea lo que distrae", function (id) { return toggle("driveMode", id); });
+    var dsRow = row(c, "Activar a partir de", "", function (id) { return range("driveSpeed", 5, 40, 1, function (v) { return v + " km/h"; }, id); });
+    var dbRow = row(c, "Controles grandes", "", function (id) { return toggle("driveBig", id); });
+    var dvRow = row(c, "Bloquear videos y navegador", "YouTube y direcciones libres se bloquean; música, mapa y llamadas siguen. «Soy pasajero» lo salta", function (id) { return toggle("driveBlockVideo", id); });
+    refreshers.push(function () { dsRow.hidden = dbRow.hidden = dvRow.hidden = !state.driveMode; });
+
     group(mount, "Vehículo");
     c = card(mount, "");
     row(c, "Cámara de reversa automática", "Se abre sola al meter reversa", function (id) { return toggle("autoReverseCam", id); });
@@ -646,6 +696,13 @@
       return range("nightBright", 10, 100, 5, function (v) { return v + "%"; }, id);
     });
     refreshers.push(function () { nightRow.hidden = !state.autoBright; });
+    var legend = h("div", "set-item set-legend");
+    legend.appendChild(h("span", "set-item__hint", "Qué hace cada señal del volante (las envía el ESP32):"));
+    [["vol+ / vol−", "Subir o bajar el volumen (la perilla también)"], ["mute", "Silenciar"], ["next / prev", "Siguiente o anterior (emisora o pista)"], ["play", "Pausar o reanudar"],
+     ["src", "Cambiar de fuente: Inicio → Radio → Bluetooth"], ["home", "Volver al Inicio"], ["voice", "Abrir las órdenes de voz"], ["answer / hangup", "Abrir Llamadas / volver al Inicio"]].forEach(function (r) {
+      var line = h("div", "set-legend__row"); line.appendChild(h("b", "", r[0])); line.appendChild(h("span", "", r[1])); legend.appendChild(line);
+    });
+    c.appendChild(legend);
 
     /* ----- Navegación ----- */
     group(mount, "Navegación");
@@ -689,6 +746,23 @@
     /* ----- Sistema ----- */
     group(mount, "Sistema");
     c = card(mount, "");
+    var logHint = null, logPre = h("pre", "set-log"); logPre.hidden = true;
+    var logRow = row(c, "Registro de errores", "", function () {
+      var wrap = h("div", "set-item__btns");
+      wrap.style.display = "flex"; wrap.style.gap = "0.5rem"; wrap.style.flexWrap = "wrap";
+      wrap.appendChild(button("Ver", function () { logPre.textContent = (window.RadioErr && window.RadioErr.text(20)) || "Sin errores."; logPre.hidden = !logPre.hidden; }));
+      wrap.appendChild(button("Copiar", function () {
+        var t = (window.RadioErr && window.RadioErr.text(60)) || "";
+        try { navigator.clipboard.writeText(t); if (window.RadioToast) window.RadioToast.show({ title: "Registro copiado", kind: "ok", ms: 1500 }); } catch (e) {}
+      }));
+      wrap.appendChild(button("Borrar", function () { if (window.RadioErr) window.RadioErr.clear(); logPre.textContent = "Sin errores."; paintLog(); }));
+      if (window.RadioHost && window.RadioHost.openLogs) wrap.appendChild(button("Abrir carpeta", function () { window.RadioHost.openLogs(); }));
+      return wrap;
+    });
+    logHint = (function () { var sp = h("span", "set-item__hint", ""); logRow.querySelector(".set-item__txt").appendChild(sp); return sp; })();
+    function paintLog() { var n = window.RadioErr ? window.RadioErr.list().length : 0; logHint.textContent = n ? n + " error" + (n === 1 ? "" : "es") + " guardados. Ayuda a encontrar fallas." : "Sin errores. Aquí se guardan los fallos de la interfaz."; }
+    window.addEventListener("radio:errlog", paintLog); paintLog();
+    c.appendChild(logPre);
     var fsRow = row(c, "Pantalla completa", "", function () {
       return button("Activar", function () {
         var d = document;
@@ -740,9 +814,9 @@
     ["Apariencia", ["Pantalla"]],
     ["Hora y unidades", ["Hora y unidades"]],
     ["Sonido", ["Sonido"]],
-    ["Inicio y entrada", ["Inicio del sistema", "Entrada"]],
+    ["Inicio y entrada", ["Inicio del sistema", "Tarjetas del inicio", "Entrada"]],
     ["Apps", ["Apps", "Sistema Android"]],
-    ["Vehículo", ["Vehículo", "Climatización", "Seguridad", "Llave y volante"]],
+    ["Vehículo", ["Conducción", "Vehículo", "Climatización", "Seguridad", "Llave y volante"]],
     ["Navegación", ["Navegación"]],
     ["Conexiones", ["Bluetooth y ESP32"]],
     ["Sistema", ["Sistema", "Windows"]]

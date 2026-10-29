@@ -226,9 +226,10 @@
     launch(a);
   }
   function openInside(a) {
+    if (window.RadioDrive && window.RadioDrive.blocks(a)) { window.RadioDrive.notice(a); return; }
     cur = a;
     if (EMB) {
-      if (a.url && ifr.dataset.appid !== a.id) EMB.open(a.id, a.url);
+      if (a.url && ifr.dataset.appid !== a.id) EMB.open(a.id, a.url, a.name);
       ifr.dataset.appid = a.id;
       addrIn.value = (a.url && EMB.id() === a.id ? EMB.url() : "") || a.url || "";
       showFrame(true);
@@ -365,7 +366,7 @@
     if (!u) return;
     cur = cur || { id: "tmp", name: "Navegador", mode: "in", kind: "custom" };
     cur.url = u; addrIn.value = u; note.hidden = !!EMB ? true : false;
-    if (EMB) { if (EMB.id() === (cur.id || "tmp")) EMB.go(u); else EMB.open(cur.id || "tmp", u); ifr.dataset.appid = cur.id || "tmp"; showFrame(true); addrIn.blur(); return; }
+    if (EMB) { if (EMB.id() === (cur.id || "tmp")) EMB.go(u); else EMB.open(cur.id || "tmp", u, cur.name); ifr.dataset.appid = cur.id || "tmp"; showFrame(true); addrIn.blur(); return; }
     ifr.src = u;
     addrIn.blur();
   });
@@ -406,6 +407,7 @@
     openService: openService,
     open: open, close: close, refresh: render,
     list: function () { return cache.slice(); },
+    current: function () { return cur; },
     icon: function (a, size) { return iconEl(a, size); }
   };
   render();

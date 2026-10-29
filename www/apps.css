@@ -131,3 +131,12 @@
   .ap__addr { order: 5; flex-basis: 100%; }
   .ap__fav { width: 5rem; }
 }
+
+/* Pantalla de espera mientras carga una app web incrustada */
+.ap__skel { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; background: var(--surface); color: var(--text); }
+.ap__skel[hidden] { display: none; }
+.ap__skel-name { font-size: 1.4rem; font-weight: 400; }
+.ap__skel small { color: var(--text-dim); font-size: 0.85rem; }
+.ap__skel-dot { width: 2.4rem; height: 2.4rem; border-radius: 50%; border: 0.22rem solid var(--border-strong); border-top-color: var(--text); animation: ap-spin 0.9s linear infinite; }
+@keyframes ap-spin { to { transform: rotate(360deg); } }
+html[data-motion="reduce"] .ap__skel-dot { animation: none; }

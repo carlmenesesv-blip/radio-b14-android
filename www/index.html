@@ -54,8 +54,11 @@
   <link rel="stylesheet" href="ignition.css">
   <link rel="stylesheet" href="cluster.css">
   <link rel="stylesheet" href="osk.css">
+  <link rel="stylesheet" href="voice.css">
+  <link rel="stylesheet" href="drive.css">
 
   <!-- Aplica los ajustes guardados antes de pintar -->
+  <script src="errlog.js"></script>
   <script src="settings.js"></script>
 </head>
 <body>
@@ -198,6 +201,9 @@
         <button class="dock__btn" data-target="apps" aria-label="Apps"><svg class="icon"><use href="#i-grid"/></svg></button>
         <button class="dock__btn" data-target="settings" aria-label="Ajustes"><svg class="icon"><use href="#i-settings"/></svg></button>
       </nav>
+
+      <div class="dock__divider"></div>
+      <button type="button" class="dock__act" id="voice-btn" aria-label="Comandos de voz"><svg class="icon"><use href="#i-mic"/></svg></button>
     </aside>
     <div class="sbar sbar--r" id="sbar-r" data-side="pax" role="group" aria-label="Lado del copiloto">
       <button type="button" class="sbar__b sbar__vol" id="vol-pax" data-side="pax" aria-haspopup="dialog" aria-expanded="false" aria-label="Volumen">
@@ -220,6 +226,10 @@
           <div class="topbar__title" id="view-title">Inicio</div>
           <div class="topbar__sub" id="date-label">—</div>
         </div>
+        <button type="button" class="now" id="now" hidden aria-label="Suena ahora">
+          <svg class="icon"><use href="#i-music"/></svg>
+          <span class="sbar__nt"></span>
+        </button>
         <div class="topbar__status">
           <span><strong id="temp-out">25</strong><span id="temp-unit">°C</span></span>
           <!-- Accesos rápidos (la barra de estado es la de Android) -->
@@ -1334,6 +1344,9 @@
   <script src="freq.js"></script>
   <script src="calls.js"></script>
   <script src="power.js"></script>
+  <script src="source.js"></script>
+  <script src="drive.js"></script>
+  <script src="voice.js"></script>
   <script src="android.js"></script>
   <script src="osk.js"></script>
   <script src="boot.js"></script>

@@ -38,6 +38,14 @@ Archivo: `%APPDATA%\Radio B14\config.json` (se crea al primer cambio; también p
 Desde la consola de la app, `await RadioHost.displays()` lista los ids de pantalla y `await RadioHost.setConfig({...})` cambia ajustes.
 Para el uso real en el auto: `openAtLogin: true`, `suspendMode: "hibernate"` (o `"sleep"`) y activa la hibernación en Windows.
 
+## Novedades de esta versión
+- **Modo conducción:** con el auto en marcha agranda los controles y bloquea videos y navegador libre; «Soy pasajero» lo salta hasta que el auto se detenga.
+- **Voz:** botón de micrófono en la barra. La app de Windows no incluye el servicio de reconocimiento de voz de Google, así que ahí aparece un cuadro para escribir la orden (se interpreta igual). En un navegador con micrófono sí se habla.
+- **Suena ahora:** indicador arriba con lo que suena (radio, Bluetooth o una app); con «Una sola fuente de audio» lo nuevo pausa lo anterior. El botón play del volante pausa también la app web que suene.
+- **Tema oscuro con las luces del auto**, tarjetas del Inicio que se pueden ocultar, pantalla de espera al abrir apps, avisos de lo que hace cada botón del volante.
+- **Registro de errores** (Ajustes → Sistema): se guarda también en `%APPDATA%\Radio B14\radio.log` y el botón «Abrir carpeta» lo muestra.
+- **Apagado seguro:** espera la confirmación `{"ack":"power"}` del ESP32 antes de suspender (máximo 3 s).
+
 ## Límites conocidos (sin probar en hardware real)
 - No se ha ejecutado en un Windows real, con el ESP32 ni con dos pantallas: lo verifica la prueba de arranque del flujo, pero el resto debes probarlo tú.
 - Volumen/brillo de Windows no se controlan desde el radio (el volumen va al ESP32/amplificador).

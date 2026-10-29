@@ -191,3 +191,6 @@
 /* ---------- Reproducción: tarjeta Media (portada neutra en claro) ---------- */
 :root[data-theme="light"] .media__cover { background: linear-gradient(135deg, #f7f7f9, #e2e3e8); border-color: rgba(17, 17, 19, 0.08); }
 :root[data-theme="light"] .card--media .btn-round:not(.btn-round--main) { background: rgba(17, 17, 19, 0.06); border-color: var(--border-strong); }
+
+/* Tarjetas ocultas desde Ajustes → Tarjetas del inicio */
+.home [hidden], .home__col[hidden] { display: none !important; }
