@@ -28,7 +28,7 @@ jobs:
           gh release create windows-log build.log --title "log" --notes "registro de error"
       - uses: actions/upload-artifact@v4
         with:
-          name: RadioB14-Windows
+          name: AURA-Windows
           path: dist/*.exe
       - name: Publicar en Releases
         shell: bash
@@ -36,7 +36,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           ls -la dist
-          cp dist/*Setup*.exe RadioB14-Setup.exe
-          for f in dist/*.exe; do case "$f" in *Setup*) ;; *) cp "$f" RadioB14-Portable.exe;; esac; done
+          cp dist/*Setup*.exe AURA-Setup.exe
+          for f in dist/*.exe; do case "$f" in *Setup*) ;; *) cp "$f" AURA-Portable.exe;; esac; done
           gh release delete windows-latest --yes --cleanup-tag || true
-          gh release create windows-latest RadioB14-Setup.exe RadioB14-Portable.exe --title "Radio B14 (Windows)" --notes "Instalador de Windows compilado automáticamente."
+          gh release create windows-latest AURA-Setup.exe AURA-Portable.exe --title "AURA (Windows)" --notes "Instalador de Windows compilado automáticamente."

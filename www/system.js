@@ -22,8 +22,10 @@
     driveBlockVideo: true,      // bloquear videos y navegación libre al conducir
     exclusiveAudio: true,       // una sola fuente de audio: la nueva pausa a la anterior
     homeLayout: "calma",       // calma | cockpit | widgets
-    voiceWake: false,           // «Oye Nómada» (solo navegadores con reconocimiento continuo)
-    voiceSpeak: false,          // respuestas habladas
+    voiceWake: false,           // «Oye Aura» (solo navegadores con reconocimiento continuo)
+    voiceSpeak: true,           // respuestas habladas
+    mapEngine: "google",        // google (con clave) | osm
+    aiVoice: true,              // usar Gemini cuando hay clave
     voiceCmd: true,             // botón de micrófono y órdenes de voz
     keyHints: true,             // aviso breve de lo que hace cada botón del volante
     homeWx: true, homeCar: true, homeMedia: true, homeApps: true, homeMap: true,   // tarjetas del Inicio
@@ -321,7 +323,7 @@
         if (/^radio-/.test(k) && k !== "radio-wallpaper" && k !== "radio-music-ytkey") out[k] = localStorage.getItem(k);
       }
     } catch (e) {}
-    var blob = new Blob([JSON.stringify({ app: "NÓMADA", version: VERSION, data: out }, null, 2)], { type: "application/json" });
+    var blob = new Blob([JSON.stringify({ app: "AURA", version: VERSION, data: out }, null, 2)], { type: "application/json" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "nomada-ajustes.json";
@@ -333,7 +335,7 @@
     r.onload = function () {
       try {
         var j = JSON.parse(r.result);
-        if (!j || (j.app !== "RADIO B14" && j.app !== "NÓMADA") || !j.data) throw new Error("x");
+        if (!j || (["RADIO B14", "NÓMADA", "AURA"].indexOf(j.app) < 0) || !j.data) throw new Error("x");
         Object.keys(j.data).forEach(function (k) { if (/^radio-/.test(k) && k !== "radio-wallpaper" && typeof j.data[k] === "string") localStorage.setItem(k, j.data[k]); });
         done(true);
         setTimeout(function () { location.reload(); }, 600);
@@ -518,8 +520,8 @@
     group(mount, "Entrada");
     c = card(mount, "");
     row(c, "Órdenes de voz", "Botón de micrófono en la barra y botón «voz» del volante", function (id) { return toggle("voiceCmd", id); });
-    row(c, "Decir «Oye Nómada»", "Escucha siempre con el micrófono, sin tocar el botón. Solo funciona en navegadores con reconocimiento de voz (no en la app de Windows)", function (id) { return toggle("voiceWake", id); });
-    row(c, "Respuestas habladas", "Nómada confirma en voz alta lo que hizo", function (id) { return toggle("voiceSpeak", id); });
+    row(c, "Decir «Oye Aura»", "Escucha siempre, sin tocar el botón. Con clave de Gemini funciona también en la app de Windows; cada frase que oye se envía a Google para saber si le hablaron", function (id) { return toggle("voiceWake", id); });
+    row(c, "Respuestas habladas", "Aura confirma en voz alta lo que hizo", function (id) { return toggle("voiceSpeak", id); });
     row(c, "Avisos de los botones del volante", "Muestra un aviso corto de lo que hizo cada botón", function (id) { return toggle("keyHints", id); });
     row(c, "Teclado en pantalla", "Auto lo muestra en pantallas sin teclado físico; en celulares usa el del teléfono", function (id) {
       return seg("oskMode", [["Auto", "auto"], ["Siempre", "on"], ["Nunca", "off"]], id);
@@ -543,7 +545,7 @@
       c = card(mount, "");
       var homeHint = null, ovHint = null, wrHint = null, ovTgl = null;
       var homeRow = row(c, "Pantalla de inicio", "", function (id) {
-        return button("Elegir NÓMADA como inicio", function () { window.RadioAndroid && window.RadioAndroid.open("home"); }, id);
+        return button("Elegir AURA como inicio", function () { window.RadioAndroid && window.RadioAndroid.open("home"); }, id);
       });
       homeHint = homeRow.querySelector(".set-item__hint") || (function () { var s = h("span", "set-item__hint", ""); homeRow.querySelector(".set-item__txt").appendChild(s); return s; })();
       var ovRow = row(c, "Botón «Volver al radio»", "", function (id) {
@@ -558,7 +560,7 @@
       wrHint = (function () { var s = h("span", "set-item__hint", ""); wrRow.querySelector(".set-item__txt").appendChild(s); return s; })();
       function paintAndroid(i) {
         i = i || {};
-        homeHint.textContent = i.home ? "NÓMADA ya es la pantalla de inicio." : "Para que al pulsar Inicio vuelva aquí, elígelo como inicio y marca «Siempre».";
+        homeHint.textContent = i.home ? "AURA ya es la pantalla de inicio." : "Para que al pulsar Inicio vuelva aquí, elígelo como inicio y marca «Siempre».";
         ovTgl.setAttribute("aria-checked", String(i.floating !== false && i.overlay !== false));
         ovHint.textContent = i.overlay === false ? "Falta el permiso «Mostrar sobre otras apps». Al activarlo se abre su pantalla." : "Aparece sobre otras apps para volver al radio con un toque.";
         wrRow.hidden = i.writeSettings !== false;
@@ -606,7 +608,7 @@
       var dispHint = dispRow.querySelector(".set-item__hint");
       var espRow = row(c, "Puerto del ESP32", "Automático detecta el USB; si falla, escribe el COM en config.json", function () { return h("span", "set-item__hint", ""); });
       var espHint = espRow.querySelector(".set-item__hint");
-      var note = h("div", "set-item"); note.appendChild(h("span", "set-item__hint", "Las demás opciones están en %APPDATA%\\NÓMADA\\config.json y se aplican al reiniciar la app."));
+      var note = h("div", "set-item"); note.appendChild(h("span", "set-item__hint", "Las demás opciones están en %APPDATA%\\AURA\\config.json y se aplican al reiniciar la app."));
       c.appendChild(note);
       function paintHost() {
         hostRows.forEach(function (f) { f(); });
@@ -759,6 +761,39 @@
       haMsg = (function () { var sp = h("span", "set-item__hint", HAx.demo() ? "Sin conectar: se muestran datos de ejemplo." : "Conectado."); haRow.querySelector(".set-item__txt").appendChild(sp); return sp; })();
     }
 
+    /* ----- Asistente (Gemini) y mapas de Google ----- */
+    group(mount, "Asistente y mapas de Google");
+    c = card(mount, "");
+    var AIx = window.RadioAI;
+    if (AIx) {
+      var gKey = h("input", "set-input"), gModel = h("input", "set-input"), mKey = h("input", "set-input"), aiMsg = null;
+      gKey.type = "password"; gKey.autocomplete = "off"; gKey.placeholder = AIx.keys().hasGemini ? "•••••••• (guardada; escribe otra para cambiarla)" : "Clave de la API de Gemini (aistudio.google.com/apikey)"; gKey.setAttribute("aria-label", "Clave de Gemini");
+      gModel.type = "text"; gModel.value = AIx.keys().model; gModel.spellcheck = false; gModel.setAttribute("aria-label", "Modelo de Gemini");
+      mKey.type = "password"; mKey.autocomplete = "off"; mKey.placeholder = AIx.keys().hasMaps ? "•••••••• (guardada; escribe otra para cambiarla)" : "Clave de Google Maps Platform"; mKey.setAttribute("aria-label", "Clave de Google Maps");
+      row(c, "Asistente con Gemini", "Entiende frases libres, controla la casa y responde hablando. Sin clave solo funcionan las órdenes fijas", function (id) { return toggle("aiVoice", id); });
+      row(c, "Clave de Gemini", "Gratis en Google AI Studio. Se guarda solo en este equipo", function () { return gKey; }).classList.add("set-item--stack");
+      row(c, "Modelo", "Cambia el nombre si Google publica uno más nuevo", function () { return gModel; }).classList.add("set-item--stack");
+      var aiRow = row(c, "Probar", "", function () {
+        var w = h("div", "set-item__btns"); w.style.display = "flex"; w.style.gap = "0.5rem"; w.style.flexWrap = "wrap";
+        w.appendChild(button("Guardar y probar", function () {
+          var o = { model: gModel.value.trim() || "gemini-2.5-flash" }; if (gKey.value.trim()) o.gemini = gKey.value.trim();
+          AIx.setKeys(o); aiMsg.textContent = "Probando…";
+          AIx.test().then(function (r) { aiMsg.textContent = r.ok ? "✓ Gemini responde." : "✗ " + (r.error || "No respondió."); if (r.ok) { gKey.value = ""; gKey.placeholder = "•••••••• (guardada)"; } });
+        }));
+        w.appendChild(button("Quitar clave", function () { AIx.setKeys({ gemini: "" }); gKey.value = ""; gKey.placeholder = "Clave de la API de Gemini (aistudio.google.com/apikey)"; aiMsg.textContent = "Clave eliminada."; }));
+        return w;
+      });
+      aiMsg = (function () { var sp = h("span", "set-item__hint", AIx.ready() ? "Listo." : "Sin clave: órdenes fijas."); aiRow.querySelector(".set-item__txt").appendChild(sp); return sp; })();
+      row(c, "Clave de Google Maps", "Activa el mapa de Google con tráfico y rutas. Debe tener habilitadas Maps JavaScript API, Places API (New) y Routes API", function () { return mKey; }).classList.add("set-item--stack");
+      row(c, "", "", function () {
+        var w = h("div", "set-item__btns"); w.style.display = "flex"; w.style.gap = "0.5rem";
+        w.appendChild(button("Guardar clave de mapas", function () { if (mKey.value.trim()) { AIx.setKeys({ maps: mKey.value.trim() }); mKey.value = ""; mKey.placeholder = "•••••••• (guardada)"; if (window.RadioToast) window.RadioToast.show({ title: "Clave de mapas guardada", text: "Reinicia la pestaña del mapa para usarla", kind: "ok", ms: 2600 }); } }));
+        w.appendChild(button("Quitar", function () { AIx.setKeys({ maps: "" }); mKey.value = ""; mKey.placeholder = "Clave de Google Maps Platform"; }));
+        return w;
+      });
+      row(c, "Mapa", "Google necesita clave; Estándar usa OpenStreetMap sin cuenta", function (id) { return seg("mapEngine", [["Estándar", "osm"], ["Google", "google"]], id); });
+    }
+
     group(mount, "Bluetooth y ESP32");
     c = card(mount, "");
     row(c, "Nombre del receptor Bluetooth", "Se muestra en las instrucciones para vincular el celular", function (id) {
@@ -840,7 +875,7 @@
     function sysMsg(t) { msg.textContent = t || ""; }
 
     c = card(mount, "Acerca de");
-    c.appendChild(h("p", "set-about", "NÓMADA · versión " + VERSION));
+    c.appendChild(h("p", "set-about", "AURA · versión " + VERSION));
     c.appendChild(h("p", "set-hint", "Mapas: según el proveedor elegido (datos de OpenStreetMap). Rutas: OSRM. Búsqueda de lugares: Photon. Enlace con el teléfono: servidor propio (server.js) o ntfy."));
 
     organize(mount);
@@ -856,7 +891,7 @@
     ["Apps", ["Apps", "Sistema Android"]],
     ["Vehículo", ["Conducción", "Vehículo", "Climatización", "Seguridad", "Llave y volante"]],
     ["Navegación", ["Navegación"]],
-    ["Conexiones", ["Casa (Home Assistant)", "Bluetooth y ESP32"]],
+    ["Conexiones", ["Casa (Home Assistant)", "Asistente y mapas de Google", "Bluetooth y ESP32"]],
     ["Sistema", ["Sistema", "Windows"]]
   ];
   var CAT_KEY = "radio-settings-cat";

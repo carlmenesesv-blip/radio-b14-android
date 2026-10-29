@@ -222,11 +222,19 @@
   }
 
   function speak(text) {
+    if (window.RadioAI && window.RadioAI.ready()) { window.RadioAI.speak(text); return; }
     if (sys().voiceSpeak !== true || !window.speechSynthesis || !text) return;
     try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = "es-CR"; u.rate = 1.02; speechSynthesis.speak(u); } catch (e) {}
   }
+  function exec(text) {            // ejecuta sin panel (lo usa la asistente de IA)
+    var cmd = parse(text);
+    if (!cmd || cmd.fail) return false;
+    try { cmd.run(); } catch (e) {}
+    return cmd.say;
+  }
   function run(text) {
     var cmd = parse(text);
+    if (!cmd && window.RadioAI && window.RadioAI.ready()) { window.RadioAI.ask(text); return true; }
     if (!cmd) { show("No te entendí: «" + text + "»", "fail"); hint.textContent = "Di «ayuda» para ver ejemplos."; schedule(4000); return false; }
     if (cmd.fail) { show(cmd.say, "fail"); schedule(3500); return false; }
     show(cmd.say, "ok"); speak(cmd.say);
@@ -240,6 +248,7 @@
     build();
     if (open && rec) { close(); return; }
     wakeStop();
+    if (window.RadioAI && window.RadioAI.ready()) { build(); show("Te escucho…", "listen"); hint.textContent = ""; window.RadioAI.listen(); return; }
     show("", "idle"); hint.textContent = "";
     if (!SR || srBroken) { fallback(srBroken ? "El reconocimiento de voz no está disponible en esta app." : "Este navegador no trae reconocimiento de voz."); return; }
     try {
@@ -271,18 +280,18 @@
   }
 
 
-  /* ---------- Palabra de activación: «Oye Nómada» ---------- */
+  /* ---------- Palabra de activación: «Oye Aura» ---------- */
   var wakeRec = null, wakeOn = false, wakeRetry = 0;
   function wakeStop() { wakeOn = false; if (wakeRec) { try { wakeRec.onend = null; wakeRec.abort(); } catch (e) {} wakeRec = null; } }
   function wakeStart() {
-    if (wakeOn || !SR || srBroken || sys().voiceWake !== true || sys().voiceCmd === false) return;
+    if (wakeOn || !SR || srBroken || sys().voiceWake !== true || sys().voiceCmd === false || (window.RadioAI && window.RadioAI.ready())) return;
     wakeOn = true;
     try {
       wakeRec = new SR(); wakeRec.lang = "es-CR"; wakeRec.continuous = true; wakeRec.interimResults = false;
       wakeRec.onresult = function (e) {
         for (var i = e.resultIndex; i < e.results.length; i++) {
           if (!e.results[i].isFinal) continue;
-          var tr = norm(e.results[i][0].transcript), mm = tr.match(/\b(oye|hey|ey|hola)\s+(nomada|nomadas|no mada)\b\s*(.*)$/);
+          var tr = norm(e.results[i][0].transcript), mm = tr.match(/\b(oye|hey|ey|hola)\s+(aura|aora|ahura|laura)\b\s*(.*)$/);
           if (!mm) continue;
           var rest = (mm[3] || "").trim();
           if (rest) { show("", "ok"); run(rest); } else { wakeStop(); listen(); }
@@ -293,7 +302,7 @@
       wakeRec.start();
     } catch (e) { wakeOn = false; }
   }
-  function wakeSync() { if (sys().voiceWake === true) wakeStart(); else wakeStop(); }
+  function wakeSync() { if (sys().voiceWake === true && !(window.RadioAI && window.RadioAI.ready())) wakeStart(); else wakeStop(); }
   window.addEventListener("radio:systemchange", wakeSync);
   setTimeout(wakeSync, 1500);
 
@@ -304,5 +313,5 @@
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && open) close(); });
   window.addEventListener("radio:key", function (e) { if (e.detail && e.detail.key === "voice") listen(); });
 
-  window.RadioVoice = { listen: listen, run: run, parse: function (t) { var c = parse(t); return c ? c.say : null; }, close: close, isOpen: function () { return open; } };
+  window.RadioVoice = { exec: exec, ui: { show: function (t, st, h) { show(t, st); if (hint) hint.textContent = h || ""; }, schedule: schedule, close: close }, listen: listen, run: run, parse: function (t) { var c = parse(t); return c ? c.say : null; }, close: close, isOpen: function () { return open; } };
 })();

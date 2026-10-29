@@ -245,3 +245,8 @@ html[data-view="map"] .topbar { display: none; }
 /* Con la guía de ruta o la tarjeta del destino abiertas, los flotantes suben para no taparlas */
 .nav[data-mode="guide"] .nav__hud { bottom: 6.2rem; }
 @container navview (max-width: 46rem) { .nav__hud { bottom: 2.2rem; } .hud__media { max-width: 13rem; } }
+
+/* Motor de Google Maps */
+.nav__map--g { display: none; }
+.nav[data-engine="google"] #nav-map { display: none; }
+.nav[data-engine="google"] .nav__map--g { display: block; }

@@ -81,7 +81,9 @@
   function tileUrl() { var p = provider(), t = mapTheme(); return t === "dark" && p.dark ? p.dark : p.light; }
   function needsInvert() { var p = provider(); return mapTheme() === "dark" && !p.dark; }
   var start = data.last || FALLBACK;
-  var map = new TM($("nav-map"), { lat: start.lat, lon: start.lon, zoom: start.zoom || 14, tileUrl: tileUrl() });
+  var tmMap = new TM($("nav-map"), { lat: start.lat, lon: start.lon, zoom: start.zoom || 14, tileUrl: tileUrl() });
+  var map = tmMap, gmap = null, mapHandlers = [];
+  function onMap(ev, fn) { mapHandlers.push([ev, fn]); map.on(ev, fn); }
   var mini = null;
   var miniEl = $("home-map");
   if (miniEl) mini = new TM(miniEl, { lat: start.lat, lon: start.lon, zoom: 15, interactive: false, tileUrl: tileUrl(), minZ: 10, maxZ: 17 });
@@ -97,6 +99,7 @@
     navEl.setAttribute("data-ts", ts);
     if (miniEl) { miniEl.setAttribute("data-mt", t); miniEl.setAttribute("data-ts", ts); }
     if (map) { map.setTileUrl(tileUrl()); if (mini) mini.setTileUrl(tileUrl()); }
+    if (gmap) gmap.setDark(t === "dark");
     applyAttr();
   }
   applyTheme();
@@ -104,13 +107,13 @@
 
   var attr = $("nav-attr");
   function applyAttr() {
-    if (attr) attr.textContent = provider().attr;
+    if (attr) attr.textContent = gmap ? "© Google" : provider().attr;
   }
   applyAttr();
 
-  map.on("tileerror", function (e) { navEl.setAttribute("data-tiles", e.errors > 3 && e.loaded < 1 ? "error" : "ok"); });
-  map.on("tiles", function () { navEl.setAttribute("data-tiles", "ok"); });
-  map.on("userpan", function () { st.follow = false; navEl.classList.add("is-free"); scheduleRecenter(); });
+  onMap("tileerror", function (e) { navEl.setAttribute("data-tiles", e.errors > 3 && e.loaded < 1 ? "error" : "ok"); });
+  onMap("tiles", function () { navEl.setAttribute("data-tiles", "ok"); });
+  onMap("userpan", function () { st.follow = false; navEl.classList.add("is-free"); scheduleRecenter(); });
 
   var carSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.500l7 18-7-4.200-7 4.200z"/></svg>';
   var pinSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.200 7-12a7 7 0 0 0-14 0c0 5.800 7 12 7 12z"/><circle cx="12" cy="10" r="2.600"/></svg>';
@@ -319,6 +322,16 @@
     if (c) { renderResults([{ lat: c.lat, lon: c.lon, name: "Coordenadas", sub: c.lat.toFixed(5) + ", " + c.lon.toFixed(5) }]); return; }
     if (cache[text]) { renderResults(cache[text]); return; }
     resultsMsg("Buscando…");
+    if (gmap && window.RadioGMaps) {
+      window.RadioGMaps.search(text, st.pos).then(function (items) {
+        cache[text] = items;
+        if (q.value.trim() === text) renderResults(items);
+      }, function () { searchPhoton(text); });
+      return;
+    }
+    searchPhoton(text);
+  }
+  function searchPhoton(text) {
     var url = PHOTON + "/api/?limit=7&q=" + encodeURIComponent(text);
     if (st.pos) url += "&lat=" + st.pos.lat.toFixed(4) + "&lon=" + st.pos.lon.toFixed(4) + "&location_bias_scale=0.4";
     var ctl = window.AbortController ? new AbortController() : null;
@@ -532,6 +545,16 @@
   }
 
   function fetchRoute(from, to, alts) {
+    var GM = window.RadioGMaps;
+    if (gmap && GM) {
+      return GM.route(from, to, alts).then(function (rs) { return rs.map(buildRoute); }, function (e) {
+        if (e && e.message === "noroute") throw e;
+        return fetchRouteOsrm(from, to, alts);    // si Routes API no está habilitada, se usa el servicio estándar
+      });
+    }
+    return fetchRouteOsrm(from, to, alts);
+  }
+  function fetchRouteOsrm(from, to, alts) {
     var url = OSRM + "/route/v1/driving/" + from.lon.toFixed(6) + "," + from.lat.toFixed(6) + ";" + to.lon.toFixed(6) + "," + to.lat.toFixed(6) +
       "?overview=full&geometries=geojson&steps=true&alternatives=" + (alts ? "true" : "false");
     return fetch(url).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); }).then(function (o) {
@@ -599,6 +622,7 @@
   function streetOf(s) { return s.name || s.ref || ""; }
 
   function stepText(s, last) {
+    if (s.man && s.man.text) return s.man.text;
     var t = s.man.type, m = s.man.modifier, name = streetOf(s);
     var en = name ? " en " + name : "";
     switch (t) {
@@ -860,7 +884,7 @@
   $("nav-center").addEventListener("click", recenter);
 
   // Mantener presionado en el mapa = elegir ese punto
-  map.on("longpress", function (e) {
+  onMap("longpress", function (e) {
     if (st.mode === "guide") return;
     var pl = { lat: e.lat, lon: e.lon, name: "Punto en el mapa", sub: e.lat.toFixed(5) + ", " + e.lon.toFixed(5) };
     setDestination(pl);
@@ -873,7 +897,7 @@
       }
     }).catch(function () {});
   });
-  map.on("tap", function () { if (!panel.hidden) { q.blur(); closePanel(); } });
+  onMap("tap", function () { if (!panel.hidden) { q.blur(); closePanel(); } });
 
   /* ==========================================================
      Waze
@@ -890,6 +914,7 @@
     return "https://embed.waze.com/iframe?zoom=" + Math.max(8, Math.min(16, map.z - 1)) + "&lat=" + c.lat.toFixed(5) + "&lon=" + c.lon.toFixed(5) + "&ct=livemap";
   }
   function trafficToggle(on) {
+    if (gmap) { on = on == null ? wz.btn.getAttribute("aria-pressed") !== "true" : on; wz.btn.setAttribute("aria-pressed", String(on)); gmap.setTraffic(on); return; }
     on = on == null ? wz.root.hidden : on;
     wz.root.hidden = !on;
     wz.btn.setAttribute("aria-pressed", String(on));
@@ -940,6 +965,40 @@
   if (viewEl) new MutationObserver(function () {
     if (viewEl.classList.contains("is-active")) { map.renderNow(); if (st.follow && st.pos) followCar(); if (watchId == null && !st.sim) startGps(); }
   }).observe(viewEl, { attributes: true, attributeFilter: ["class"] });
+
+  /* ==========================================================
+     Motor de Google Maps (opcional): mismo mapa, búsqueda y rutas, con tráfico y datos de Google
+     ========================================================== */
+  function applyEngine() {
+    var GM = window.RadioGMaps; if (!GM) return;
+    if (!GM.enabled()) {
+      if (gmap) {                                  // se apagó o falló: vuelve al mapa estándar
+        var v = gmap.getView(); gmap.destroy(); gmap = null; map = tmMap;
+        navEl.removeAttribute("data-engine"); wz.btn.setAttribute("aria-pressed", "false");
+        map.setView({ lat: v.lat, lon: v.lon }, Math.min(18, v.zoom)); applyAttr(); redrawAll();
+      }
+      return;
+    }
+    if (gmap) return;
+    GM.load().then(function () {
+      if (gmap || !GM.enabled()) return;
+      var v = map.getView(), g = GM.create($("nav-gmap"), { lat: v.lat, lon: v.lon, zoom: v.zoom, dark: mapTheme() === "dark" });
+      mapHandlers.forEach(function (h) { g.on(h[0], h[1]); });
+      gmap = g; map = g; navEl.setAttribute("data-engine", "google");
+      wz.btn.setAttribute("aria-pressed", "true");
+      applyAttr(); redrawAll();
+    }, function () { applyEngine(); });
+  }
+  function redrawAll() {
+    if (st.pos) setCarPin(); else setCarPinFromLast();
+    if (st.dest) map.setPin("dest", { lat: st.dest.lat, lon: st.dest.lon, cls: "pin-dest", html: pinSvg }); else map.removePin("dest");
+    drawRoutes(false);
+    if (st.follow && st.pos) followCar();
+  }
+  window.addEventListener("radio:keys", applyEngine);
+  window.addEventListener("radio:gmaps", applyEngine);
+  window.addEventListener("radio:systemchange", function (e) { var ch = (e.detail && e.detail.changed) || []; if (ch.indexOf("mapEngine") >= 0) applyEngine(); });
+  setTimeout(applyEngine, 600);
 
   /* ---------- Arranque ---------- */
   setMode("browse");

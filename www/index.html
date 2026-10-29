@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <title>NÓMADA</title>
+  <title>AURA</title>
 
   <!-- Tema aplicado antes de pintar para evitar parpadeo -->
   <script>
@@ -72,24 +72,24 @@
     <div class="boot__horizon"></div>
     <span class="boot__skip">Toca para omitir</span>
     <div class="boot__stage">
-      <svg class="boot__logo" viewBox="0 0 200 200" role="img" aria-label="NÓMADA">
+      <svg class="boot__logo" viewBox="0 0 200 200" role="img" aria-label="AURA">
         <defs>
           <linearGradient id="bg-metal" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stop-color="#ffffff"/><stop offset="0.32" stop-color="#9aa3ad"/><stop offset="0.55" stop-color="#e9edf1"/><stop offset="0.8" stop-color="#6d7681"/><stop offset="1" stop-color="#dfe4e9"/>
           </linearGradient>
         </defs>
         <path class="boot__ring" pathLength="100" d="M128.730 21.060 A84 84 0 1 1 71.270 21.060" fill="none" stroke="url(#bg-metal)" stroke-width="6" stroke-linecap="round"/>
-        <path class="boot__n" pathLength="100" d="M72 142 V62 L128 142 V62" fill="none" stroke="url(#bg-metal)" stroke-width="10" stroke-linejoin="miter" stroke-linecap="butt"/>
+        <path class="boot__n" pathLength="100" d="M68 144 L100 62 L132 144 M84 118 H116" fill="none" stroke="url(#bg-metal)" stroke-width="10" stroke-linejoin="miter" stroke-linecap="butt"/>
         <path class="boot__star" d="M100 3 C101.600 13 104.800 17 115 20 C104.800 23 101.600 27 100 37 C98.400 27 95.200 23 85 20 C95.200 17 98.400 13 100 3Z" fill="#fff"/>
       </svg>
-      <div class="boot__word" aria-hidden="true"><span>N</span><span>Ó</span><span>M</span><span>A</span><span>D</span><span>A</span></div>
+      <div class="boot__word" aria-hidden="true"><span>A</span><span>U</span><span>R</span><span>A</span></div>
     </div>
     <div class="boot__foot"><div class="boot__bar"><i></i></div><div class="boot__msg" id="boot-msg">Iniciando sistema</div></div>
   </div>
 
   <!-- ===== Sprite de iconos ===== -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-    <symbol id="i-logo" viewBox="0 0 200 200"><path d="M128.730 21.060 A84 84 0 1 1 71.270 21.060" fill="none" stroke-width="7" stroke-linecap="round"/><path d="M72 142 V62 L128 142 V62" fill="none" stroke-width="11" stroke-linejoin="miter"/><path d="M100 3 C101.600 13 104.800 17 115 20 C104.800 23 101.600 27 100 37 C98.400 27 95.200 23 85 20 C95.200 17 98.400 13 100 3Z" stroke="none" fill="currentColor"/></symbol>
+    <symbol id="i-logo" viewBox="0 0 200 200"><path d="M128.730 21.060 A84 84 0 1 1 71.270 21.060" fill="none" stroke-width="7" stroke-linecap="round"/><path d="M68 144 L100 62 L132 144 M84 118 H116" fill="none" stroke-width="11" stroke-linejoin="miter"/><path d="M100 3 C101.600 13 104.800 17 115 20 C104.800 23 101.600 27 100 37 C98.400 27 95.200 23 85 20 C95.200 17 98.400 13 100 3Z" stroke="none" fill="currentColor"/></symbol>
     <symbol id="i-casa" viewBox="0 0 24 24"><path d="M3 12l9-8 9 8"/><path d="M6 10.500V20h12v-9.500"/><path d="M9 15a4.500 4.500 0 0 1 6 0"/><path d="M10.500 17.300a2.200 2.200 0 0 1 3 0"/></symbol>
     <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.500 10.900c.6.500 1 1.200 1 2.100h5c0-.9.4-1.600 1-2.100A6 6 0 0 0 12 3z"/></symbol>
     <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 3v5M15 3v5"/><path d="M7 8h10v4a5 5 0 0 1-10 0V8z"/><path d="M12 17v4"/></symbol>
@@ -570,6 +570,7 @@
         <section class="view view--map" data-view="map" data-title="Mapa">
           <div class="nav" id="nav" data-mode="browse" data-mt="dark" data-gps="wait" data-tiles="ok">
             <div class="nav__map" id="nav-map"></div>
+            <div class="nav__map nav__map--g" id="nav-gmap"></div>
 
             <!-- Búsqueda -->
             <div class="nav__top" data-tm-ignore>
@@ -1388,6 +1389,7 @@
   <script src="media.js"></script>
   <script src="weather.js"></script>
   <script src="tilemap.js"></script>
+  <script src="gmaps.js"></script>
   <script src="map.js"></script>
   <script src="hostembed.js"></script>
   <script src="apps.js"></script>
@@ -1400,6 +1402,7 @@
   <script src="homelayouts.js"></script>
   <script src="drive.js"></script>
   <script src="voice.js"></script>
+  <script src="aura-ai.js"></script>
   <script src="android.js"></script>
   <script src="osk.js"></script>
   <script src="boot.js"></script>

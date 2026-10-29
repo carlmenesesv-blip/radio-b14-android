@@ -1,8 +1,8 @@
 'use strict';
-/* Radio B14 · Windows (Electron)
+/* AURA · Windows (Electron)
    - Pantalla táctil: interfaz del radio. Segunda pantalla: cluster (cluster/display.html).
    - ESP32 por USB (serialport). Apps de Windows. Suspensión al apagar el auto. */
-const { app, BrowserWindow, ipcMain, protocol, net, shell, powerSaveBlocker, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, protocol, net, shell, powerSaveBlocker, screen, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
@@ -213,6 +213,12 @@ app.on('second-instance', () => { if (main) { if (main.isMinimized()) main.resto
 
 app.whenReady().then(async () => {
   serve();
+  // Micrófono y ubicación se conceden una sola vez para la propia app (nunca se vuelve a preguntar)
+  try {
+    const okPerm = (p) => ['media', 'audioCapture', 'geolocation', 'clipboard-sanitized-write', 'fullscreen'].includes(p);
+    session.defaultSession.setPermissionRequestHandler((_wc, perm, cb) => cb(okPerm(perm)));
+    session.defaultSession.setPermissionCheckHandler((_wc, perm) => okPerm(perm));
+  } catch (e) {}
   if (SMOKE) return smoke();
   if (config.get().keepAwake) blocker = powerSaveBlocker.start('prevent-display-sleep');
   try { await Promise.race([apps.scan(), new Promise((r) => setTimeout(r, 9000))]); } catch (e) {}

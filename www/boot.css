@@ -1,5 +1,5 @@
 /* ==========================================================
-   BOOT — animación de inicio de NÓMADA
+   BOOT — animación de inicio de AURA
    Siempre oscura (como una pantalla de auto al arrancar), sin importar el tema.
    Secuencia: horizonte → el aro se dibuja → la N se traza → destello metálico → nombre → barra.
    Se carga en <head> para cubrir la pantalla antes del primer pintado.

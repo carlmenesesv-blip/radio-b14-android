@@ -1,4 +1,4 @@
-# Radio B14 para Windows
+# AURA para Windows
 
 Envuelve la interfaz del radio en una app de Windows (Electron). Hace lo mismo que la APK de Android:
 pantalla táctil = radio, segunda pantalla = cluster, un ESP32 por USB para el auto.
@@ -17,11 +17,11 @@ pantalla táctil = radio, segunda pantalla = cluster, un ESP32 por USB para el a
 
 ## Cómo obtener el instalador
 1. Sube esta carpeta a GitHub (rama `main`); el flujo **Build Windows** hace la prueba de arranque y genera
-   `Radio B14 Setup 1.0.0.exe` (instalador) y la versión portátil en *Actions → Artifacts*.
+   `AURA Setup 1.0.0.exe` (instalador) y la versión portátil en *Actions → Artifacts*.
 2. O en tu PC con Node 20: `npm install`, luego `npm start` (probar) o `npm run dist` (instalador en `dist/`).
 
 ## Configuración
-Archivo: `%APPDATA%\Radio B14\config.json` (se crea al primer cambio; también puedes crearlo a mano).
+Archivo: `%APPDATA%\AURA\config.json` (se crea al primer cambio; también puedes crearlo a mano).
 
 | Clave | Valores | Por defecto |
 |---|---|---|
@@ -43,7 +43,7 @@ Para el uso real en el auto: `openAtLogin: true`, `suspendMode: "hibernate"` (o 
 - **Voz:** botón de micrófono en la barra. La app de Windows no incluye el servicio de reconocimiento de voz de Google, así que ahí aparece un cuadro para escribir la orden (se interpreta igual). En un navegador con micrófono sí se habla.
 - **Suena ahora:** indicador arriba con lo que suena (radio, Bluetooth o una app); con «Una sola fuente de audio» lo nuevo pausa lo anterior. El botón play del volante pausa también la app web que suene.
 - **Tema oscuro con las luces del auto**, tarjetas del Inicio que se pueden ocultar, pantalla de espera al abrir apps, avisos de lo que hace cada botón del volante.
-- **Registro de errores** (Ajustes → Sistema): se guarda también en `%APPDATA%\Radio B14\radio.log` y el botón «Abrir carpeta» lo muestra.
+- **Registro de errores** (Ajustes → Sistema): se guarda también en `%APPDATA%\AURA\radio.log` y el botón «Abrir carpeta» lo muestra.
 - **Apagado seguro:** espera la confirmación `{"ack":"power"}` del ESP32 antes de suspender (máximo 3 s).
 
 ## Límites conocidos (sin probar en hardware real)
