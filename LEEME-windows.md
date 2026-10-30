@@ -56,3 +56,9 @@ Para el uso real en el auto: `openAtLogin: true`, `suspendMode: "hibernate"` (o 
 - El teclado en pantalla del radio no aparece dentro de las apps web; se usa el teclado táctil de Windows.
 - Las ventanas de apps de Windows se acomodan en el primer plano justo tras abrirlas; algunas apps no aceptan cambiar de tamaño.
 - Para que el ESP32 despierte la laptop con ACC se necesita hardware aparte (encendido por USB/teclado).
+
+## Cambios de la versión 1.1 (AURA)
+- El programa se llama **AURA**. La carpeta de configuración ahora es `%APPDATA%\AURA` (la anterior `Radio B14` ya no se usa; copia `config.json` si quieres conservar tus opciones).
+- Micrófono y ubicación se conceden una sola vez para la app.
+- Gemini, Home Assistant y Google Maps se configuran en Ajustes (ver `LEEME-esp32.md` del sistema).
+- La ubicación en una laptop sin GPS sale por Wi-Fi y es poco precisa; para navegar usa un receptor GPS USB.

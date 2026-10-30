@@ -1,7 +1,7 @@
 {
   "name": "radio-b14-windows",
   "productName": "AURA",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "AURA para Windows: pantalla táctil del radio + pantalla del cluster + ESP32 por USB",
   "main": "main.js",
   "private": true,
