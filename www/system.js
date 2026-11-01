@@ -21,6 +21,8 @@
     driveBig: true,             // agrandar los controles al conducir
     driveBlockVideo: true,      // bloquear videos y navegación libre al conducir
     exclusiveAudio: true,       // una sola fuente de audio: la nueva pausa a la anterior
+    visualStyle: "aura",        // aura | win11 | oneui | macos
+    accentColor: "",            // "" = el del estilo; o un color #rrggbb
     homeLayout: "calma",       // calma | cockpit | widgets
     voiceWake: false,           // «Oye Aura» (solo navegadores con reconocimiento continuo)
     voiceSpeak: true,           // respuestas habladas
@@ -147,6 +149,10 @@
   function applyFlags() {
     if (state.reduceMotion) root.setAttribute("data-motion", "reduce"); else root.removeAttribute("data-motion");
     if (state.highContrast) root.setAttribute("data-contrast", "high"); else root.removeAttribute("data-contrast");
+    if (state.visualStyle && state.visualStyle !== "aura") root.setAttribute("data-vs", state.visualStyle); else root.removeAttribute("data-vs");
+    var ac = /^#[0-9a-f]{6}$/i.test(state.accentColor || "") ? state.accentColor : "";
+    if (ac) { root.style.setProperty("--accent", ac); root.style.setProperty("--accent-soft", ac + "29"); root.style.setProperty("--info", ac); }
+    else { root.style.removeProperty("--accent"); root.style.removeProperty("--accent-soft"); root.style.removeProperty("--info"); }
   }
   applyFlags();
 
@@ -210,7 +216,7 @@
   }
 
   function onChanged(changed) {
-    if (changed.indexOf("reduceMotion") >= 0 || changed.indexOf("highContrast") >= 0) applyFlags();
+    if (changed.indexOf("reduceMotion") >= 0 || changed.indexOf("highContrast") >= 0 || changed.indexOf("visualStyle") >= 0 || changed.indexOf("accentColor") >= 0) applyFlags();
     if (changed.indexOf("themeMode") >= 0 || changed.indexOf("themeLights") >= 0) applyTheme();
     if (changed.some(function (k) { return k.indexOf("home") === 0; })) applyHome();
     if (changed.indexOf("keepAwake") >= 0) wake();
@@ -457,6 +463,12 @@
     var c = card(mount, "");
     row(c, "Tema", "Automático: oscuro de 18:00 a 6:00", function (id) {
       return seg("themeMode", [["Claro", "light"], ["Oscuro", "dark"], ["Automático", "auto"]], id);
+    });
+    row(c, "Estilo visual", "AURA, Windows 11, One UI (Samsung) o macOS. Funcionan en claro y oscuro", function (id) {
+      return seg("visualStyle", [["AURA", "aura"], ["Windows 11", "win11"], ["One UI", "oneui"], ["macOS", "macos"]], id);
+    });
+    row(c, "Color de acento", "Cambia el color de los detalles y de lo seleccionado", function (id) {
+      return seg("accentColor", [["Auto", ""], ["Azul", "#3e91ff"], ["Verde", "#30c46b"], ["Naranja", "#ff9f0a"], ["Violeta", "#9d7bff"], ["Rojo", "#ff3b30"]], id);
     });
     row(c, "Oscuro con las luces del auto", "En Automático, el tema pasa a oscuro cuando enciendes las luces (túneles, lluvia)", function (id) { return toggle("themeLights", id); });
     row(c, "Mantener la pantalla encendida", "Evita que se apague mientras el sistema está abierto", function (id) { return toggle("keepAwake", id); });

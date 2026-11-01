@@ -1,0 +1,72 @@
+/* ==========================================================
+   VISUAL STYLES — estilos visuales alternativos del sistema
+   Ajustes → Pantalla → Estilo visual: AURA (el de siempre), Windows 11, One UI y macOS.
+   Se activan con html[data-vs]; sin el atributo no cambia nada. Funcionan en oscuro y claro.
+   Sección: TEMAS
+   ========================================================== */
+
+/* ---------- Windows 11 ---------- */
+/* Vista previa: AURA con estilo Windows 11 (Fluent: Mica/acrílico, esquinas de 8 px, acento azul) */
+html[data-vs="win11"] {
+  --font: "Segoe UI Variable Text", "Segoe UI", "Selawik", "Inter", system-ui, sans-serif;
+  --radius-xl: 12px; --radius-lg: 8px; --radius-md: 6px; --radius-pill: 6px;
+  --gap: 0.75rem; --pad: 1rem;
+}
+html[data-vs="win11"][data-theme="dark"] {
+  --bg: #1c1c1f; --text: #ffffff; --text-dim: rgba(255,255,255,0.7); --text-faint: rgba(255,255,255,0.45);
+  --surface: rgba(255,255,255,0.06); --surface-strong: rgba(255,255,255,0.1); --surface-inset: rgba(255,255,255,0.05);
+  --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.12);
+  --accent: #60cdff; --accent-soft: rgba(96,205,255,0.16); --info: #60cdff;
+  --dock-bg: rgba(40,40,46,0.72); --dock-active-bg: var(--accent); --dock-active-fg: #00131c;
+  --shadow: 0 8px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.05);
+}
+html[data-vs="win11"][data-theme="light"] {
+  --bg: #eef2f8; --text: #1b1b1b; --text-dim: rgba(0,0,0,0.62); --text-faint: rgba(0,0,0,0.4);
+  --surface: rgba(255,255,255,0.72); --surface-strong: rgba(255,255,255,0.95); --surface-inset: rgba(0,0,0,0.04);
+  --border: rgba(0,0,0,0.07); --border-strong: rgba(0,0,0,0.14);
+  --accent: #0067c0; --accent-soft: rgba(0,103,192,0.12); --info: #0067c0;
+  --dock-bg: rgba(255,255,255,0.78); --dock-active-bg: var(--accent); --dock-active-fg: #ffffff;
+  --shadow: 0 4px 14px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+}
+/* Mica: fondo con color suave que se asoma por las tarjetas */
+html[data-vs="win11"][data-theme="dark"] body { background: radial-gradient(1200px 700px at 12% 8%, #1d3b66 0%, transparent 60%), radial-gradient(900px 600px at 92% 90%, #4a2a6a 0%, transparent 62%), #1c1c1f; }
+html[data-vs="win11"][data-theme="light"] body { background: radial-gradient(1200px 700px at 10% 5%, #cfe3ff 0%, transparent 60%), radial-gradient(900px 600px at 95% 95%, #e9d8ff 0%, transparent 60%), #eef2f8; }
+html[data-vs="win11"] .card, html[data-vs="win11"] .bar, html[data-vs="win11"] .hq { -webkit-backdrop-filter: blur(28px) saturate(1.5); backdrop-filter: blur(28px) saturate(1.5); border: 1px solid var(--border); }
+/* Barra tipo barra de tareas: iconos cuadrados con acento debajo del activo */
+html[data-vs="win11"] .dock__btn { border-radius: 6px; }
+html[data-vs="win11"] .dock__btn[aria-current="page"] { background: var(--surface-strong); color: var(--text); }
+html[data-vs="win11"] .dock__btn[aria-current="page"]::before { content: ""; position: absolute; left: 50%; bottom: 1px; width: 16px; height: 3px; border-radius: 2px; background: var(--accent); transform: translateX(-50%); }
+html[data-vs="win11"] .btn-round--main { background: var(--accent); color: var(--dock-active-fg); }
+html[data-vs="win11"] .card--greet .greet__clock { font-weight: 300; letter-spacing: -0.02em; }
+html[data-vs="win11"] .seg { border-radius: 6px; }
+
+/* ---------- One UI ---------- */
+/* Vista previa: AURA estilo One UI (Samsung): esquinas muy grandes, superficies planas y suaves, azul de acento */
+html[data-vs="oneui"] { --font: "Samsung One UI", "SamsungOne", "Roboto Flex", "Roboto", "Inter", system-ui, sans-serif; --radius-xl: 32px; --radius-lg: 28px; --radius-md: 20px; --radius-pill: 999px; --gap: 0.85rem; --pad: 1.2rem; }
+html[data-vs="oneui"][data-theme="dark"] { --bg: #000; --text: #fff; --text-dim: rgba(255,255,255,0.62); --text-faint: rgba(255,255,255,0.38); --surface: #1b1b1d; --surface-strong: #2a2a2d; --surface-inset: #262629; --border: transparent; --border-strong: rgba(255,255,255,0.12); --accent: #3e91ff; --accent-soft: rgba(62,145,255,0.18); --info: #3e91ff; --dock-bg: #1b1b1d; --dock-active-bg: var(--accent); --dock-active-fg: #fff; --shadow: none; }
+html[data-vs="oneui"][data-theme="light"] { --bg: #f2f3f7; --text: #111; --text-dim: rgba(0,0,0,0.58); --text-faint: rgba(0,0,0,0.35); --surface: #ffffff; --surface-strong: #eceef4; --surface-inset: #f1f2f7; --border: transparent; --border-strong: rgba(0,0,0,0.1); --accent: #3e6ff5; --accent-soft: rgba(62,111,245,0.12); --info: #3e6ff5; --dock-bg: #ffffff; --dock-active-bg: var(--accent); --dock-active-fg: #fff; --shadow: none; }
+html[data-vs="oneui"] body { background: var(--bg); }
+html[data-vs="oneui"] .card, html[data-vs="oneui"] .bar { border: 0; }
+html[data-vs="oneui"] .topbar__title { font-size: 1.7rem; font-weight: 600; letter-spacing: -0.01em; }
+html[data-vs="oneui"] .card--greet .greet__clock { font-weight: 300; }
+html[data-vs="oneui"] .dock__btn { border-radius: 50%; }
+html[data-vs="oneui"] .btn-round--main { background: var(--accent); color: #fff; }
+html[data-vs="oneui"] .hq { background: var(--surface); height: 3.6rem; }
+
+/* ---------- macOS ---------- */
+/* Vista previa: AURA estilo macOS: vibrancy, esquinas de 14 px, dock flotante, azul del sistema */
+html[data-vs="macos"] { --font: "SF Pro Text", "SF Pro Display", -apple-system, "Inter", system-ui, sans-serif; --radius-xl: 18px; --radius-lg: 14px; --radius-md: 10px; --radius-pill: 999px; --gap: 0.8rem; --pad: 1.05rem; }
+html[data-vs="macos"][data-theme="dark"] { --bg: #1e1e1e; --text: #f5f5f7; --text-dim: rgba(245,245,247,0.6); --text-faint: rgba(245,245,247,0.35); --surface: rgba(60,60,67,0.45); --surface-strong: rgba(120,120,128,0.36); --surface-inset: rgba(120,120,128,0.2); --border: rgba(255,255,255,0.08); --border-strong: rgba(255,255,255,0.16); --accent: #0a84ff; --accent-soft: rgba(10,132,255,0.2); --info: #0a84ff; --dock-bg: rgba(60,60,67,0.5); --dock-active-bg: rgba(255,255,255,0.14); --dock-active-fg: #fff; --shadow: 0 10px 30px rgba(0,0,0,0.35); }
+html[data-vs="macos"][data-theme="light"] { --bg: #ececf0; --text: #1d1d1f; --text-dim: rgba(0,0,0,0.55); --text-faint: rgba(0,0,0,0.32); --surface: rgba(255,255,255,0.62); --surface-strong: rgba(255,255,255,0.9); --surface-inset: rgba(120,120,128,0.1); --border: rgba(0,0,0,0.06); --border-strong: rgba(0,0,0,0.12); --accent: #007aff; --accent-soft: rgba(0,122,255,0.12); --info: #007aff; --dock-bg: rgba(255,255,255,0.55); --dock-active-bg: rgba(0,0,0,0.08); --dock-active-fg: #1d1d1f; --shadow: 0 8px 24px rgba(0,0,0,0.1); }
+html[data-vs="macos"][data-theme="dark"] body { background: radial-gradient(1100px 700px at 15% 0%, #3a2d6b 0%, transparent 62%), radial-gradient(900px 600px at 95% 100%, #0e4a6b 0%, transparent 60%), #1a1a1c; }
+html[data-vs="macos"][data-theme="light"] body { background: radial-gradient(1100px 700px at 10% 0%, #ffd9e8 0%, transparent 60%), radial-gradient(900px 600px at 95% 100%, #cfe6ff 0%, transparent 60%), #ececf0; }
+html[data-vs="macos"] .card, html[data-vs="macos"] .bar, html[data-vs="macos"] .hq { -webkit-backdrop-filter: blur(40px) saturate(1.8); backdrop-filter: blur(40px) saturate(1.8); border: 0.5px solid var(--border); }
+html[data-vs="macos"] .bar { border-radius: 24px; }
+html[data-vs="macos"] .dock__btn { border-radius: 12px; }
+html[data-vs="macos"] .dock__btn[aria-current="page"]::after { content: ""; position: absolute; left: 50%; bottom: 2px; width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.8; transform: translateX(-50%); inset: auto; }
+html[data-vs="macos"] .btn-round--main { background: var(--accent); color: #fff; }
+html[data-vs="macos"] .topbar__title { font-weight: 600; }
+
+/* El alto contraste siempre manda sobre el estilo */
+html[data-vs][data-contrast="high"] { --border: var(--border-strong); --text-dim: var(--text); --text-faint: var(--text-dim); }
+html[data-vs]:not([data-motion="reduce"]) .card { transition: background 200ms, box-shadow 200ms; }
