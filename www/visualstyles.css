@@ -79,7 +79,6 @@ html[data-vs="sport"] .topbar__title, html[data-vs="sport"] .freq__t, html[data-
 html[data-vs="sport"] .card--greet .greet__clock { font-weight: 700; font-style: italic; letter-spacing: -0.01em; }
 html[data-vs="sport"] .dock__btn, html[data-vs="sport"] .hq, html[data-vs="sport"] .seg__btn { clip-path: polygon(7px 0, 100% 0, calc(100% - 7px) 100%, 0 100%); border-radius: 0; }
 html[data-vs="sport"] .btn-round--main { background: var(--accent); color: #fff; }
-html[data-vs="sport"] svg.icon { stroke-width: 2.3; stroke-linecap: square; stroke-linejoin: miter; }
 
 /* ---------- Retro (ámbar / papel térmico) ---------- */
 html[data-vs="retro"] { --font: "Cascadia Mono", "Consolas", "IBM Plex Mono", "DejaVu Sans Mono", "Courier New", monospace; --radius-xl: 3px; --radius-lg: 2px; --radius-md: 2px; --radius-pill: 2px; --gap: 0.7rem; --pad: 1rem; }
@@ -92,18 +91,13 @@ html[data-vs="retro"] .card, html[data-vs="retro"] .bar, html[data-vs="retro"] .
 html[data-vs="retro"] .topbar__title, html[data-vs="retro"] .freq__t, html[data-vs="retro"] .hcasa__head { text-transform: uppercase; letter-spacing: 0.1em; }
 html[data-vs="retro"] .card--greet .greet__clock { font-weight: 400; letter-spacing: 0.04em; }
 html[data-vs="retro"] .btn-round--main { background: var(--accent); color: var(--dock-active-fg, #000); }
-html[data-vs="retro"] svg.icon { stroke-width: 1.9; stroke-linecap: square; stroke-linejoin: miter; }
 html[data-vs="retro"][data-theme="dark"] svg.icon { filter: drop-shadow(0 0 3px rgba(255,176,0,0.55)); }
 
-/* ---------- Paquetes de íconos por estilo (grosor, remates y relleno del activo) ---------- */
-html[data-vs="win11"] svg.icon { stroke-width: 1.5; }
-html[data-vs="win11"] .dock__btn[aria-current="page"] svg.icon { fill: currentColor; fill-opacity: 0.2; }
-html[data-vs="oneui"] svg.icon { stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
-html[data-vs="oneui"] .dock__btn[aria-current="page"] svg.icon { fill: currentColor; fill-opacity: 0.28; }
-html[data-vs="macos"] svg.icon { stroke-width: 1.7; }
-html[data-vs="macos"] .dock__btn[aria-current="page"] svg.icon { fill: currentColor; fill-opacity: 0.3; }
-html[data-vs="sport"] .dock__btn[aria-current="page"] svg.icon { fill: currentColor; fill-opacity: 0.35; }
-html[data-vs="retro"] .dock__btn[aria-current="page"] svg.icon { fill: currentColor; fill-opacity: 0.3; }
+/* ---------- Paquetes de íconos por estilo ----------
+   El contenido real de cada ícono lo cambia icons.js (Fluent, Material, Lucide,
+   Phosphor, Pixelarticons). Aquí solo el ajuste fino de cada paquete. */
+html[data-iconpack="macos"] svg.icon { stroke-width: 1.7; }
+html[data-iconpack="retro"] svg.icon { shape-rendering: crispEdges; }
 html[data-vs] .statusbar__icons svg.icon, html[data-vs] .qsbtn__icons svg.icon { stroke-width: 1.8; }
 html[data-vs] .wx__ico { stroke-width: 1.3; }
 

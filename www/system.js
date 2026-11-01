@@ -371,7 +371,55 @@
     if (text != null) n.textContent = text;
     return n;
   }
-  function group(mount, title) { mount.appendChild(h("h3", "set-group", title)); }
+  /* Íconos de Ajustes: cada opción lleva su ícono (del paquete del estilo activo) */
+  var ROW_ICONS = [
+    [/estilo visual|acento/i, "ambient"], [/^tema|oscuro con las luces/i, "sun"], [/brillo/i, "dim"],
+    [/contraste/i, "dim"], [/animaci|duraci|inicio de|estilo del inicio/i, "spark"],
+    [/pantalla encendida|pantalla completa|pantallas|pantalla de inicio/i, "display"],
+    [/formato de hora|hora/i, "recent"], [/distancia|velocidad|activar a partir|bloquear a partir/i, "gauge"],
+    [/temperatura|paso de temp/i, "thermo"], [/presi[oó]n|neum/i, "tire"],
+    [/desempa/i, "defrost-front"], [/puerta|llave|bloquear puertas/i, "door"],
+    [/bloquear|candado/i, "lock"], [/modo conducci|controles grandes/i, "wheel"],
+    [/volante|botones del/i, "wheel"], [/reversa|c[aá]mara/i, "camera"],
+    [/volumen|sonido|bajar la m|audio|fuente/i, "volume"], [/vibraci/i, "phone"], [/radio/i, "radio"],
+    [/el tiempo/i, "w-part"], [/el auto|veh|viaje|al encender el auto|al apagar el auto/i, "car"],
+    [/m[uú]sica/i, "music"], [/apps/i, "grid"], [/mapa|navegaci|gu[ií]a|teselas|proveedor/i, "map"],
+    [/voz|[oó]rdenes|oye|respuestas/i, "mic"], [/teclado|escritura/i, "backspace"],
+    [/volver|abrir|usar la app/i, "external"], [/servicio|avisar|aviso/i, "alert"],
+    [/gemini|asistente/i, "spark"], [/google maps|clave|token/i, "lock"], [/modelo/i, "sliders"],
+    [/probar|prueba/i, "check"], [/bluetooth|receptor/i, "bluetooth"],
+    [/esp32|puerto|conexi|direcci/i, "link"], [/error|registro/i, "wrench"], [/copia/i, "folder"],
+    [/borrar/i, "trash"], [/acc\b|apagar|esperar|iniciar con|al encender|encender/i, "power"],
+    [/casa|luz/i, "casa"]
+  ];
+  var GROUP_ICONS = {
+    "Pantalla": "display", "Hora y unidades": "recent", "Sonido": "volume", "Inicio del sistema": "power",
+    "Tarjetas del inicio": "home", "Entrada": "mic", "Apps": "grid", "Sistema Android": "phone", "Windows": "display",
+    "Conducción": "wheel", "Vehículo": "car", "Climatización": "climate", "Seguridad": "shield",
+    "Llave y volante": "wheel", "Navegación": "map", "Casa (Home Assistant)": "casa",
+    "Asistente y mapas de Google": "spark", "Bluetooth y ESP32": "bluetooth", "Sistema": "settings"
+  };
+  var CAT_ICONS = {
+    "Apariencia": "ambient", "Hora y unidades": "recent", "Sonido": "volume", "Inicio y entrada": "power", "Apps": "grid",
+    "Vehículo": "car", "Navegación": "map", "Conexiones": "link", "Sistema": "settings"
+  };
+  function icon(id, cls) {
+    var NS = "http://www.w3.org/2000/svg";
+    var s = document.createElementNS(NS, "svg"); s.setAttribute("class", "icon " + (cls || ""));
+    s.setAttribute("aria-hidden", "true");
+    var u = document.createElementNS(NS, "use"); u.setAttribute("href", "#i-" + id);
+    s.appendChild(u); return s;
+  }
+  function iconFor(label) {
+    for (var i = 0; i < ROW_ICONS.length; i++) if (ROW_ICONS[i][0].test(label)) return ROW_ICONS[i][1];
+    return "sliders";
+  }
+  function group(mount, title) {
+    var g = h("h3", "set-group");
+    if (GROUP_ICONS[title]) g.appendChild(icon(GROUP_ICONS[title], "set-group__ico"));
+    g.appendChild(h("span", "", title));
+    mount.appendChild(g);
+  }
   function card(mount, label, wide) {
     var c = h("article", "card set-card" + (wide === false ? "" : " set-card--wide"));
     if (label) c.appendChild(h("div", "card__label", label));
@@ -382,6 +430,7 @@
     var row = h("div", "set-item");
     var txt = h("div", "set-item__txt");
     var l = h("span", "set-item__label", label);
+    if (label) row.appendChild(h("span", "set-item__ico")).appendChild(icon(iconFor(label)));
     if (id) l.id = id;
     txt.appendChild(l);
     if (hint) txt.appendChild(h("span", "set-item__hint", hint));
@@ -401,7 +450,7 @@
     return b;
   }
   function seg(key, options, labelId, cast) {
-    var s = h("div", "seg set-seg");
+    var s = h("div", "seg set-seg" + (options.length > 3 ? " seg--many" : ""));
     s.setAttribute("role", "group");
     if (labelId) s.setAttribute("aria-labelledby", labelId);
     options.forEach(function (o) {
@@ -951,7 +1000,9 @@
     var body = h("div", "set-panes");
     var btns = {};
     order.forEach(function (name) {
-      var b = h("button", "set-side__btn", name); b.type = "button";
+      var b = h("button", "set-side__btn"); b.type = "button";
+      if (CAT_ICONS[name]) b.appendChild(icon(CAT_ICONS[name], "set-side__ico"));
+      b.appendChild(h("span", "", name));
       b.addEventListener("click", function () { select(name); });
       side.appendChild(b); btns[name] = b; body.appendChild(panes[name]);
     });

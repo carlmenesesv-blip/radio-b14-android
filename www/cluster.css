@@ -50,3 +50,9 @@
 .cl__dstat::before { content: ""; flex: none; width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--text-faint); }
 .cl__dstat[data-on="1"]::before { background: var(--ok); }
 .cl__dstat[data-on="0"]::before { background: var(--warn); }
+
+/* Filas con selector: si no caben en una línea, el selector baja y ocupa el ancho (nada se corta ni se monta) */
+.cl__row { flex-wrap: wrap; }
+.cl__row > .cl__lbl { flex: 1 1 9rem; }
+.cl__row > .cl__seg { flex: 1 1 auto; margin-left: auto; max-width: 100%; }
+.cl__seg .seg__btn { flex: 1 1 auto; min-width: max-content; }

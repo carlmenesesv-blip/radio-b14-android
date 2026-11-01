@@ -120,3 +120,34 @@
 .set-legend__row b { flex: none; min-width: 8.5rem; font-weight: 500; }
 .set-legend__row span { color: var(--text-dim); }
 .set-log { margin: 0.5rem 0 0; padding: 0.7rem 0.9rem; max-height: 11rem; overflow: auto; border-radius: 1rem; background: var(--surface-inset); color: var(--text-dim); font: 0.72rem/1.4 ui-monospace, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ---------- Íconos en Ajustes ---------- */
+.set-item { justify-content: flex-start; }
+.set-item > .set-item__ico {
+  flex: none; display: grid; place-items: center; width: 2.2rem; height: 2.2rem;
+  border-radius: var(--radius-md); background: var(--surface-inset); color: var(--text-dim);
+}
+.set-item > .set-item__ico svg.icon { width: 1.15rem; height: 1.15rem; }
+.set-item > .set-item__txt { flex: 1 1 0; }
+.set-item > .tgl, .set-item > .set-actions, .set-item > .btn-pill { margin-left: auto; }
+.set-group { display: flex; align-items: center; gap: 0.55rem; }
+.set-group__ico { width: 1.15rem; height: 1.15rem; color: var(--text-dim); flex: none; }
+.set-side__btn { display: flex; align-items: center; gap: 0.7rem; }
+.set-side__ico { width: 1.2rem; height: 1.2rem; flex: none; }
+.set-side__btn > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- Selectores con varias opciones: nunca se montan ---------- */
+.set-seg { flex-wrap: wrap; }
+.set-seg .seg__btn { flex: 1 1 auto; padding-inline: 0.9rem; min-width: max-content; }
+.set-item > .seg { flex: 0 1 auto; max-width: 100%; }
+.set-item { flex-wrap: wrap; }
+.set-item > .set-item__txt { flex: 1 1 12rem; }
+.set-item > .seg { margin-left: auto; }
+.set-item > .seg--many { flex: 1 1 100%; width: 100%; margin: 0.1rem 0 0; }
+.set-item > .set-rangebox { flex: 0 1 20rem; }
+.set-item__label, .set-item__hint { overflow-wrap: anywhere; }
+
+/* Filas de campo de texto (apiladas): ícono + texto arriba, campo debajo */
+.set-item.set-item--stack { display: grid; grid-template-columns: 2.2rem minmax(0, 1fr); column-gap: 1rem; row-gap: 0.6rem; align-items: center; }
+.set-item--stack > .set-item__txt { flex: none; }
+.set-item--stack > :not(.set-item__ico):not(.set-item__txt) { grid-column: 1 / -1; margin: 0; }
