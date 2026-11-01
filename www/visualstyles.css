@@ -67,6 +67,46 @@ html[data-vs="macos"] .dock__btn[aria-current="page"]::after { content: ""; posi
 html[data-vs="macos"] .btn-round--main { background: var(--accent); color: #fff; }
 html[data-vs="macos"] .topbar__title { font-weight: 600; }
 
+
+/* ---------- Deportivo ---------- */
+html[data-vs="sport"] { --font: "Bahnschrift", "Barlow Condensed", "Oswald", "Arial Narrow", "Inter", sans-serif; --radius-xl: 6px; --radius-lg: 4px; --radius-md: 3px; --radius-pill: 3px; --gap: 0.7rem; --pad: 1rem; }
+html[data-vs="sport"][data-theme="dark"] { --bg: #0a0a0b; --text: #f4f4f5; --text-dim: rgba(244,244,245,0.62); --text-faint: rgba(244,244,245,0.36); --surface: #141416; --surface-strong: #1e1e21; --surface-inset: #1a1a1d; --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.18); --accent: #ff2a2a; --accent-soft: rgba(255,42,42,0.18); --info: #ffd400; --dock-bg: #101012; --dock-active-bg: var(--accent); --dock-active-fg: #fff; --shadow: none; }
+html[data-vs="sport"][data-theme="light"] { --bg: #e8e8ea; --text: #0d0d0f; --text-dim: rgba(0,0,0,0.6); --text-faint: rgba(0,0,0,0.36); --surface: #ffffff; --surface-strong: #f0f0f2; --surface-inset: #f3f3f5; --border: rgba(0,0,0,0.08); --border-strong: rgba(0,0,0,0.22); --accent: #e10600; --accent-soft: rgba(225,6,0,0.12); --info: #b38f00; --dock-bg: #ffffff; --dock-active-bg: var(--accent); --dock-active-fg: #fff; --shadow: none; }
+html[data-vs="sport"][data-theme="dark"] body { background: repeating-linear-gradient(45deg, rgba(255,255,255,0.018) 0 2px, transparent 2px 7px), radial-gradient(900px 500px at 0% 100%, rgba(255,42,42,0.16), transparent 65%), #0a0a0b; }
+html[data-vs="sport"][data-theme="light"] body { background: repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0 2px, transparent 2px 7px), #e8e8ea; }
+html[data-vs="sport"] .card { border: 0; border-left: 3px solid var(--accent); }
+html[data-vs="sport"] .topbar__title, html[data-vs="sport"] .freq__t, html[data-vs="sport"] .hcasa__head { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+html[data-vs="sport"] .card--greet .greet__clock { font-weight: 700; font-style: italic; letter-spacing: -0.01em; }
+html[data-vs="sport"] .dock__btn, html[data-vs="sport"] .hq, html[data-vs="sport"] .seg__btn { clip-path: polygon(7px 0, 100% 0, calc(100% - 7px) 100%, 0 100%); border-radius: 0; }
+html[data-vs="sport"] .btn-round--main { background: var(--accent); color: #fff; }
+html[data-vs="sport"] svg.icon { stroke-width: 2.3; stroke-linecap: square; stroke-linejoin: miter; }
+
+/* ---------- Retro (ámbar / papel térmico) ---------- */
+html[data-vs="retro"] { --font: "Cascadia Mono", "Consolas", "IBM Plex Mono", "DejaVu Sans Mono", "Courier New", monospace; --radius-xl: 3px; --radius-lg: 2px; --radius-md: 2px; --radius-pill: 2px; --gap: 0.7rem; --pad: 1rem; }
+html[data-vs="retro"][data-theme="dark"] { --bg: #0a0700; --text: #ffb000; --text-dim: rgba(255,176,0,0.62); --text-faint: rgba(255,176,0,0.36); --surface: rgba(255,176,0,0.05); --surface-strong: rgba(255,176,0,0.12); --surface-inset: rgba(255,176,0,0.07); --border: rgba(255,176,0,0.38); --border-strong: rgba(255,176,0,0.7); --accent: #ffb000; --accent-soft: rgba(255,176,0,0.18); --info: #ffb000; --dock-bg: rgba(255,176,0,0.05); --dock-active-bg: #ffb000; --dock-active-fg: #0a0700; --shadow: none; }
+html[data-vs="retro"][data-theme="light"] { --bg: #e9e1c9; --text: #2a2210; --text-dim: rgba(42,34,16,0.68); --text-faint: rgba(42,34,16,0.4); --surface: #f3ecd6; --surface-strong: #e3d9b8; --surface-inset: #ece3c7; --border: rgba(42,34,16,0.4); --border-strong: rgba(42,34,16,0.75); --accent: #b23a00; --accent-soft: rgba(178,58,0,0.14); --info: #b23a00; --dock-bg: #f3ecd6; --dock-active-bg: #2a2210; --dock-active-fg: #f3ecd6; --shadow: none; }
+html[data-vs="retro"][data-theme="dark"] body { background: radial-gradient(900px 600px at 50% 40%, rgba(255,176,0,0.08), transparent 70%), #0a0700; text-shadow: 0 0 6px rgba(255,176,0,0.4); }
+html[data-vs="retro"][data-theme="light"] body { background: #e9e1c9; }
+html[data-vs="retro"][data-theme="dark"]::after { content: ""; position: fixed; inset: 0; z-index: 99998; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.22) 0 1px, transparent 1px 3px); }
+html[data-vs="retro"] .card, html[data-vs="retro"] .bar, html[data-vs="retro"] .hq { border: 1px solid var(--border); }
+html[data-vs="retro"] .topbar__title, html[data-vs="retro"] .freq__t, html[data-vs="retro"] .hcasa__head { text-transform: uppercase; letter-spacing: 0.1em; }
+html[data-vs="retro"] .card--greet .greet__clock { font-weight: 400; letter-spacing: 0.04em; }
+html[data-vs="retro"] .btn-round--main { background: var(--accent); color: var(--dock-active-fg, #000); }
+html[data-vs="retro"] svg.icon { stroke-width: 1.9; stroke-linecap: square; stroke-linejoin: miter; }
+html[data-vs="retro"][data-theme="dark"] svg.icon { filter: drop-shadow(0 0 3px rgba(255,176,0,0.55)); }
+
+/* ---------- Paquetes de íconos por estilo (grosor, remates y relleno del activo) ---------- */
+html[data-vs="win11"] svg.icon { stroke-width: 1.5; }
+html[data-vs="win11"] .dock__btn[aria-current="page"] svg.icon { fill: currentColor; fill-opacity: 0.2; }
+html[data-vs="oneui"] svg.icon { stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+html[data-vs="oneui"] .dock__btn[aria-current="page"] svg.icon { fill: currentColor; fill-opacity: 0.28; }
+html[data-vs="macos"] svg.icon { stroke-width: 1.7; }
+html[data-vs="macos"] .dock__btn[aria-current="page"] svg.icon { fill: currentColor; fill-opacity: 0.3; }
+html[data-vs="sport"] .dock__btn[aria-current="page"] svg.icon { fill: currentColor; fill-opacity: 0.35; }
+html[data-vs="retro"] .dock__btn[aria-current="page"] svg.icon { fill: currentColor; fill-opacity: 0.3; }
+html[data-vs] .statusbar__icons svg.icon, html[data-vs] .qsbtn__icons svg.icon { stroke-width: 1.8; }
+html[data-vs] .wx__ico { stroke-width: 1.3; }
+
 /* El alto contraste siempre manda sobre el estilo */
 html[data-vs][data-contrast="high"] { --border: var(--border-strong); --text-dim: var(--text); --text-faint: var(--text-dim); }
 html[data-vs]:not([data-motion="reduce"]) .card { transition: background 200ms, box-shadow 200ms; }

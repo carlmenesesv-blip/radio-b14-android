@@ -21,7 +21,7 @@
     driveBig: true,             // agrandar los controles al conducir
     driveBlockVideo: true,      // bloquear videos y navegación libre al conducir
     exclusiveAudio: true,       // una sola fuente de audio: la nueva pausa a la anterior
-    visualStyle: "aura",        // aura | win11 | oneui | macos
+    visualStyle: "aura",        // aura | win11 | oneui | macos | sport | retro
     accentColor: "",            // "" = el del estilo; o un color #rrggbb
     homeLayout: "calma",       // calma | cockpit | widgets
     voiceWake: false,           // «Oye Aura» (solo navegadores con reconocimiento continuo)
@@ -464,8 +464,8 @@
     row(c, "Tema", "Automático: oscuro de 18:00 a 6:00", function (id) {
       return seg("themeMode", [["Claro", "light"], ["Oscuro", "dark"], ["Automático", "auto"]], id);
     });
-    row(c, "Estilo visual", "AURA, Windows 11, One UI (Samsung) o macOS. Funcionan en claro y oscuro", function (id) {
-      return seg("visualStyle", [["AURA", "aura"], ["Windows 11", "win11"], ["One UI", "oneui"], ["macOS", "macos"]], id);
+    row(c, "Estilo visual", "Cada estilo trae su propio paquete de íconos (grosor, remates y relleno). Funcionan en claro y oscuro", function (id) {
+      return seg("visualStyle", [["AURA", "aura"], ["Windows 11", "win11"], ["One UI", "oneui"], ["macOS", "macos"], ["Deportivo", "sport"], ["Retro", "retro"]], id);
     });
     row(c, "Color de acento", "Cambia el color de los detalles y de lo seleccionado", function (id) {
       return seg("accentColor", [["Auto", ""], ["Azul", "#3e91ff"], ["Verde", "#30c46b"], ["Naranja", "#ff9f0a"], ["Violeta", "#9d7bff"], ["Rojo", "#ff3b30"]], id);
