@@ -16,6 +16,8 @@ const embed = require('./lib/embed');
 const helper = require('./lib/winhelper');
 
 const SMOKE = process.argv.includes('--smoke');
+/* Si aun asi hay pantalla verde en videos: abrir AURA con --no-hw-video (decodifica por software) */
+if (process.argv.includes('--no-hw-video')) app.commandLine.appendSwitch('disable-accelerated-video-decode');
 const WWW = app.isPackaged ? path.join(process.resourcesPath, 'www') : path.join(__dirname, 'www');
 
 protocol.registerSchemesAsPrivileged([

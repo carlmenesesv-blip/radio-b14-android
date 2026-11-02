@@ -62,3 +62,8 @@ Para el uso real en el auto: `openAtLogin: true`, `suspendMode: "hibernate"` (o 
 - Micrófono y ubicación se conceden una sola vez para la app.
 - Gemini, Home Assistant y Google Maps se configuran en Ajustes (ver `LEEME-esp32.md` del sistema).
 - La ubicación en una laptop sin GPS sale por Wi-Fi y es poco precisa; para navegar usa un receptor GPS USB.
+
+## YouTube: pantalla verde o trabas
+Las vistas incrustadas (YouTube, etc.) cargan `lib/yt-preload.js`, que pide a YouTube video H.264 en lugar de VP9/AV1
+(la gráfica Intel de la laptop decodifica H.264 por hardware). Si aun así ves pantalla verde, abre AURA con el
+argumento `--no-hw-video` (decodificación por software; usa más procesador). Calidad máxima: 1080p.
