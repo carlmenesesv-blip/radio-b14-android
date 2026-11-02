@@ -109,6 +109,7 @@
       city(p).then(function (n) { if (n) data.city = n; try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} render(); });
       try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
       render();
+      window.dispatchEvent(new CustomEvent("radio:weather", { detail: { temp: data.temp } }));
     }).catch(function () { render(); }).then(function () { busy = false; });
   }
 

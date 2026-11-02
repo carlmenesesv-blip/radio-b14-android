@@ -16,8 +16,8 @@
 
   var DEFAULTS = { fog: false, fan: false, amb: false, head: false, cabin: false, dim: false, prevBrightness: 100 };
   var state = load();
-  var tele = { voltage: 13.8, temp: 88, fuel: 62 };
-  var simulating = true;
+  var tele = { voltage: null, temp: null, fuel: null };   // sin datos hasta que el ESP32 los envíe
+  var simulating = false;
 
   /* Zonas: [desde, hasta, estado] */
   var ZONES = {
@@ -93,40 +93,45 @@
   }
 
   /* ---------- Render: salud y combustible ---------- */
+  function has(v) { return typeof v === "number" && isFinite(v); }
   function renderTelemetry() {
-    var sv = classify("voltage", tele.voltage);
-    var st = classify("temp", tele.temp);
-    var sf = fuelState(tele.fuel);
+    var hv = has(tele.voltage), ht = has(tele.temp), hf = has(tele.fuel);
+    var sv = hv ? classify("voltage", tele.voltage) : "ok";
+    var st = ht ? classify("temp", tele.temp) : "ok";
+    var sf = hf ? fuelState(tele.fuel) : "ok";
     var sh = worst([sv, st]);
 
-    el.voltVal.textContent = tele.voltage.toFixed(1);
-    el.mVolt.dataset.state = sv;
-    el.voltZone.querySelector(".zone__mark").style.setProperty("--pos", pct("voltage", tele.voltage) + "%");
-    setStatus(el.voltStatus, sv, LABEL[sv]);
-    el.mVolt.setAttribute("aria-label", "Voltaje " + tele.voltage.toFixed(1) + " voltios, " + LABEL[sv].toLowerCase());
+    el.mVolt.dataset.nodata = hv ? "" : "1"; el.mTemp.dataset.nodata = ht ? "" : "1"; el.fuel.dataset.nodata = hf ? "" : "1";
+    el.health.dataset.nodata = hv || ht ? "" : "1";
 
-    el.tempVal.textContent = String(Math.round(tele.temp));
+    el.voltVal.textContent = hv ? tele.voltage.toFixed(1) : "—";
+    el.mVolt.dataset.state = sv;
+    el.voltZone.querySelector(".zone__mark").style.setProperty("--pos", (hv ? pct("voltage", tele.voltage) : 0) + "%");
+    setStatus(el.voltStatus, sv, hv ? LABEL[sv] : "Sin datos");
+    el.mVolt.setAttribute("aria-label", hv ? "Voltaje " + tele.voltage.toFixed(1) + " voltios, " + LABEL[sv].toLowerCase() : "Voltaje: sin datos");
+
+    el.tempVal.textContent = ht ? String(Math.round(tele.temp)) : "—";
     el.mTemp.dataset.state = st;
-    el.tempZone.querySelector(".zone__mark").style.setProperty("--pos", pct("temp", tele.temp) + "%");
-    setStatus(el.tempStatus, st, LABEL[st]);
-    el.mTemp.setAttribute("aria-label", "Temperatura del motor " + Math.round(tele.temp) + " grados, " + LABEL[st].toLowerCase());
+    el.tempZone.querySelector(".zone__mark").style.setProperty("--pos", (ht ? pct("temp", tele.temp) : 0) + "%");
+    setStatus(el.tempStatus, st, ht ? LABEL[st] : "Sin datos");
+    el.mTemp.setAttribute("aria-label", ht ? "Temperatura del motor " + Math.round(tele.temp) + " grados, " + LABEL[st].toLowerCase() : "Temperatura del motor: sin datos");
 
     el.health.dataset.state = sh;
-    setStatus(el.overall, sh, LABEL[sh]);
+    setStatus(el.overall, sh, hv || ht ? LABEL[sh] : "Sin datos");
 
-    var f = Math.max(0, Math.min(100, Math.round(tele.fuel)));
-    el.fuelVal.textContent = String(f);
+    var f = hf ? Math.max(0, Math.min(100, Math.round(tele.fuel))) : 0;
+    el.fuelVal.textContent = hf ? String(f) : "—";
     el.fuel.dataset.state = sf;
     el.fuel.style.setProperty("--lvl", f + "%");
-    el.fuelGauge.setAttribute("aria-label", "Nivel de combustible " + f + " por ciento");
-    setStatus(el.fuelStatus, sf, FUEL_LABEL[sf]);
+    el.fuelGauge.setAttribute("aria-label", hf ? "Nivel de combustible " + f + " por ciento" : "Combustible: sin datos");
+    setStatus(el.fuelStatus, sf, hf ? FUEL_LABEL[sf] : "Sin datos");
 
     // Alerta global en la barra de estado
-    var all = worst([sv, st, sf]);
+    var all = worst([hv ? sv : "ok", ht ? st : "ok", hf ? sf : "ok"]);
     var msgs = [];
-    if (sv !== "ok") msgs.push("voltaje " + LABEL[sv].toLowerCase());
-    if (st !== "ok") msgs.push("temperatura " + LABEL[st].toLowerCase());
-    if (sf !== "ok") msgs.push("combustible " + FUEL_LABEL[sf].toLowerCase());
+    if (hv && sv !== "ok") msgs.push("voltaje " + LABEL[sv].toLowerCase());
+    if (ht && st !== "ok") msgs.push("temperatura " + LABEL[st].toLowerCase());
+    if (hf && sf !== "ok") msgs.push("combustible " + FUEL_LABEL[sf].toLowerCase());
     if (el.alert) {
       el.alert.classList.toggle("is-off", all === "ok");
       el.alert.dataset.state = all;
@@ -225,8 +230,8 @@
   }
   setInterval(function () {
     if (!simulating || document.hidden) return;
-    tele.voltage = jitter(tele.voltage, 0.06, 13.6, 14.1);
-    tele.temp = jitter(tele.temp, 0.6, 86, 91);
+    tele.voltage = jitter(has(tele.voltage) ? tele.voltage : 13.8, 0.06, 13.6, 14.1);
+    tele.temp = jitter(has(tele.temp) ? tele.temp : 88, 0.6, 86, 91);
     emit();
   }, 2500);
 

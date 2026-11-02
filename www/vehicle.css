@@ -114,3 +114,7 @@
   .fan-rot { animation: none; }
   .status[data-state="bad"] > i { animation: none; }
 }
+
+/* Sin datos reales (ESP32 sin conectar): guion y etiqueta visible, nada inventado */
+[data-nodata="1"] .status { position: static !important; width: auto !important; height: auto !important; overflow: visible !important; clip: auto !important; color: var(--text-faint); background: none; }
+[data-nodata="1"] .zone__mark { opacity: 0; }

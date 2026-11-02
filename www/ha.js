@@ -19,7 +19,7 @@
   function load() {
     var d = {};
     try { d = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) {}
-    return { url: d.url || "", token: d.token || "", hidden: Array.isArray(d.hidden) ? d.hidden : [], demo: d.demo === true };
+    return { url: d.url || "", token: d.token || "", refresh: d.refresh || "", exp: d.exp || 0, pins: Array.isArray(d.pins) ? d.pins : [], pinHash: d.pinHash || "", hidden: Array.isArray(d.hidden) ? d.hidden : [], demo: d.demo === true };
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) {} }
   function base() {
@@ -28,14 +28,25 @@
     return u;
   }
   function configured() { return !!(base() && cfg.token); }
-  function isDemo() { return !configured(); }
+  function isDemo() { return !configured() && cfg.demo === true; }   // la demostración ya no se activa sola
 
   /* ---------- Transporte ---------- */
-  function req(path, o) {
+  var CID = "http://aura.local/";   // client_id para el inicio de sesión de Home Assistant
+  var refreshing = null;
+  function ensure() {   // renueva el token de acceso (inicio de sesión con usuario) antes de que venza
+    if (!cfg.refresh || !cfg.exp || Date.now() < cfg.exp - 60000) return Promise.resolve();
+    if (!refreshing) refreshing = rawReq("/auth/token", { method: "POST", noauth: true, ctype: "application/x-www-form-urlencoded",
+      body: "grant_type=refresh_token&refresh_token=" + encodeURIComponent(cfg.refresh) + "&client_id=" + encodeURIComponent(CID) })
+      .then(function (r) { if (r && r.ok && r.data && r.data.access_token) { cfg.token = r.data.access_token; cfg.exp = Date.now() + (r.data.expires_in || 1800) * 1000; save(); } }, function () {})
+      .then(function () { refreshing = null; });
+    return refreshing;
+  }
+  function req(path, o) { return ensure().then(function () { return rawReq(path, o); }); }
+  function rawReq(path, o) {
     o = o || {};
     var url = base() + path;
-    var headers = { Authorization: "Bearer " + cfg.token };
-    if (o.body) headers["Content-Type"] = "application/json";
+    var headers = o.noauth ? {} : { Authorization: "Bearer " + cfg.token };
+    if (o.body) headers["Content-Type"] = o.ctype || "application/json";
     if (window.RadioHost && typeof window.RadioHost.haFetch === "function") {
       return Promise.resolve(window.RadioHost.haFetch(url, { method: o.method || "GET", headers: headers, body: o.body || null, as: o.as || "json" }));
     }
@@ -70,6 +81,7 @@
   function emit() { var d = { ok: ok, demo: isDemo(), error: err }; subs.forEach(function (f) { try { f(d); } catch (e) {} }); window.dispatchEvent(new CustomEvent("radio:ha", { detail: d })); }
 
   function refresh() {
+    if (!configured() && !isDemo()) { states = []; ok = false; err = "Sin conectar"; lastAt = Date.now(); emit(); return Promise.resolve(false); }
     if (isDemo()) { if (!DEMO) DEMO = demoData(); states = DEMO; ok = true; err = ""; lastAt = Date.now(); emit(); return Promise.resolve(true); }
     return req("/api/states").then(function (r) {
       if (!r || !r.ok || !Array.isArray(r.data)) { ok = false; err = r && r.status === 401 ? "Token no válido" : "No se pudo conectar" + (r && r.status ? " (" + r.status + ")" : ""); emit(); return false; }
@@ -96,6 +108,47 @@
       return { ok: false, msg: r && r.status === 401 ? "El token no es válido" : "No se pudo conectar" + (r && r.status ? " (" + r.status + ")" : "") };
     }, function () { cfg.url = old.url; cfg.token = old.token; return { ok: false, msg: "No se pudo conectar. Revisa la dirección y la red." }; });
   }
+
+  /* ---------- Inicio de sesión con usuario y contraseña ---------- */
+  function login(url, user, pass) {
+    var oldUrl = cfg.url; cfg.url = url;
+    function fail(m) { cfg.url = oldUrl; return { ok: false, msg: m }; }
+    return rawReq("/auth/login_flow", { method: "POST", noauth: true, body: JSON.stringify({ client_id: CID, handler: ["homeassistant", null], redirect_uri: CID + "?auth_callback=1" }) })
+      .then(function (r) {
+        if (!r || !r.ok || !r.data || !r.data.flow_id) throw fail("No se pudo conectar" + (r && r.status ? " (" + r.status + ")" : "") + ". Revisa la dirección.");
+        return rawReq("/auth/login_flow/" + r.data.flow_id, { method: "POST", noauth: true, body: JSON.stringify({ username: user, password: pass, client_id: CID }) });
+      })
+      .then(function (r) {
+        var d = r && r.data;
+        if (d && d.type === "create_entry" && d.result) return rawReq("/auth/token", { method: "POST", noauth: true, ctype: "application/x-www-form-urlencoded", body: "grant_type=authorization_code&code=" + encodeURIComponent(d.result) + "&client_id=" + encodeURIComponent(CID) });
+        if (d && d.type === "form" && d.step_id === "mfa") throw fail("Tu cuenta pide verificación en dos pasos. Usa el token de larga duración.");
+        throw fail("Usuario o contraseña incorrectos.");
+      })
+      .then(function (r) {
+        if (!r || !r.ok || !r.data || !r.data.access_token) throw fail("No se pudo completar el inicio de sesión.");
+        cfg.token = r.data.access_token; cfg.refresh = r.data.refresh_token || ""; cfg.exp = Date.now() + (r.data.expires_in || 1800) * 1000;
+        states = []; areas = {}; DEMO = null; ok = false; save(); refresh(); poll();
+        return { ok: true, msg: "Sesión iniciada" };
+      })
+      .catch(function (e) { cfg.url = oldUrl; return e && e.ok === false ? e : { ok: false, msg: "No se pudo conectar. Revisa la dirección y la red." }; });
+  }
+
+  /* ---------- Accesos rápidos y código de seguridad ---------- */
+  var PROTECTED = ["camera", "lock", "cover", "alarm_control_panel"], unlockedUntil = 0;
+  function pins() { return cfg.pins.slice(); }
+  function isPinned(id) { return cfg.pins.indexOf(id) >= 0; }
+  function togglePin(id) { var i = cfg.pins.indexOf(id); if (i >= 0) cfg.pins.splice(i, 1); else cfg.pins.push(id); save(); emit(); }
+  function protectedId(id) { return PROTECTED.indexOf(String(id).split(".")[0]) >= 0; }
+  function sha(t) {
+    var data = "aura|" + t;
+    if (window.crypto && crypto.subtle && window.TextEncoder) return crypto.subtle.digest("SHA-256", new TextEncoder().encode(data)).then(function (b) { return Array.prototype.map.call(new Uint8Array(b), function (x) { return ("0" + x.toString(16)).slice(-2); }).join(""); });
+    var h = 5381; for (var i = 0; i < data.length; i++) h = ((h << 5) + h + data.charCodeAt(i)) | 0; return Promise.resolve("w" + h);
+  }
+  function hasPin() { return !!cfg.pinHash; }
+  function setPin(code) { if (!code) { cfg.pinHash = ""; save(); emit(); return Promise.resolve(); } return sha(code).then(function (h) { cfg.pinHash = h; unlockedUntil = Date.now() + 5 * 60000; save(); emit(); }); }
+  function checkPin(code) { return sha(code).then(function (h) { var good = h === cfg.pinHash; if (good) unlockedUntil = Date.now() + 5 * 60000; return good; }); }
+  function locked() { return hasPin() && Date.now() > unlockedUntil; }
+  function lockNow() { unlockedUntil = 0; }
 
   /* ---------- Consultas ---------- */
   function visible(s) { return cfg.hidden.indexOf(s.entity_id) < 0; }
@@ -186,7 +239,7 @@
   /* ---------- Configuración ---------- */
   function setConfig(p) {
     if (p.url != null) cfg.url = String(p.url).trim();
-    if (p.token != null) cfg.token = String(p.token).trim();
+    if (p.token != null) { cfg.token = String(p.token).trim(); cfg.refresh = ""; cfg.exp = 0; }
     states = []; areas = {}; DEMO = null; ok = false; save(); refresh(); poll();
   }
   function toggleHidden(id) { var i = cfg.hidden.indexOf(id); if (i >= 0) cfg.hidden.splice(i, 1); else cfg.hidden.push(id); save(); emit(); }
@@ -197,8 +250,11 @@
 
   window.RadioHA = {
     configured: configured, demo: isDemo,
-    config: function () { return { url: cfg.url, hasToken: !!cfg.token, hidden: cfg.hidden.slice() }; },
-    setConfig: setConfig, test: test, refresh: refresh,
+    config: function () { return { url: cfg.url, hasToken: !!cfg.token, hasLogin: !!cfg.refresh, hidden: cfg.hidden.slice() }; },
+    setConfig: setConfig, test: test, login: login,
+    setDemo: function (on) { cfg.demo = !!on; states = []; DEMO = null; ok = false; save(); refresh(); },   // solo para pruebas de diseño
+    pins: pins, isPinned: isPinned, togglePin: togglePin, protectedId: protectedId,
+    hasPin: hasPin, setPin: setPin, checkPin: checkPin, locked: locked, lockNow: lockNow, refresh: refresh,
     all: function () { return states.filter(visible); }, domain: domain, get: get, name: name, area: area, isOn: isOn,
     toggle: toggle, call: call, setBrightness: setBrightness, alarm: alarm, allLights: allLights, snapshot: snapshot,
     scenes: function () { return domain("scene").concat(domain("script")); },

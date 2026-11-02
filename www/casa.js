@@ -36,7 +36,7 @@
     root.textContent = "";
     var head = $("div", "casa__head");
     var tabs = $("div", "seg casa__tabs"); tabs.setAttribute("role", "tablist");
-    [["resumen", "Resumen"], ["luces", "Luces y más"], ["camaras", "Cámaras"]].forEach(function (t) {
+    [["resumen", "Resumen"], ["luces", "Luces y más"], ["camaras", "Cámaras"], ["accesos", "Accesos"]].forEach(function (t) {
       var b = $("button", "seg__btn", t[1]); b.type = "button"; b.dataset.tab = t[0]; b.setAttribute("role", "tab");
       b.addEventListener("click", function () { setTab(t[0]); }); tabs.appendChild(b);
     });
@@ -53,7 +53,7 @@
     el.textContent = "";
     var dot = $("i", "casa__dot" + (s.ok ? " is-ok" : " is-bad")); el.appendChild(dot);
     el.appendChild($("span", "", HA.demo() ? "Modo demostración" : s.ok ? "Casa conectada" : (s.error || "Sin conexión")));
-    if (HA.demo()) {
+    if (!HA.configured()) {
       var b = $("button", "btn-pill casa__cfg", "Conectar"); b.type = "button";
       b.addEventListener("click", function () { if (window.RadioNav) window.RadioNav.show("settings"); setTimeout(function () { var x = [].slice.call(document.querySelectorAll(".set-side__btn")).filter(function (y) { return /Conexiones/.test(y.textContent); })[0]; if (x) x.click(); }, 250); });
       el.appendChild(b);
@@ -165,11 +165,59 @@
       var b = $("button", "casa__cam"); b.type = "button"; b.dataset.id = s.entity_id; b.setAttribute("aria-label", "Ver " + HA.name(s));
       var im = $("img"); im.alt = ""; im.draggable = false; b.appendChild(im);
       var cap = $("span", "casa__cam-t", HA.name(s)); b.appendChild(cap);
-      b.addEventListener("click", function () { openCamera(s.entity_id); });
+      b.addEventListener("click", function () { guard(s.entity_id, function () { openCamera(s.entity_id); }); });
       camImgs[s.entity_id] = im; g.appendChild(b);
     });
     body.appendChild(g);
     pullCams(); clearInterval(camTimer); camTimer = setInterval(pullCams, 2500);
+  }
+  var GROUPS = [["camera", "Cámaras"], ["light", "Luces"], ["switch", "Apagadores y enchufes"], ["lock", "Cerraduras"], ["cover", "Portón y cortinas"], ["fan", "Ventiladores"], ["input_boolean", "Interruptores"], ["scene", "Escenas"], ["script", "Scripts"], ["alarm_control_panel", "Alarma"], ["climate", "Clima"]];
+  function renderAccesos(body) {
+    var st = HA.status();
+    var top = $("article", "card casa__card"); top.appendChild($("div", "card__label", "Mis accesos"));
+    var tiles = $("div", "casa__tiles casa__tiles--big");
+    HA.pins().map(function (id) { return HA.get(id); }).filter(Boolean).forEach(function (s) {
+      var b = $("button", "casa__tile"); b.type = "button"; b.dataset.id = s.entity_id;
+      b.appendChild(icon(DOM_ICON[s.entity_id.split(".")[0]] || "i-plug"));
+      var t = $("span", "casa__tile-t"); t.appendChild($("b", "", HA.name(s))); t.appendChild($("small", "casa__tile-s", HA.protectedId(s.entity_id) && HA.hasPin() ? "Con código" : stateText(s))); b.appendChild(t);
+      b.setAttribute("aria-pressed", String(HA.isOn(s)));
+      b.addEventListener("click", function () { quick(s); });
+      var w = $("div", "casa__cell"); w.appendChild(b); tiles.appendChild(w);
+    });
+    if (!tiles.children.length) tiles.appendChild($("p", "casa__empty", "Aún no tienes accesos. Elige abajo los dispositivos que quieras tener a un toque."));
+    top.appendChild(tiles); body.appendChild(top);
+
+    var sec = $("article", "card casa__card"); sec.appendChild($("div", "card__label", "Código de acceso"));
+    var line = $("div", "casa__btns");
+    sec.appendChild($("p", "casa__hint", HA.hasPin() ? "Cámaras, cerraduras, portón y alarma piden el código (se recuerda 5 min)." : "Crea un código para proteger cámaras, cerraduras, portón y alarma."));
+    var bset = $("button", "btn-pill", HA.hasPin() ? "Cambiar código" : "Crear código"); bset.type = "button";
+    bset.addEventListener("click", function () { pin(function (c) { if (c.length < 4) { toast({ title: "Usa al menos 4 dígitos", kind: "warn", ms: 2400 }); return; } HA.setPin(c).then(function () { toast({ title: "Código guardado", kind: "ok", ms: 1800 }); sig = ""; render(); }); }, "Nuevo código (4 a 8 dígitos)"); });
+    line.appendChild(bset);
+    if (HA.hasPin()) {
+      var bl = $("button", "btn-pill", "Bloquear ahora"); bl.type = "button"; bl.addEventListener("click", function () { HA.lockNow(); toast({ title: "Bloqueado", kind: "ok", ms: 1500 }); }); line.appendChild(bl);
+      var bq = $("button", "btn-pill", "Quitar código"); bq.type = "button";
+      bq.addEventListener("click", function () { pin(function (c) { HA.checkPin(c).then(function (good) { if (!good) { toast({ title: "Código incorrecto", kind: "warn", ms: 2200 }); return; } HA.setPin("").then(function () { sig = ""; render(); }); }); }, "Escribe tu código para quitarlo"); });
+      line.appendChild(bq);
+    }
+    sec.appendChild(line); body.appendChild(sec);
+
+    var found = $("article", "card casa__card"); found.appendChild($("div", "card__label", (st.demo ? "Dispositivos de ejemplo" : "Dispositivos encontrados") + " · toca para añadir o quitar"));
+    var any = false;
+    GROUPS.forEach(function (g) {
+      var list = HA.domain(g[0]); if (!list.length) return; any = true;
+      found.appendChild($("div", "casa__sub", g[1]));
+      var grid = $("div", "casa__tiles");
+      list.forEach(function (s) {
+        var b = $("button", "casa__tile"); b.type = "button"; b.setAttribute("aria-pressed", String(HA.isPinned(s.entity_id)));
+        b.appendChild(icon(DOM_ICON[g[0]] || "i-plug"));
+        var t = $("span", "casa__tile-t"); t.appendChild($("b", "", HA.name(s))); t.appendChild($("small", "casa__tile-s", HA.isPinned(s.entity_id) ? "En mis accesos" : (HA.area(s) || "Sin área"))); b.appendChild(t);
+        b.addEventListener("click", function () { HA.togglePin(s.entity_id); });
+        var w = $("div", "casa__cell"); w.appendChild(b); grid.appendChild(w);
+      });
+      found.appendChild(grid);
+    });
+    if (!any) found.appendChild($("p", "casa__empty", "No se encontró ningún dispositivo. Inicia sesión en Ajustes → Conexiones."));
+    body.appendChild(found);
   }
   function pullCams() {
     if (document.hidden || tab !== "camaras" || document.documentElement.getAttribute("data-view") !== "casa") return;
@@ -190,10 +238,18 @@
   }
   function closeCamera() { clearInterval(bigTimer); if (big && big.parentNode) big.parentNode.removeChild(big); big = null; document.documentElement.removeAttribute("data-casacam"); }
 
+  /* Lo delicado (cámaras, llaves, portón, alarma) pide el código de acceso si hay uno creado */
+  function guard(id, fn) {
+    if (HA.protectedId(id) && HA.hasPin() && HA.locked()) {
+      pin(function (code) { HA.checkPin(code).then(function (good) { if (good) fn(); else toast({ title: "Código incorrecto", kind: "warn", ms: 2200 }); }); }, "Código de acceso");
+    } else fn();
+  }
+  function quick(s) { var id = s.entity_id; guard(id, function () { if (id.indexOf("camera.") === 0) openCamera(id); else act(s); }); }
+
   /* ---------- Código de alarma ---------- */
-  function pin(cb) {
+  function pin(cb, title) {
     var ov = $("div", "casa__pin"); var box = $("div", "casa__pin-box"); var disp = $("div", "casa__pin-d", ""); var code = "";
-    box.appendChild($("div", "card__label", "Código de la alarma")); box.appendChild(disp);
+    box.appendChild($("div", "card__label", title || "Código de la alarma")); box.appendChild(disp);
     var pad = $("div", "casa__pin-pad");
     function paint() { disp.textContent = code.replace(/./g, "●") || " "; }
     ["1", "2", "3", "4", "5", "6", "7", "8", "9", "←", "0", "OK"].forEach(function (k) {
@@ -213,12 +269,18 @@
     var body = document.getElementById("casa-body"); if (!body) return;
     root.querySelectorAll(".casa__tabs .seg__btn").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.tab === tab)); b.setAttribute("aria-selected", String(b.dataset.tab === tab)); });
     paintStatus();
-    var s = [tab, room, edit, HA.all().map(function (x) { return x.entity_id; }).join(","), HA.config().hidden.join(",")].join("|");
+    var s = [tab, room, edit, HA.all().map(function (x) { return x.entity_id; }).join(","), HA.config().hidden.join(","), HA.pins().join(","), HA.hasPin(), tab === "accesos" ? HA.pins().map(function (i) { var x = HA.get(i); return x ? x.state : ""; }).join(",") : ""].join("|");
     if (s === sig) { patchTiles(); return; }
     sig = s;
     clearInterval(camTimer); camTimer = null;
     body.textContent = "";
-    if (tab === "resumen") renderResumen(body); else if (tab === "luces") renderLuces(body); else renderCamaras(body);
+    if (!HA.configured() && !HA.demo()) {
+      var em = $("div", "casa__none"); em.appendChild(icon("i-casa"));
+      em.appendChild($("b", "", "Casa sin conectar"));
+      em.appendChild($("p", "casa__empty", "Aquí aparecerán tus luces, cámaras y apagadores cuando conectes tu casa en Ajustes → Conexiones."));
+      body.appendChild(em); return;
+    }
+    if (tab === "resumen") renderResumen(body); else if (tab === "luces") renderLuces(body); else if (tab === "accesos") renderAccesos(body); else renderCamaras(body);
     patchTiles();
   }
 

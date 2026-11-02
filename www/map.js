@@ -863,6 +863,7 @@
 
   card.go.addEventListener("click", function () { startNavigation(false); });
   card.sim.addEventListener("click", function () { startNavigation(40); });
+  card.sim.hidden = true;   // la simulación de recorrido ya no se ofrece en pantalla (sigue en la API para pruebas)
   card.waze.addEventListener("click", function () { openWaze(st.dest); });
   card.save.addEventListener("click", function () { card.saveRow.hidden = !card.saveRow.hidden; });
   card.saveRow.querySelectorAll("[data-save]").forEach(function (b) {

@@ -37,8 +37,8 @@
   /* ---------- Estado ---------- */
   var state = load();
   var prev = null;                 // valores previos al desempañar el parabrisas
-  var cabin = 27, outside = 25;
-  var simulating = true;
+  var cabin = null, outside = null;   // null = sin dato real: se muestra «—»
+  var simulating = false;
   var rearUntil = 0;
 
   function load() {
@@ -63,6 +63,7 @@
 
   /* ---------- Formato ---------- */
   function num(c) {
+    if (typeof c !== "number" || !isFinite(c)) return "—";
     if (unitF()) return String(Math.round(toF(c)));
     var v = Math.round(c * 2) / 2;
     return (v % 1 ? v.toFixed(1) : String(v)).replace(".", ",");
@@ -107,6 +108,7 @@
   function target() { return (state.driver + state.pass) / 2; }
   function applyAuto() {
     if (!state.auto || !state.power) return;
+    if (cabin == null) return;
     var diff = target() - cabin, ad = Math.abs(diff);
     state.fan = clamp(Math.round(1 + ad * 0.9), 1, FAN_MAX);
     if (!state.dfront) {
@@ -166,6 +168,7 @@
       changed();
     }
     if (!simulating) { render(); return; }
+    if (cabin == null || outside == null) { render(); return; }
     var t = state.power ? target() : outside;
     var rate = state.power ? 0.035 + state.fan * 0.012 : 0.006;
     if (state.power && !state.ac && t < outside) { t = outside; rate *= 0.5; }   // sin A/C no se enfría por debajo del exterior
@@ -175,6 +178,10 @@
     render();
   }
   var timer = setInterval(tick, 3000);
+  /* Temperatura exterior real: la del clima de tu ubicación (Open-Meteo) */
+  function fromWeather(t) { if (typeof t === "number" && isFinite(t)) { outside = t; render(); } }
+  window.addEventListener("radio:weather", function (e) { fromWeather(e.detail && e.detail.temp); });
+  setTimeout(function () { var w = window.RadioWeather && window.RadioWeather.get(); if (w) fromWeather(w.temp); }, 800);
 
   /* ---------- Interfaz ---------- */
   var el = {
@@ -205,6 +212,7 @@
     if (!state.power) return "Apagado";
     if (state.dfront) return "Desempañando parabrisas";
     if (!state.auto) return "Manual";
+    if (cabin == null) return "Auto · Sin sensor de cabina";
     var d = target() - cabin;
     return Math.abs(d) < 0.6 ? "Auto · Cabina a gusto" : d < 0 ? "Auto · Enfriando" : "Auto · Calentando";
   }

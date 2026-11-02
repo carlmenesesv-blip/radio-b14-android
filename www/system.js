@@ -799,9 +799,25 @@
     haTok.type = "password"; haTok.placeholder = "Token de acceso de larga duración"; haTok.setAttribute("aria-label", "Token de acceso"); haTok.autocomplete = "off";
     var HAx = window.RadioHA;
     if (HAx) {
-      var c0 = HAx.config(); haUrl.value = c0.url || ""; if (c0.hasToken) haTok.placeholder = "•••••••• (guardado; escribe otro para cambiarlo)";
+      var c0 = HAx.config(); haUrl.value = c0.url || ""; if (c0.hasToken && !c0.hasLogin) haTok.placeholder = "•••••••• (guardado; escribe otro para cambiarlo)";
       row(c, "Dirección", "La de tu Home Assistant en la red de la casa o por Nabu Casa / VPN", function () { return haUrl; }).classList.add("set-item--stack");
-      row(c, "Token", "En Home Assistant: tu perfil → Seguridad → Tokens de acceso de larga duración", function () { return haTok; }).classList.add("set-item--stack");
+      var haUser = h("input", "set-input"), haPass = h("input", "set-input");
+      haUser.type = "text"; haUser.placeholder = "Usuario de Home Assistant"; haUser.setAttribute("aria-label", "Usuario"); haUser.autocomplete = "off"; haUser.spellcheck = false;
+      haPass.type = "password"; haPass.placeholder = "Contraseña"; haPass.setAttribute("aria-label", "Contraseña"); haPass.autocomplete = "off";
+      row(c, "Iniciar sesión", "Con tu usuario y contraseña de Home Assistant, sin copiar tokens. La contraseña no se guarda", function () {
+        var w = h("div", "set-login"); w.appendChild(haUser); w.appendChild(haPass);
+        w.appendChild(button("Iniciar sesión", function () {
+          var u = haUrl.value.trim();
+          if (!u || !haUser.value.trim() || !haPass.value) { haMsg.textContent = "Escribe la dirección, el usuario y la contraseña."; return; }
+          haMsg.textContent = "Iniciando sesión…";
+          HAx.login(u, haUser.value.trim(), haPass.value).then(function (r) {
+            haMsg.textContent = (r.ok ? "✓ " : "✗ ") + r.msg; haPass.value = "";
+            if (r.ok && window.RadioToast) window.RadioToast.show({ title: "Casa conectada", kind: "ok", ms: 2200 });
+          });
+        }));
+        return w;
+      }).classList.add("set-item--stack");
+      row(c, "Token (alternativa)", "En Home Assistant: tu perfil → Seguridad → Tokens de acceso de larga duración", function () { return haTok; }).classList.add("set-item--stack");
       var haRow = row(c, "Conexión", "", function () {
         var w = h("div", "set-item__btns"); w.style.display = "flex"; w.style.gap = "0.5rem"; w.style.flexWrap = "wrap";
         w.appendChild(button("Probar y guardar", function () {
@@ -815,11 +831,11 @@
             if (r.ok) { HAx.setConfig({ url: u, token: tk }); haTok.value = ""; haTok.placeholder = "•••••••• (guardado)"; if (window.RadioToast) window.RadioToast.show({ title: "Casa conectada", kind: "ok", ms: 2200 }); }
           });
         }));
-        w.appendChild(button("Desconectar", function () { HAx.setConfig({ url: "", token: "" }); haUrl.value = ""; haTok.value = ""; haTok.placeholder = "Token de acceso de larga duración"; haMsg.textContent = "Desconectado. Se muestran datos de ejemplo."; }));
+        w.appendChild(button("Desconectar", function () { HAx.setConfig({ url: "", token: "" }); haUrl.value = ""; haTok.value = ""; haTok.placeholder = "Token de acceso de larga duración"; haMsg.textContent = "Desconectado."; }));
         w.appendChild(button("Mostrar todo lo oculto", function () { HAx.clearHidden(); haMsg.textContent = "Se muestran todas las fichas."; }));
         return w;
       });
-      haMsg = (function () { var sp = h("span", "set-item__hint", HAx.demo() ? "Sin conectar: se muestran datos de ejemplo." : "Conectado."); haRow.querySelector(".set-item__txt").appendChild(sp); return sp; })();
+      haMsg = (function () { var sp = h("span", "set-item__hint", HAx.configured() ? "Conectado." : "Sin conectar."); haRow.querySelector(".set-item__txt").appendChild(sp); return sp; })();
     }
 
     /* ----- Asistente (Gemini) y mapas de Google ----- */

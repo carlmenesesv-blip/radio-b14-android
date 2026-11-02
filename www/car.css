@@ -163,3 +163,7 @@
 /* Icono de alerta de la barra superior: tocable cuando hay algo que revisar */
 #sb-alert:not(.is-off) { cursor: pointer; }
 #sb-alert:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 4px; }
+
+/* Llanta sin dato real */
+.tire[data-nodata="1"] .tire__val { color: var(--text-faint); }
+.cv__demo[hidden] { display: none !important; }

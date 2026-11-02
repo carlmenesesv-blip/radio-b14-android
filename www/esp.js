@@ -1,7 +1,7 @@
 /* ==========================================================
    ESP — enlace con el ESP32 del auto (una sola puerta de entrada y salida)
    ENTRADA  (ESP32 → app): líneas JSON, p. ej.
-     {"kmh":62,"rpm":2400,"temp":88,"fuel":0.4,"volt":13.8,"izq":0,"der":0,
+     {"kmh":62,"rpm":2400,"temp":88,"cab":24.5,"fuel":0.4,"volt":13.8,"izq":0,"der":0,
       "altas":0,"freno":0,"puerta":0,"reversa":0,"neutro":0,"emerg":0}
      eventos: {"e":"ack","c":"relay","n":"ignition","v":1}
      llave y mandos (se actúan al instante, sin esperar):
@@ -43,6 +43,7 @@
         if (num(d.fuel)) p.fuel = Math.max(0, Math.min(100, d.fuel <= 1 ? d.fuel * 100 : d.fuel));
         if (Object.keys(p).length) { window.RadioVehicle.simulate(false); window.RadioVehicle.setTelemetry(p); }
       }
+      if (window.RadioClimate && num(d.cab)) window.RadioClimate.setCabin(d.cab);
       if (window.RadioCar && ("puerta" in d || "reversa" in d)) {
         var u = {};
         if ("puerta" in d) u.doors = { fl: !!d.puerta };

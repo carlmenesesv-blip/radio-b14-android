@@ -1279,7 +1279,7 @@ button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid va
     if (m !== 'usb') closeUsb();
     if (m === 'usb') { if (NATIVE) { status(nativeLinked ? 'Conectado por USB' : 'Conectá el ESP32 al celular'); try { NATIVE.connect(); } catch (e) {} } else { status(port ? 'Conectado por USB' : 'Sin ESP32 elegido'); usbAuto(); } }
   }
-  $('mSim').onclick = () => setMode('sim'); $('mUsb').onclick = () => setMode('usb');
+  $('mSim').onclick = () => { store.set('simChosen', '1'); setMode('sim'); }; $('mUsb').onclick = () => { store.set('simChosen', '0'); setMode('usb'); };
 
   // USB (Web Serial, Chrome o Edge). La primera vez se elige el puerto; después se reconecta solo.
   const USB_FILTROS = [{ usbVendorId:0x10C4 }, { usbVendorId:0x1A86 }, { usbVendorId:0x0403 }, { usbVendorId:0x303A }];
@@ -1344,7 +1344,7 @@ button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid va
   setTheme(store.get('theme', 'auto'));
   sync(); sizeRoad(); paintRadio();
   if (rValid(CFG.radioCode)) radioConnect();
-  { const m0 = store.get('mode', NATIVE ? 'usb' : 'sim'); if (m0 === 'usb') setMode('usb'); }
+  { const m0 = store.get('simChosen', '0') === '1' ? 'sim' : 'usb'; if (m0 === 'usb') setMode('usb'); }
   if (NATIVE) $('bUsb').textContent = 'Buscar ESP32 por USB';
   requestAnimationFrame(frame);
 

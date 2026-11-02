@@ -250,3 +250,4 @@ html[data-view="map"] .topbar { display: none; }
 .nav__map--g { display: none; }
 .nav[data-engine="google"] #nav-map { display: none; }
 .nav[data-engine="google"] .nav__map--g { display: block; }
+#nc-sim[hidden], .casa__cfg[hidden] { display: none !important; }

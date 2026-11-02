@@ -86,3 +86,12 @@ html[data-driving] .casa__tile { min-height: 4.4rem; }
 /* tabs: el texto nunca se recorta */
 .casa__tabs .seg__btn { white-space: nowrap; flex: none; }
 .casa__tabs .seg__btn { padding-inline: 1rem; }
+
+/* Accesos */
+.casa__sub { margin: 0.9rem 0 0.4rem; font-size: 0.8rem; color: var(--text-dim); letter-spacing: 0.03em; }
+.casa__card .casa__hint { text-align: left; margin-bottom: 0.6rem; }
+.casa__tile > svg.icon { flex: none; }
+
+.casa__none { display: grid; place-items: center; gap: 0.6rem; padding: 3rem 1rem; text-align: center; color: var(--text-dim); }
+.casa__none svg.icon { width: 2.4rem; height: 2.4rem; }
+.casa__none b { color: var(--text); font-weight: 500; font-size: 1.05rem; }

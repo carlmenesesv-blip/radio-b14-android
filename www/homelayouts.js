@@ -35,7 +35,7 @@
     var live = H.demo() || H.configured();
     card.dataset.on = String(!!live && (H.demo() || H.status().ok));
     var n = $("hc-n"), t = $("hc-t"), sc = $("hc-sc"), al = $("hc-al");
-    if (!live) { n.textContent = "—"; t.textContent = "Conecta tu Home Assistant en Ajustes"; sc.textContent = ""; al.hidden = true; return; }
+    if (!live) { n.textContent = "—"; t.textContent = "Sin conectar"; sc.textContent = ""; al.hidden = true; return; }
     var on = H.lightsOn();
     n.textContent = on; t.textContent = on === 1 ? "luz encendida" : "luces encendidas";
     var scenes = H.scenes().slice(0, 3), sig = scenes.map(function (s) { return s.entity_id; }).join("|");

@@ -39,7 +39,7 @@
   try { saved = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
   var st = {
     locked: saved.locked !== false,
-    demo: saved.demo !== false,
+    demo: saved.v >= 2 && saved.demo === true,   // la simulación ya no se activa sola
     odo: Math.max(0, Number(saved.odo) || 0),
     trip: Object.assign({ km: 0, secs: 0, max: 0 }, saved.trip || {}),
     prevTrip: saved.prevTrip || null,
@@ -52,7 +52,7 @@
   var speed = 0, speedSeen = 0, lastT = 0, dirty = false;
 
   function persist() {
-    try { localStorage.setItem(KEY, JSON.stringify({ locked: st.locked, demo: st.demo, odo: st.odo, trip: st.trip, prevTrip: st.prevTrip, svc: st.svc, lastMove: st.lastMove })); } catch (e) {}
+    try { localStorage.setItem(KEY, JSON.stringify({ v: 2, locked: st.locked, demo: st.demo, odo: st.odo, trip: st.trip, prevTrip: st.prevTrip, svc: st.svc, lastMove: st.lastMove })); } catch (e) {}
     dirty = false;
   }
   setInterval(function () { if (dirty) persist(); }, 10000);
@@ -100,6 +100,7 @@
     var od = openDoors();
     od.forEach(function (k) { out.push({ level: moving ? "bad" : "warn", text: DOOR_LONG[k] }); });
     Object.keys(tires).forEach(function (k) {
+      if (tires[k] == null && !st.demo) return;
       var s = tireState(tireKpa(k));
       if (s[0] !== "ok") out.push({ level: s[0], text: "Llanta " + TIRE_NAMES[k] + ": " + s[1].toLowerCase() + " (" + pressText(tireKpa(k)) + ")" });
     });
@@ -135,8 +136,9 @@
     el.alerts.dataset.state = worst;
     var ic = el.alerts.querySelector(".cv__alerts-ico use");
     if (ic) ic.setAttribute("href", worst === "ok" ? "#i-check" : "#i-alert");
-    el.aTitle.textContent = !list.length ? "Todo en orden" : list.length === 1 ? list[0].text : list.length + " alertas";
-    el.aSub.textContent = !list.length ? "Sin alertas del vehículo." : list.length === 1 ? (worst === "bad" ? "Requiere atención." : "Conviene revisarlo.") : "Revisa los detalles.";
+    var linked = st.demo || window.RadioESP && window.RadioESP.linked && window.RadioESP.linked();
+    el.aTitle.textContent = !list.length && !linked ? "Sin datos del auto" : !list.length ? "Todo en orden" : list.length === 1 ? list[0].text : list.length + " alertas";
+    el.aSub.textContent = !list.length && !linked ? "Conecta el ESP32 por USB para ver puertas, llantas y alertas." : !list.length ? "Sin alertas del vehículo." : list.length === 1 ? (worst === "bad" ? "Requiere atención." : "Conviene revisarlo.") : "Revisa los detalles.";
     el.aList.textContent = "";
     if (list.length > 1) list.forEach(function (a) {
       var c = document.createElement("span"); c.className = "cv__achip"; c.dataset.level = a.level; c.textContent = a.text; el.aList.appendChild(c);
@@ -154,10 +156,10 @@
     el.sum.dataset.state = od.length ? "warn" : "ok";
 
     root.querySelectorAll(".tire").forEach(function (b) {
-      var k = b.dataset.tire, s = tireState(tireKpa(k));
-      b.dataset.state = s[0];
-      b.querySelector(".tire__val").textContent = pressText(tireKpa(k));
-      b.setAttribute("aria-label", "Llanta " + TIRE_NAMES[k] + ", " + pressText(tireKpa(k)) + ", " + s[1].toLowerCase());
+      var k = b.dataset.tire, s = tireState(tireKpa(k)), nd = tires[k] == null && !st.demo;
+      b.dataset.state = nd ? "ok" : s[0]; b.dataset.nodata = nd ? "1" : "";
+      b.querySelector(".tire__val").textContent = nd ? "—" : pressText(tireKpa(k));
+      b.setAttribute("aria-label", "Llanta " + TIRE_NAMES[k] + ", " + (nd ? "sin datos" : pressText(tireKpa(k)) + ", " + s[1].toLowerCase()));
     });
 
     var tl = lights.turnL || lights.hazard, tr = lights.turnR || lights.hazard;
@@ -172,7 +174,7 @@
       b.disabled = !st.demo;
     });
     root.dataset.demo = st.demo ? "on" : "off";
-    el.demo.setAttribute("aria-pressed", String(st.demo));
+    el.demo.setAttribute("aria-pressed", String(st.demo)); el.demo.hidden = !st.demo;
   }
 
   function renderTrip() {
@@ -397,6 +399,7 @@
       alerts: alerts()
     };
   }
+  window.addEventListener("radio:esplink", function () { render(); });
   window.RadioCar = {
     get: get,
     update: function (p) {

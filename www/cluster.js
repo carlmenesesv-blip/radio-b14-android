@@ -111,14 +111,14 @@
     row(g, "Aviso al pasar el límite", "", stepper(api.FIELDS.filter(function (f) { return f[1] === "margen"; })[0]));
 
     g = group("Datos");
-    row(g, "Fuente", "Demo simula un recorrido; ESP32 lee el auto por USB", seg([["Demo", "sim"], ["ESP32 por USB", "usb"]], function () { return api.getMode(); }, function (v) { api.setMode(v); }));
-    var perf = row(g, "Demo: tipo de recorrido", "", seg([["Ciudad", "ciudad"], ["Carretera", "carretera"], ["A fondo", "pista"]], function () { return api.getPerfil(); }, function (v) { api.perfil(v); }));
+    row(g, "Fuente", "Lo normal es ESP32 por USB (datos reales). «Simulación» es solo para probar el diseño", seg([["ESP32 por USB", "usb"], ["Simulación", "sim"]], function () { return api.getMode(); }, function (v) { api.setMode(v); }));
+    var perf = row(g, "Simulación: tipo de recorrido", "", seg([["Ciudad", "ciudad"], ["Carretera", "carretera"], ["A fondo", "pista"]], function () { return api.getPerfil(); }, function (v) { api.perfil(v); }));
     refreshers.push(function () { perf.classList.toggle("cl__off", api.getMode() !== "sim"); });
     var bt = h("div", "cl__btns");
     [["Direccional izq.", "bIzq"], ["Direccional der.", "bDer"], ["Emergencia", "bEmerg"], ["Luces altas", "bAltas"], ["Puerta", "bPuerta"], ["Reversa", "bRev"]].forEach(function (p) {
       var b = h("button", "btn-pill", p[0]); b.type = "button"; b.addEventListener("click", function () { api.click(p[1]); }); bt.appendChild(b);
     });
-    var demoBtns = h("div", "cl__grp"); demoBtns.appendChild(h("div", "cl__lbl", "Probar avisos (solo Demo)")); demoBtns.appendChild(bt); g.appendChild(demoBtns);
+    var demoBtns = h("div", "cl__grp"); demoBtns.appendChild(h("div", "cl__lbl", "Probar avisos (solo Simulación)")); demoBtns.appendChild(bt); g.appendChild(demoBtns);
     refreshers.push(function () { demoBtns.classList.toggle("cl__off", api.getMode() !== "sim"); });
 
     [["Calibración", ["kSpeed", "kRpm"], "Si el cluster marca 100 y el GPS 96, pon la velocidad en 96 %."],
