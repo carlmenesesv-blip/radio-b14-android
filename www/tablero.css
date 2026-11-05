@@ -1,0 +1,96 @@
+/* ==========================================================
+   TABLERO — Home con sedán dibujado por detrás, velocímetro, diales y mosaicos.
+   Solo se ve con .home[data-layout="tablero"]. Usa las variables del tema (--accent, --surface…),
+   así funciona en oscuro y en claro, con cualquier estilo visual.
+   Sección: HOME
+   ========================================================== */
+.tab { display: none; }
+.home[data-layout="tablero"] > :not(.tab) { display: none !important; }
+.home[data-layout="tablero"] { display: block; padding: 0; }
+.home[data-layout="tablero"] > .tab { display: grid; }
+
+.tab { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr); gap: var(--gap); height: 100%; min-height: 0; grid-template-rows: minmax(0, 1fr); align-items: stretch; }
+.tab__col { overflow: hidden; display: flex; flex-direction: column; gap: var(--gap); min-width: 0; min-height: 0; }
+.tab__col--c { align-items: center; justify-content: center; gap: 0.4rem; }
+
+.tab__card { background: var(--surface); border-radius: var(--radius-lg); padding: 1rem 1.1rem; min-width: 0; color: var(--text); }
+.tab__txt { display: flex; flex-direction: column; min-width: 0; text-align: start; }
+.tab__txt small { font-size: 0.78rem; color: var(--text-dim); letter-spacing: 0.02em; }
+.tab__txt b { font-size: 1.05rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tab__txt span { font-size: 0.85rem; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* mosaicos: activo = celeste con ícono oscuro */
+.tab__tiles { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
+.tt { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 0.7rem; min-height: 5.4rem; padding: 0.9rem 1rem; border-radius: var(--radius-lg); background: var(--surface); color: var(--text); font-size: 0.9rem; touch-action: manipulation; transition: transform 200ms cubic-bezier(0.3, 1.4, 0.5, 1), background 160ms, color 160ms; }
+.tt .icon { width: 1.6rem; height: 1.6rem; }
+.tt:active { transform: scale(0.95); }
+.tt[aria-pressed="true"] { background: var(--accent); color: var(--dock-active-fg, #07222f); }
+
+.tab__media { display: flex; flex-direction: column; gap: 0.7rem; }
+.tab__ctl { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.tb { display: inline-grid; place-items: center; width: 3rem; height: 3rem; border-radius: 50%; background: var(--surface-strong); color: var(--text); touch-action: manipulation; transition: transform 180ms cubic-bezier(0.3, 1.4, 0.5, 1); }
+.tb:active { transform: scale(0.92); }
+.tb .icon { width: 1.35rem; height: 1.35rem; }
+.tb--main { width: 3.6rem; height: 3.6rem; background: var(--accent); color: var(--dock-active-fg, #07222f); }
+
+.tab__nav { display: flex; align-items: center; gap: 0.8rem; text-align: start; touch-action: manipulation; }
+.tab__nav > .icon { width: 1.7rem; height: 1.7rem; flex: none; color: var(--accent); }
+.tab__nav[data-on="1"] { background: var(--accent-soft); }
+
+/* velocímetro semicircular */
+.tab__gauge { position: relative; width: min(100%, 24rem, 46vh); flex: none; }
+.tab__gauge svg { display: block; width: 100%; height: auto; overflow: visible; }
+.g-track, .g-val { fill: none; stroke-width: 9; stroke-linecap: round; }
+.g-track { stroke: var(--surface-strong); }
+.g-val { stroke: var(--accent); transition: stroke-dasharray 400ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.tab__speed { position: absolute; inset: auto 0 0.2rem 0; display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.tab__speed b { font-size: 3.4rem; font-weight: 300; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+.tab__speed small { font-size: 0.85rem; color: var(--text-dim); margin-top: 0.2rem; }
+
+/* sedán */
+.tab__car { width: min(100%, 27rem, 50vh); height: auto; flex: 0 1 auto; min-height: 0; }
+.c-shadow { fill: rgba(0,0,0,0.35); }
+.c-wheel { fill: #05070a; stroke: var(--border-strong); stroke-width: 1.2; }
+.c-body { fill: var(--surface-strong); stroke: var(--border-strong); stroke-width: 1.5; }
+.c-glass { fill: var(--surface-inset); stroke: var(--border); stroke-width: 1; }
+.c-line { fill: none; stroke: var(--border-strong); stroke-width: 1.5; stroke-linecap: round; }
+.c-plate { fill: var(--surface-inset); stroke: var(--border-strong); stroke-width: 1.2; }
+.c-lamp { fill: var(--text-faint); transition: fill 160ms, filter 160ms; }
+.c-rev { fill: var(--text-faint); opacity: 0.5; transition: fill 160ms, opacity 160ms; }
+#tab-car[data-head="1"] .c-lamp { fill: #b3262d; }
+#tab-car[data-brake="1"] .c-lamp { fill: #ff3b3b; filter: drop-shadow(0 0 7px rgba(255,59,59,0.85)); }
+#tab-car[data-rev="1"] .c-rev { fill: #f4f7fa; opacity: 1; filter: drop-shadow(0 0 5px rgba(255,255,255,0.8)); }
+#tab-car[data-tl="1"] .lamp-l, #tab-car[data-tr="1"] .lamp-r { fill: #ffb020; animation: tab-blink 0.8s steps(1) infinite; }
+@keyframes tab-blink { 50% { fill: var(--text-faint); filter: none; } }
+
+.tab__status { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.9rem; border-radius: var(--radius-pill); background: var(--surface); font-size: 0.9rem; color: var(--text-dim); }
+.tab__status .icon { width: 1.1rem; height: 1.1rem; }
+.tab__status[data-warn="1"] { background: var(--accent-soft); color: var(--text); }
+
+/* diales */
+.tab__dial { overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; flex: 1 1 0; justify-content: center; }
+.tdial { position: relative; width: clamp(6rem, 19vh, 11rem); height: clamp(6rem, 19vh, 11rem); flex: none; }
+.tdial svg { width: 100%; height: 100%; transform: rotate(135deg); }
+.d-track, .d-val { fill: none; stroke-width: 9; stroke-linecap: round; }
+.d-track { stroke: var(--surface-strong); stroke-dasharray: 75 100; }
+.d-val { stroke: var(--accent); transition: stroke-dasharray 300ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.tdial__c { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.05; }
+.tdial__c b { font-size: clamp(1.3rem, 3.6vh, 2.1rem); font-weight: 400; font-variant-numeric: tabular-nums; }
+.tdial__c small { font-size: 0.78rem; color: var(--text-dim); margin-top: 0.15rem; }
+.tdial__btns { display: flex; gap: 1.2rem; }
+.tdial__sub { display: flex; gap: 1rem; font-size: 0.8rem; color: var(--text-dim); }
+.tdial__sub b { color: var(--text); font-weight: 500; }
+
+/* pantallas bajas */
+@media (max-height: 720px) {
+  .tab__speed b { font-size: 2.6rem; }
+  .tt { min-height: 4.4rem; padding: 0.7rem 0.85rem; }
+  .tab__card { padding: 0.8rem 0.95rem; }
+  .tb { width: 2.6rem; height: 2.6rem; }
+  .tb--main { width: 3.1rem; height: 3.1rem; }
+  .tab__car { width: min(100%, 20rem); }
+}
+@media (max-width: 900px) {
+  .tab { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); overflow-y: auto; }
+  .tab__col--c { grid-column: 1 / -1; order: -1; }
+}

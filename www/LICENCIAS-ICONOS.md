@@ -10,10 +10,7 @@ Los íconos están en `icons-packs.js` y se aplican con `icons.js`. Cada paquete
 | One UI | Material Symbols Rounded (Google) | Apache 2.0 | github.com/marella/material-symbols · fonts.google.com/icons |
 | macOS | Lucide | ISC | github.com/lucide-icons/lucide |
 | Deportivo | Phosphor Icons (peso Bold) | MIT | github.com/phosphor-icons/core |
-| Retro | Pixelarticons | MIT | github.com/halfmage/pixelarticons |
-
-Excepciones dibujadas a mano (no existen en el paquete original): en Retro, los íconos de Bluetooth y de
-gota (humedad), a 2 px por celda para coincidir con la retícula de Pixelarticons.
+| Tablero | Phosphor Icons (peso Regular) | MIT | github.com/phosphor-icons/core |
 
 El logotipo de AURA (`i-logo`) no cambia con el estilo.
 

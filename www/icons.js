@@ -1,14 +1,14 @@
 /* AURA — paquetes de íconos por estilo visual.
    Cada estilo usa su propio paquete real (ver LICENCIAS-ICONOS.md):
    win11 → Fluent · oneui → Material Symbols Rounded · macos → Lucide
-   sport → Phosphor Bold · retro → Pixelarticons · aura → set original.
+   sport → Phosphor Bold · tablero → Phosphor Regular · aura → set original.
    Reemplaza el contenido de los <symbol id="i-*"> del sprite, así todo el
    sistema (HTML y JS que usan <use href="#i-…">) cambia sin tocar nada más. */
 (function () {
   "use strict";
   var root = document.documentElement;
   var sprite = null, orig = null, current = "aura";
-  var FILLED = { win11: 1, oneui: 1, sport: 1, retro: 1 }; // paquetes de relleno (los demás son de trazo)
+  var FILLED = { win11: 1, oneui: 1, sport: 1, tablero: 1 }; // paquetes de relleno (los demás son de trazo)
 
   function symbols() {
     sprite = sprite || document.querySelector("svg[aria-hidden] > symbol[id^='i-']");

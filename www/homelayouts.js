@@ -7,7 +7,7 @@
    ========================================================== */
 (function () {
   "use strict";
-  var LAYOUTS = ["calma", "cockpit", "widgets"], NAMES = { calma: "Calma", cockpit: "Cockpit", widgets: "Widgets" };
+  var LAYOUTS = ["calma", "cockpit", "widgets", "tablero"], NAMES = { calma: "Calma", cockpit: "Cockpit", widgets: "Widgets", tablero: "Tablero" };
   var home = document.getElementById("home"); if (!home) return;
   function $(id) { return document.getElementById(id); }
   function sys() { return (window.RadioSystem && window.RadioSystem.get && window.RadioSystem.get()) || {}; }

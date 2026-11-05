@@ -21,9 +21,9 @@
     driveBig: true,             // agrandar los controles al conducir
     driveBlockVideo: true,      // bloquear videos y navegación libre al conducir
     exclusiveAudio: true,       // una sola fuente de audio: la nueva pausa a la anterior
-    visualStyle: "aura",        // aura | win11 | oneui | macos | sport | retro
+    visualStyle: "aura",        // aura | win11 | oneui | macos | sport | tablero
     accentColor: "",            // "" = el del estilo; o un color #rrggbb
-    homeLayout: "calma",       // calma | cockpit | widgets
+    homeLayout: "calma",       // calma | cockpit | widgets | tablero
     voiceWake: false,           // «Oye Aura» (solo navegadores con reconocimiento continuo)
     voiceSpeak: true,           // respuestas habladas
     mapEngine: "google",        // google (con clave) | osm
@@ -514,7 +514,7 @@
       return seg("themeMode", [["Claro", "light"], ["Oscuro", "dark"], ["Automático", "auto"]], id);
     });
     row(c, "Estilo visual", "Cada estilo trae su propio paquete de íconos (grosor, remates y relleno). Funcionan en claro y oscuro", function (id) {
-      return seg("visualStyle", [["AURA", "aura"], ["Windows 11", "win11"], ["One UI", "oneui"], ["macOS", "macos"], ["Deportivo", "sport"], ["Retro", "retro"]], id);
+      return seg("visualStyle", [["AURA", "aura"], ["Windows 11", "win11"], ["One UI", "oneui"], ["macOS", "macos"], ["Deportivo", "sport"], ["Tablero", "tablero"]], id);
     });
     row(c, "Color de acento", "Cambia el color de los detalles y de lo seleccionado", function (id) {
       return seg("accentColor", [["Auto", ""], ["Azul", "#3e91ff"], ["Verde", "#30c46b"], ["Naranja", "#ff9f0a"], ["Violeta", "#9d7bff"], ["Rojo", "#ff3b30"]], id);
@@ -571,7 +571,7 @@
     /* ----- Entrada ----- */
     group(mount, "Tarjetas del inicio");
     c = card(mount, "");
-    row(c, "Estilo del inicio", "Calma, Cockpit o Widgets. También se cambia con el botón Estilo en Inicio", function (id) { return seg("homeLayout", [["Calma", "calma"], ["Cockpit", "cockpit"], ["Widgets", "widgets"]], id); });
+    row(c, "Estilo del inicio", "Calma, Cockpit, Widgets o Tablero. También se cambia con el botón Estilo en Inicio", function (id) { return seg("homeLayout", [["Calma", "calma"], ["Cockpit", "cockpit"], ["Widgets", "widgets"], ["Tablero", "tablero"]], id); });
     row(c, "El tiempo", "", function (id) { return toggle("homeWx", id); });
     row(c, "El auto", "", function (id) { return toggle("homeCar", id); });
     row(c, "Música", "", function (id) { return toggle("homeMedia", id); });

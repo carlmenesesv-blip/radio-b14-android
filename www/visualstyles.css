@@ -80,24 +80,19 @@ html[data-vs="sport"] .card--greet .greet__clock { font-weight: 700; font-style:
 html[data-vs="sport"] .dock__btn, html[data-vs="sport"] .hq, html[data-vs="sport"] .seg__btn { clip-path: polygon(7px 0, 100% 0, calc(100% - 7px) 100%, 0 100%); border-radius: 0; }
 html[data-vs="sport"] .btn-round--main { background: var(--accent); color: #fff; }
 
-/* ---------- Retro (ámbar / papel térmico) ---------- */
-html[data-vs="retro"] { --font: "Cascadia Mono", "Consolas", "IBM Plex Mono", "DejaVu Sans Mono", "Courier New", monospace; --radius-xl: 3px; --radius-lg: 2px; --radius-md: 2px; --radius-pill: 2px; --gap: 0.7rem; --pad: 1rem; }
-html[data-vs="retro"][data-theme="dark"] { --bg: #0a0700; --text: #ffb000; --text-dim: rgba(255,176,0,0.62); --text-faint: rgba(255,176,0,0.36); --surface: rgba(255,176,0,0.05); --surface-strong: rgba(255,176,0,0.12); --surface-inset: rgba(255,176,0,0.07); --border: rgba(255,176,0,0.38); --border-strong: rgba(255,176,0,0.7); --accent: #ffb000; --accent-soft: rgba(255,176,0,0.18); --info: #ffb000; --dock-bg: rgba(255,176,0,0.05); --dock-active-bg: #ffb000; --dock-active-fg: #0a0700; --shadow: none; }
-html[data-vs="retro"][data-theme="light"] { --bg: #e9e1c9; --text: #2a2210; --text-dim: rgba(42,34,16,0.68); --text-faint: rgba(42,34,16,0.4); --surface: #f3ecd6; --surface-strong: #e3d9b8; --surface-inset: #ece3c7; --border: rgba(42,34,16,0.4); --border-strong: rgba(42,34,16,0.75); --accent: #b23a00; --accent-soft: rgba(178,58,0,0.14); --info: #b23a00; --dock-bg: #f3ecd6; --dock-active-bg: #2a2210; --dock-active-fg: #f3ecd6; --shadow: none; }
-html[data-vs="retro"][data-theme="dark"] body { background: radial-gradient(900px 600px at 50% 40%, rgba(255,176,0,0.08), transparent 70%), #0a0700; text-shadow: 0 0 6px rgba(255,176,0,0.4); }
-html[data-vs="retro"][data-theme="light"] body { background: #e9e1c9; }
-html[data-vs="retro"][data-theme="dark"]::after { content: ""; position: fixed; inset: 0; z-index: 99998; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.22) 0 1px, transparent 1px 3px); }
-html[data-vs="retro"] .card, html[data-vs="retro"] .bar, html[data-vs="retro"] .hq { border: 1px solid var(--border); }
-html[data-vs="retro"] .topbar__title, html[data-vs="retro"] .freq__t, html[data-vs="retro"] .hcasa__head { text-transform: uppercase; letter-spacing: 0.1em; }
-html[data-vs="retro"] .card--greet .greet__clock { font-weight: 400; letter-spacing: 0.04em; }
-html[data-vs="retro"] .btn-round--main { background: var(--accent); color: var(--dock-active-fg, #000); }
-html[data-vs="retro"][data-theme="dark"] svg.icon { filter: drop-shadow(0 0 3px rgba(255,176,0,0.55)); }
+/* ---------- Tablero (negro profundo, un solo acento celeste, mosaicos muy redondeados) ---------- */
+html[data-vs="tablero"] { --radius-xl: 28px; --radius-lg: 22px; --radius-md: 16px; --radius-pill: 999px; --gap: 0.8rem; --pad: 1.1rem; }
+html[data-vs="tablero"][data-theme="dark"] { --bg: #07090c; --text: #eef3f7; --text-dim: rgba(238,243,247,0.62); --text-faint: rgba(238,243,247,0.36); --surface: #11151a; --surface-strong: #1a2027; --surface-inset: #0c1014; --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.16); --accent: #8fd3f4; --accent-soft: rgba(143,211,244,0.16); --info: #8fd3f4; --dock-bg: #0c1014; --dock-active-bg: #8fd3f4; --dock-active-fg: #07222f; --shadow: none; }
+html[data-vs="tablero"][data-theme="light"] { --bg: #e9eef2; --text: #0d1a22; --text-dim: rgba(13,26,34,0.64); --text-faint: rgba(13,26,34,0.38); --surface: #f7fafc; --surface-strong: #dde5eb; --surface-inset: #e2e9ee; --border: rgba(13,26,34,0.08); --border-strong: rgba(13,26,34,0.2); --accent: #1b7fa8; --accent-soft: rgba(27,127,168,0.14); --info: #1b7fa8; --dock-bg: #f7fafc; --dock-active-bg: #1b7fa8; --dock-active-fg: #ffffff; --shadow: 0 1px 2px rgba(13,26,34,0.06); }
+html[data-vs="tablero"][data-theme="dark"] body { background: radial-gradient(1000px 640px at 50% 38%, rgba(143,211,244,0.06), transparent 70%), #07090c; }
+html[data-vs="tablero"][data-theme="light"] body { background: #e9eef2; }
+html[data-vs="tablero"] .btn-round--main { background: var(--accent); color: var(--dock-active-fg); }
+html[data-vs="tablero"] .topbar__title, html[data-vs="tablero"] .freq__t, html[data-vs="tablero"] .hcasa__head { letter-spacing: 0.02em; }
 
 /* ---------- Paquetes de íconos por estilo ----------
    El contenido real de cada ícono lo cambia icons.js (Fluent, Material, Lucide,
-   Phosphor, Pixelarticons). Aquí solo el ajuste fino de cada paquete. */
+   Phosphor). Aquí solo el ajuste fino de cada paquete. */
 html[data-iconpack="macos"] svg.icon { stroke-width: 1.7; }
-html[data-iconpack="retro"] svg.icon { shape-rendering: crispEdges; }
 html[data-vs] .statusbar__icons svg.icon, html[data-vs] .qsbtn__icons svg.icon { stroke-width: 1.8; }
 html[data-vs] .wx__ico { stroke-width: 1.3; }
 

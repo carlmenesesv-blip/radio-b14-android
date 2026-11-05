@@ -58,6 +58,7 @@
   <link rel="stylesheet" href="drive.css">
   <link rel="stylesheet" href="casa.css">
   <link rel="stylesheet" href="homelayouts.css">
+  <link rel="stylesheet" href="tablero.css">
   <link rel="stylesheet" href="refine.css">
   <link rel="stylesheet" href="visualstyles.css">
 
@@ -280,6 +281,76 @@
         <!-- ================= HOME ================= -->
         <section class="view is-active" data-view="home" data-title="Inicio">
           <div class="home" id="home" data-media="idle">
+
+            <!-- Home «Tablero»: sedán dibujado por detrás, velocímetro, diales y mosaicos -->
+            <section class="tab" id="home-tab" aria-label="Tablero">
+              <div class="tab__col tab__col--l">
+                <div class="tab__tiles" role="group" aria-label="Controles rápidos">
+                  <button type="button" class="tt" id="tt-lock" aria-pressed="false"><svg class="icon"><use href="#i-lock"/></svg><span>Puertas</span></button>
+                  <button type="button" class="tt" id="tt-light" aria-pressed="false"><svg class="icon"><use href="#i-bulb"/></svg><span>Luces</span></button>
+                  <button type="button" class="tt" id="tt-clim" aria-pressed="false"><svg class="icon"><use href="#i-fan"/></svg><span>Clima</span></button>
+                  <button type="button" class="tt" id="tt-play" aria-pressed="false"><svg class="icon" id="tt-play-i"><use href="#i-play"/></svg><span>Música</span></button>
+                </div>
+                <article class="tab__card tab__media" aria-label="Reproducción">
+                  <div class="tab__txt"><small id="tm-src">Música</small><b id="tm-t">Sin reproducir</b><span id="tm-s"></span></div>
+                  <div class="tab__ctl">
+                    <button type="button" class="tb" id="tm-prev" aria-label="Anterior"><svg class="icon"><use href="#i-prev"/></svg></button>
+                    <button type="button" class="tb tb--main" id="tm-play" aria-label="Reproducir"><svg class="icon" id="tm-play-i"><use href="#i-play"/></svg></button>
+                    <button type="button" class="tb" id="tm-next" aria-label="Siguiente"><svg class="icon"><use href="#i-next"/></svg></button>
+                  </div>
+                </article>
+                <button type="button" class="tab__card tab__nav" data-go="map" aria-label="Abrir navegación">
+                  <svg class="icon"><use href="#i-pin"/></svg>
+                  <span class="tab__txt"><small>Navegación</small><b id="tn-t">Sin destino</b><span id="tn-s">Toca para elegir uno</span></span>
+                </button>
+              </div>
+
+              <div class="tab__col tab__col--c">
+                <div class="tab__gauge" aria-label="Velocidad">
+                  <svg viewBox="0 0 200 112" aria-hidden="true">
+                    <path class="g-track" d="M14 100 A86 86 0 0 1 186 100" pathLength="100"/>
+                    <path class="g-val" id="tg-arc" d="M14 100 A86 86 0 0 1 186 100" pathLength="100" stroke-dasharray="0 100"/>
+                  </svg>
+                  <div class="tab__speed"><b id="tg-v">—</b><small id="tg-u">km/h</small></div>
+                </div>
+                <svg class="tab__car" id="tab-car" viewBox="0 0 320 176" role="img" aria-label="Sedán visto por detrás">
+                  <ellipse cx="160" cy="166" rx="128" ry="7" class="c-shadow"/>
+                  <rect x="64" y="136" width="30" height="30" rx="9" class="c-wheel"/>
+                  <rect x="226" y="136" width="30" height="30" rx="9" class="c-wheel"/>
+                  <rect x="68" y="84" width="14" height="10" rx="4" class="c-body"/>
+                  <rect x="238" y="84" width="14" height="10" rx="4" class="c-body"/>
+                  <path class="c-body" d="M80 110 L95 62 Q99 54 110 54 L210 54 Q221 54 225 62 L240 110 Z"/>
+                  <path class="c-glass" d="M96 104 L106 67 Q108 63 113 63 L207 63 Q212 63 214 67 L224 104 Z"/>
+                  <path class="c-body" d="M42 130 Q42 113 58 109 L262 109 Q278 113 278 130 L278 152 Q278 160 270 160 L50 160 Q42 160 42 152 Z"/>
+                  <path class="c-line" d="M58 113 L262 113"/>
+                  <path class="c-line" d="M50 148 L270 148"/>
+                  <path class="c-lamp lamp-l" d="M50 118 L96 117 L94 133 Q93 137 88 137 L52 137 Q48 137 48 132 Z"/>
+                  <path class="c-lamp lamp-r" d="M270 118 L224 117 L226 133 Q227 137 232 137 L268 137 Q272 137 272 132 Z"/>
+                  <rect class="c-rev" x="104" y="124" width="14" height="8" rx="3"/>
+                  <rect class="c-rev" x="202" y="124" width="14" height="8" rx="3"/>
+                  <rect class="c-plate" x="134" y="121" width="52" height="19" rx="4"/>
+                </svg>
+                <div class="tab__status" id="tab-status"><svg class="icon"><use href="#i-lock"/></svg><span id="ts-t">—</span></div>
+              </div>
+
+              <div class="tab__col tab__col--r">
+                <article class="tab__card tab__dial" id="td-clim" aria-label="Clima">
+                  <div class="tdial">
+                    <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="d-track" cx="60" cy="60" r="48" pathLength="100"/><circle class="d-val" id="dc-arc" cx="60" cy="60" r="48" pathLength="100" stroke-dasharray="0 100"/></svg>
+                    <div class="tdial__c"><b id="dc-v">—</b><small id="dc-l">Clima</small></div>
+                  </div>
+                  <div class="tdial__btns"><button type="button" class="tb" id="dc-dn" aria-label="Bajar temperatura"><svg class="icon"><use href="#i-minus"/></svg></button><button type="button" class="tb" id="dc-up" aria-label="Subir temperatura"><svg class="icon"><use href="#i-plus"/></svg></button></div>
+                  <div class="tdial__sub"><span>Cabina <b id="dc-cab">—</b></span><span>Exterior <b id="dc-out">—</b></span></div>
+                </article>
+                <article class="tab__card tab__dial" id="td-vol" aria-label="Volumen">
+                  <div class="tdial">
+                    <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="d-track" cx="60" cy="60" r="48" pathLength="100"/><circle class="d-val" id="dv-arc" cx="60" cy="60" r="48" pathLength="100" stroke-dasharray="0 100"/></svg>
+                    <div class="tdial__c"><b id="dv-v">0%</b><small>Volumen</small></div>
+                  </div>
+                  <div class="tdial__btns"><button type="button" class="tb" id="dv-dn" aria-label="Bajar volumen"><svg class="icon"><use href="#i-minus"/></svg></button><button type="button" class="tb" id="dv-up" aria-label="Subir volumen"><svg class="icon"><use href="#i-plus"/></svg></button></div>
+                </article>
+              </div>
+            </section>
 
             <!-- Nuevas piezas del inicio (se muestran según el estilo elegido) -->
             <article class="card card--greet" id="hgreet" aria-label="Saludo">
@@ -1403,6 +1474,7 @@
   <script src="ha.js"></script>
   <script src="casa.js"></script>
   <script src="homelayouts.js"></script>
+  <script src="tablero.js"></script>
   <script src="drive.js"></script>
   <script src="voice.js"></script>
   <script src="aura-ai.js"></script>
