@@ -18,6 +18,8 @@
   function compute() {
     var bt = window.RadioBluetooth && window.RadioBluetooth.get();
     var t = window.RadioTuner && window.RadioTuner.get();
+    var ph = window.RadioPhone && window.RadioPhone.get();     // reproductor del celular (puente Bluetooth, Linux)
+    if (ph && ph.connected && ph.title) return { source: "bt", state: ph.state === "playing" ? "playing" : "paused", title: ph.title, sub: ph.artist || "Música del celular" };
     if (bt) return { source: "bt", state: "playing", title: "Bluetooth", sub: "Música del celular" };
     if (t && t.power) return { source: "radio", state: "playing", title: t.name || "Radio", sub: t.status === "connecting" ? "Conectando…" : "Radio en vivo" };
     if (t && t.name) return { source: "radio", state: "paused", title: t.name, sub: "En pausa" };
@@ -36,7 +38,7 @@
     cur = n;
     if (card) {
       card.dataset.state = n.state;
-      card.dataset.ctl = n.source === "bt" ? "none" : "radio";
+      card.dataset.ctl = n.source === "bt" && !phoneOn() ? "none" : "radio";
       title.textContent = n.title; sub.textContent = n.sub;
       src.textContent = n.source === "bt" ? "Bluetooth" : n.source === "radio" ? "Radio" : "Música";
       var on = n.state === "playing";
@@ -55,8 +57,11 @@
     if (changed) window.dispatchEvent(new CustomEvent("radio:mediachange", { detail: Object.assign({}, n) }));
   }
 
+  function phoneOn() { var P = window.RadioPhone && window.RadioPhone.get(); return !!(P && P.connected); }
+
   function toggle() {
     var T = window.RadioTuner;
+    if (cur.source === "bt" && phoneOn()) { window.RadioPhone.cmd("play-pause"); return; }
     if (cur.source === "bt") { if (window.RadioBluetooth) window.RadioBluetooth.set(false); return; }
     if (!T) return;
     if (cur.state === "playing") T.setPower(false);
@@ -67,13 +72,13 @@
   if (hPlay) hPlay.addEventListener("click", toggle);
   var hQs = $("hud-qs");
   if (hQs) hQs.addEventListener("click", function () { if (window.RadioQuick) window.RadioQuick.open(); });
-  if (next) next.addEventListener("click", function () { if (window.RadioTuner) window.RadioTuner.next(); });
-  if (prev) prev.addEventListener("click", function () { if (window.RadioTuner) window.RadioTuner.prev(); });
+  if (next) next.addEventListener("click", function () { if (cur.source === "bt" && phoneOn()) window.RadioPhone.cmd("next"); else if (window.RadioTuner) window.RadioTuner.next(); });
+  if (prev) prev.addEventListener("click", function () { if (cur.source === "bt" && phoneOn()) window.RadioPhone.cmd("previous"); else if (window.RadioTuner) window.RadioTuner.prev(); });
   // Tocar el texto abre la sección de la fuente actual
   var top = card && card.querySelector(".media__top");
   if (top) top.addEventListener("click", function () { if (window.RadioNav) window.RadioNav.show(cur.source === "bt" ? "media" : "radio"); });
 
-  ["radio:tunerchange", "radio:btchange"].forEach(function (ev) { window.addEventListener(ev, render); });
+  ["radio:tunerchange", "radio:btchange", "radio:phonechange"].forEach(function (ev) { window.addEventListener(ev, render); });
   setInterval(render, 1500);       // el estado de conexión de la emisora cambia sin evento propio
   window.RadioMedia = { get: function () { return Object.assign({}, cur); }, toggle: toggle, ctl: function (c) { if (c === "toggle") toggle(); else if (c === "next") this.next(); else if (c === "prev") this.prev(); }, next: function () { if (next) next.click(); }, prev: function () { if (prev) prev.click(); } };
   render();
